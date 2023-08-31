@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <TextView
+        android:id="@+id/textViewDialog"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:textSize="@dimen/text_size_30"
+        android:text="@string/dialog_title"
+        android:gravity="center"/>
+
+    <EditText
+        android:id="@+id/editTextDialogServerIP"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:textSize="@dimen/text_size_30"
+        android:hint="@string/server_ip_hint"/>
+
+    <EditText
+        android:id="@+id/editTextDialogServerPort"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:textSize="@dimen/text_size_30"
+        android:hint="Port"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_weight="1">
+
+        <Button
+            android:id="@+id/btnDialogClear"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:text="@string/app_clear"
+            android:textSize="@dimen/text_size_30"/>
+
+        <Button
+            android:id="@+id/btnDialogConfirm"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:text="@string/app_confirm"
+            android:textSize="@dimen/text_size_30"/>
+
+    </LinearLayout>
+
+</LinearLayout>

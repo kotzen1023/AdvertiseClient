@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">AdvertiseClient</string>
+    <string name="dialog_title">Input Server IP and port</string>
+    <string name="app_clear">Clear</string>
+    <string name="app_confirm">Confirm</string>
+    <string name="server_ip_hint">IP address</string>
+    <string name="server_ip_input_empty">IP address or port cannot be empty.</string>
+</resources>
