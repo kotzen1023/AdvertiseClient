@@ -13,17 +13,19 @@ class Constants {
             //const val ACTION_GET_AD_SETTING: String = "com.seventhmoon.advertiseclient.GetAdSettingAction"
             const val ACTION_GET_AD_SETTING_SUCCESS: String = "com.seventhmoon.advertiseclient.GetAdSettingSuccess"
             const val ACTION_GET_AD_SETTING_FAILED: String = "com.seventhmoon.advertiseclient.GetAdSettingFailed"
+            const val ACTION_GET_AD_SETTING_EMPTY: String = "com.seventhmoon.advertiseclient.GetAdSettingEmpty"
 
             const val ACTION_GET_MARQUEE_SUCCESS: String = "com.seventhmoon.advertiseclient.GetMarqueeSuccess"
             const val ACTION_GET_MARQUEE_FAILED: String = "com.seventhmoon.advertiseclient.GetMarqueeFailed"
             const val ACTION_GET_MARQUEE_EMPTY: String = "com.seventhmoon.advertiseclient.GetMarqueeEmpty"
 
             const val ACTION_GET_IMAGES_SUCCESS: String = "com.seventhmoon.advertiseclient.GetImagesSuccess"
+            const val ACTION_GET_IMAGES_COMPLETE: String = "com.seventhmoon.advertiseclient.GetImagesComplete"
             const val ACTION_GET_IMAGES_FAILED: String = "com.seventhmoon.advertiseclient.GetImagesFailed"
             const val ACTION_GET_IMAGES_EMPTY: String = "com.seventhmoon.advertiseclient.GetImagesEmpty"
 
             const val ACTION_GET_VIDEOS_SUCCESS: String = "com.seventhmoon.advertiseclient.GetVideosSuccess"
-            const val ACTION_GET_VIDEOS_ONE_SUCCESS: String = "com.seventhmoon.advertiseclient.GetVideosOneSuccess"
+            const val ACTION_GET_VIDEOS_COMPLETE: String = "com.seventhmoon.advertiseclient.GetVideosComplete"
             const val ACTION_GET_VIDEOS_FAILED: String = "com.seventhmoon.advertiseclient.GetVideosFailed"
             const val ACTION_GET_VIDEOS_EMPTY: String = "com.seventhmoon.advertiseclient.GetVideosEmpty"
 

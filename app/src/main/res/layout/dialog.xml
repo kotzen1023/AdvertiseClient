@@ -17,6 +17,7 @@
         android:id="@+id/editTextDialogServerIP"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:maxLines="1"
         android:textSize="@dimen/text_size_30"
         android:hint="@string/server_ip_hint"/>
 
@@ -24,6 +25,7 @@
         android:id="@+id/editTextDialogServerPort"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:maxLines="1"
         android:textSize="@dimen/text_size_30"
         android:hint="Port"/>
 

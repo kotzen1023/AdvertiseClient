@@ -5,7 +5,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 @Entity(tableName = DefaultPlayAdSettingData.TABLE_NAME)
-class DefaultPlayAdSettingData(plan_id: Int, plan_name: String, plan_marquee: String, plan_images: String, plan_videos: String, marquee_mode: Int, images_mode: Int, videos_mode: Int) {
+class DefaultPlayAdSettingData(plan_id: Int, plan_name: String, plan_marquee: String, plan_images: String, plan_videos: String, marquee_mode: Int, images_mode: Int, videos_mode: Int, image_interval: Int) {
     companion object {
         const val TABLE_NAME = "DefaultPlayAdSettingData"
     }
@@ -34,6 +34,9 @@ class DefaultPlayAdSettingData(plan_id: Int, plan_name: String, plan_marquee: St
     @ColumnInfo(name = "videos_mode")
     private var videos_mode: Int = 0
 
+    @ColumnInfo(name = "image_interval")
+    private var image_interval: Int = 0
+
     init {
         this.plan_id = plan_id
         this.plan_name = plan_name
@@ -43,6 +46,7 @@ class DefaultPlayAdSettingData(plan_id: Int, plan_name: String, plan_marquee: St
         this.marquee_mode = marquee_mode
         this.images_mode = images_mode
         this.videos_mode = videos_mode
+        this.image_interval = image_interval
     }
 
     fun getPlan_id (): Int {
@@ -107,5 +111,13 @@ class DefaultPlayAdSettingData(plan_id: Int, plan_name: String, plan_marquee: St
 
     fun setVideos_mode (videos_mode  : Int) {
         this.videos_mode  = videos_mode
+    }
+
+    fun getImage_interval (): Int {
+        return image_interval
+    }
+
+    fun setImage_interval (image_interval : Int) {
+        this.image_interval  = image_interval
     }
 }

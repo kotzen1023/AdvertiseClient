@@ -12,7 +12,6 @@ import android.content.IntentFilter
 import android.content.SharedPreferences
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
-import android.media.MediaPlayer.OnPreparedListener
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -31,6 +30,7 @@ import android.view.WindowInsetsController
 import android.view.WindowManager
 import android.view.animation.AnimationUtils
 import android.widget.Button
+import android.widget.EditText
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.MediaController
@@ -43,6 +43,10 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.text.HtmlCompat
+import androidx.media3.common.MediaItem
+import androidx.media3.common.Player
+import androidx.media3.common.Player.Listener
+import androidx.media3.exoplayer.ExoPlayer
 import androidx.room.Room
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
@@ -67,13 +71,13 @@ import com.seventhmoon.advertiseclient.persistence.DefaultPlayVideosDataDB
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.Response
-import okhttp3.internal.notify
 import org.json.JSONException
 import org.json.JSONObject
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.net.URL
+import java.net.URLEncoder
 import kotlin.random.Random
 
 
@@ -108,26 +112,30 @@ class MainActivity : AppCompatActivity() {
     private var current_play_index_bottom = -1
     private var current_video_index_bottom = -1
 
+    //top
     private var linearLayoutTop : LinearLayout ?= null
     private var textViewTop : TextView ?= null
     private var imageViewTop : ImageView ?= null
     private var imageViewTop2 : ImageView ?= null
     private var videoViewLayoutTop: RelativeLayout ?= null
     private var videoViewTop: VideoView ?= null
-
+    //private var exoPlayerViewTop: PlayerView?= null
+    //center
     private var linearLayoutCenter : LinearLayout ?= null
     var textViewCenter : TextView ?= null
     var imageViewCenter : ImageView ?= null
     var imageViewCenter2 : ImageView ?= null
     var videoViewLayoutCenter: RelativeLayout ?= null
     var videoViewCenter: VideoView ?= null
-
+    //private var exoPlayerViewCenter: PlayerView?= null
+    //bottom
     private var linearLayoutBottom : LinearLayout ?= null
     var textViewBottom : TextView ?= null
     var imageViewBottom : ImageView ?= null
     var imageViewBottom2 : ImageView ?= null
     var videoViewLayoutBottom: RelativeLayout ?= null
     var videoViewBottom: VideoView ?= null
+    //private var exoPlayerViewBottom: PlayerView?= null
 
 
     private var deviceID = ""
@@ -138,12 +146,7 @@ class MainActivity : AppCompatActivity() {
     var getfirstPingResonse = false
 
 
-
     private var toastHandle: Toast? = null
-
-    lateinit var countDownTimerTop : CountDownTimer
-    lateinit var countDownTimerCenter : CountDownTimer
-    lateinit var countDownTimerBottom : CountDownTimer
 
     lateinit var countDownTimerMarquee : CountDownTimer
     var countDownTimerMarqueeRunning : Boolean = false
@@ -151,9 +154,9 @@ class MainActivity : AppCompatActivity() {
     var countDownTimerImageRunning : Boolean = false
     //lateinit var countDownTimerVideo : CountDownTimer
 
-    var countDownTimerVideoRunningTop : Boolean = false
-    var countDownTimerVideoRunningCenter : Boolean = false
-    var countDownTimerVideoRunningBottom : Boolean = false
+    var videoRunningTop : Boolean = false
+    var videoRunningCenter : Boolean = false
+    var videoRunningBottom : Boolean = false
 
 
 
@@ -196,9 +199,14 @@ class MainActivity : AppCompatActivity() {
     //private lateinit var mediaControllerTop: MediaController
     //private lateinit var mediaControllerCenter: MediaController
     //private lateinit var mediaControllerBottom: MediaController
+    private var downloadImageComplete: Int = 0
     private var downloadVideoComplete: Int = 0
+    private var downloadImageReadyArray: ArrayList<Boolean> = ArrayList()
     private var downloadVideoReadyArray: ArrayList<Boolean> = ArrayList()
 
+    private var infoRenew = false
+    private var isFirstNetworkError = true
+    private var isFirstVideoDownload = true
     @RequiresApi(Build.VERSION_CODES.R)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -267,19 +275,22 @@ class MainActivity : AppCompatActivity() {
         Log.e(mTag, "currentOrientation = $currentOrientation")
 
         //var macAddress = getWIFIMAC()
+        //top
         linearLayoutTop = findViewById(R.id.linearLayoutTop)
         textViewTop = findViewById(R.id.textViewTop)
         imageViewTop = findViewById(R.id.imageViewTop)
         imageViewTop2 = findViewById(R.id.imageViewTop2)
         videoViewLayoutTop = findViewById(R.id.videoViewLayoutTop)
         videoViewTop = findViewById(R.id.videoViewTop)
-
+        //exoPlayerViewTop = findViewById(R.id.exoPlayerViewTop)
+        //center
         linearLayoutCenter = findViewById(R.id.linearLayoutCenter)
         textViewCenter = findViewById(R.id.textViewCenter)
         imageViewCenter = findViewById(R.id.imageViewCenter)
         imageViewCenter2 = findViewById(R.id.imageViewCenter2)
         videoViewLayoutCenter = findViewById(R.id.videoViewLayoutCenter)
         videoViewCenter = findViewById(R.id.videoViewCenter)
+        //exoPlayerViewCenter = findViewById(R.id.exoPlayerViewCenter)
 
         linearLayoutBottom = findViewById(R.id.linearLayoutBottom)
         textViewBottom = findViewById(R.id.textViewBottom)
@@ -287,6 +298,7 @@ class MainActivity : AppCompatActivity() {
         imageViewBottom2 = findViewById(R.id.imageViewBottom2)
         videoViewLayoutBottom = findViewById(R.id.videoViewLayoutBottom)
         videoViewBottom = findViewById(R.id.videoViewBottom)
+        //exoPlayerViewBottom = findViewById(R.id.exoPlayerViewBottom)
 
         //for marquee
         textViewTop!!.isSelected = true
@@ -296,6 +308,7 @@ class MainActivity : AppCompatActivity() {
         val mediaControllerTop = MediaController(this)
         val mediaControllerCenter = MediaController(this)
         val mediaControllerBottom = MediaController(this)
+
         // sets the anchor view
         // anchor view for the videoView
         mediaControllerTop.setAnchorView(videoViewTop)
@@ -315,6 +328,63 @@ class MainActivity : AppCompatActivity() {
         videoViewTop!!.setMediaController(mediaControllerTop)
         videoViewCenter!!.setMediaController(mediaControllerCenter)
         videoViewBottom!!.setMediaController(mediaControllerBottom)
+
+        //exo player
+        //exo player
+        //val exoPlayerTop = ExoPlayer.Builder(mContext as Context).build()
+        //val exoPlayerCenter = ExoPlayer.Builder(mContext as Context).build()
+        ///val exoPlayerBottom = ExoPlayer.Builder(mContext as Context).build()
+
+
+
+        /*
+        exoPlayerCenter.addListener(object : Listener {
+            override fun onPlaybackStateChanged(state: Int) {
+                if (state == Player.STATE_ENDED) {
+
+                    Log.e(mTag, "exoPlayerCenter->onPlaybackStateChanged->STATE_ENDED")
+
+                    // your code here
+                    val videos_mode = adSettingList[0].videos_mode
+                    videoRunningCenter = false
+                    if (videos_mode == 1) { //random
+                        var next: Int
+                        do {
+                            next = Random.nextInt(videoList.size)
+                        } while (next == current_video_index_center && videoList.size > 1)
+                        current_video_index_center = next
+                    } else { //circle
+                        current_video_index_center += 1
+                        if (current_video_index_center >= videoList.size) {
+                            current_video_index_center = 0
+                        }
+                    }
+                    val srcPath = "$dest_videos_folder${videoList[current_video_index_center]}"
+                    val fileVideo = File(srcPath)
+                    val uriCenter = Uri.fromFile(fileVideo)
+
+                    val mediaItem: MediaItem = MediaItem.fromUri(uriCenter)
+                    exoPlayerCenter.setMediaItem(mediaItem)
+                    exoPlayerCenter.prepare()
+                    exoPlayerCenter.play()
+                }
+            }
+        })
+        */
+        /*
+        exoPlayerBottom.addListener(object : Listener {
+            override fun onPlaybackStateChanged(state: Int) {
+                if (state == Player.STATE_ENDED) {
+                    // your code here
+                }
+            }
+        })
+        */
+
+        //exoPlayerViewTop!!.player = exoPlayerTop
+        //exoPlayerViewCenter!!.player = exoPlayerCenter
+        //exoPlayerViewBottom!!.player = exoPlayerBottom
+
 
         deviceID = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
         deviceName = Build.MODEL
@@ -378,6 +448,7 @@ class MainActivity : AppCompatActivity() {
             adSetting.marquee_mode = defaultAdSettingPlayList!![0].getMarquee_mode()
             adSetting.images_mode = defaultAdSettingPlayList!![0].getImages_mode()
             adSetting.videos_mode = defaultAdSettingPlayList!![0].getVideos_mode()
+            adSetting.image_interval = defaultAdSettingPlayList!![0].getImage_interval()
 
             adSettingList.add(adSetting)
         }
@@ -412,8 +483,19 @@ class MainActivity : AppCompatActivity() {
 
         if (defaultImagesPlayList!!.size > 0) {
             imageList.clear()
+            downloadImageReadyArray.clear()
             for (i in defaultImagesPlayList!!.indices) {
                 imageList.add(defaultImagesPlayList!![i].getFileName())
+
+                val destPath = "$dest_images_folder${defaultImagesPlayList!![i].getFileName()}"
+                Log.e(mTag, "destPath = $destPath")
+
+                val file = File(destPath)
+                if(!file.exists()) {
+                    downloadImageReadyArray.add(false)
+                } else {
+                    downloadImageReadyArray.add(true)
+                }
             }
         }
 
@@ -431,7 +513,7 @@ class MainActivity : AppCompatActivity() {
             for (i in defaultVideosPlayList!!.indices) {
                 videoList.add(defaultVideosPlayList!![i].getFileName())
 
-                val destPath = "$dest_images_folder${defaultVideosPlayList!![i].getFileName()}"
+                val destPath = "$dest_videos_folder${defaultVideosPlayList!![i].getFileName()}"
                 Log.e(mTag, "destPath = $destPath")
 
                 val file = File(destPath)
@@ -447,7 +529,15 @@ class MainActivity : AppCompatActivity() {
 
         if (layoutList.size == 1 && adSettingList.size == 1 &&
             (playMarqueeList.size > 0 || imageList.size > 0 || videoList.size > 0 )) {
-            playAd()
+            //because marquee download is unnecessary, start with image
+            //downloadImageComplete = 0
+            checkImagesExists()
+            clearImagesNotInImageList()
+            downloadImages()
+            infoRenew = true
+
+        } else {
+            Log.e(mTag, "no default setting")
         }
 
         if (server_ip_address == "" || server_webservice_port == "") {
@@ -491,7 +581,6 @@ class MainActivity : AppCompatActivity() {
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_PING_WEB_FAILED, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_PING_WEB_FAILED")
 
-
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_PING_WEB_SUCCESS, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_PING_WEB_SUCCESS")
 
@@ -529,76 +618,257 @@ class MainActivity : AppCompatActivity() {
                             //get Marquee
                             getMarquee()
                         }
+                    } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_AD_SETTING_EMPTY, ignoreCase = true)) {
+                        Log.d(mTag, "ACTION_GET_AD_SETTING_EMPTY")
+
+
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_MARQUEE_FAILED, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_MARQUEE_FAILED")
+                        /*
+                        playMarqueeList.clear()
+                        defaultMarqueePlayList!!.clear()
+                        //clear sqlite table
+                        defaultPlayMarqueeDataDB!!.defaultPlayMarqueeDataDao().clearTable()
 
+                        //ignore error, start download images
+                        val imagesArray = adSettingList[0].plan_images.split(",")
+
+                        if (imagesArray.isNotEmpty()) {
+                            imageList.clear()
+                            downloadImageReadyArray.clear()
+                            for (i in imagesArray.indices) {
+                                imageList.add(imagesArray[i])
+                                downloadImageReadyArray.add(false)
+                            }
+
+                            Log.e(mTag, "imageList = $imageList, downloadImageReadyArray = $downloadImageReadyArray")
+                            downloadImageComplete = 0
+                            downloadImages()
+                        } else { //no images, start download videos
+                            downloadVideoComplete = 0
+                            downloadVideos()
+                        }
+                        */
+                    } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_MARQUEE_EMPTY, ignoreCase = true)) {
+                        Log.d(mTag, "ACTION_GET_MARQUEE_EMPTY")
+                        playMarqueeList.clear()
+                        defaultMarqueePlayList!!.clear()
+                        //clear sqlite table
+                        defaultPlayMarqueeDataDB!!.defaultPlayMarqueeDataDao().clearTable()
+
+                        //no marquee, start download images
+                        val imagesArray = adSettingList[0].plan_images.split(",")
+
+                        if (imagesArray.isNotEmpty()) {
+                            imageList.clear()
+                            downloadImageReadyArray.clear()
+                            for (i in imagesArray.indices) {
+                                imageList.add(imagesArray[i])
+                                downloadImageReadyArray.add(false)
+                            }
+
+                            Log.e(mTag, "imageList = $imageList, downloadImageReadyArray = $downloadImageReadyArray")
+                            //downloadImageComplete = 0
+                            checkImagesExists()
+                            clearImagesNotInImageList()
+                            downloadImages()
+                        } else { //no images, start download videos
+                            //downloadVideoComplete = 0
+                            checkVideosExists()
+                            clearVideosNotInVideoList()
+                            downloadVideos()
+                        }
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_MARQUEE_SUCCESS, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_MARQUEE_SUCCESS")
 
+                        playMarqueeList.clear()
+                        defaultMarqueePlayList!!.clear()
+                        defaultPlayMarqueeDataDB!!.defaultPlayMarqueeDataDao().clearTable()
                         //then find match marquee
                         if (adSettingList.size > 0) {
                             Log.d(mTag, "plan_marquee = ${adSettingList[0].plan_marquee}")
 
-                            val marqueeArray = adSettingList[0].plan_marquee.split(",")
-                            Log.d(mTag, "marqueeArray.size = ${marqueeArray.size}")
+                            if (adSettingList[0].plan_marquee.isNotEmpty()) {
+                                val marqueeArray = adSettingList[0].plan_marquee.split(",")
+                                Log.d(mTag, "marqueeArray.size = ${marqueeArray.size}")
 
-                            playMarqueeList.clear()
+                                for (i in marqueeArray.indices) {
+                                    var found = false
+                                    var foundIdx = -1
+                                    for (j in marqueeList.indices) {
+                                        if (marqueeArray[i] == marqueeList[j].name) {
+                                            found = true
+                                            foundIdx = j
+                                            break
+                                        }
+                                    }
 
-                            for (i in marqueeArray.indices) {
-                                var found = false
-                                var foundIdx = -1
-                                for (j in marqueeList.indices) {
-                                    if (marqueeArray[i] == marqueeList[j].name) {
-                                        found = true
-                                        foundIdx = j
-                                        break
+                                    if (found) {
+                                        playMarqueeList.add(marqueeList[foundIdx])
                                     }
                                 }
 
-                                if (found) {
-                                    playMarqueeList.add(marqueeList[foundIdx])
+                                Log.e(mTag, "playMarqueeList = $playMarqueeList")
+                                //write db
+
+                                //clear before add
+                                if (playMarqueeList.size > 0) {
+                                    for (i in playMarqueeList.indices) {
+                                        val defaultPlayMarqueeData = DefaultPlayMarqueeData(
+                                            playMarqueeList[i].marqueeId, playMarqueeList[i].name, playMarqueeList[i].content)
+                                        defaultPlayMarqueeDataDB!!.defaultPlayMarqueeDataDao().insert(defaultPlayMarqueeData)
+                                    }
+                                    defaultMarqueePlayList = defaultPlayMarqueeDataDB!!.defaultPlayMarqueeDataDao().getAll() as ArrayList<DefaultPlayMarqueeData>
+                                    Log.e(mTag, "defaultMarqueePlayList.size = ${defaultMarqueePlayList!!.size}")
                                 }
                             }
-
-
-
-                            Log.e(mTag, "playMarqueeList = $playMarqueeList")
-                            //write db
-
-                            if (playMarqueeList.size > 0) {
-                                //clear before delete
-                                defaultPlayMarqueeDataDB!!.defaultPlayMarqueeDataDao().clearTable()
-                                for (i in playMarqueeList.indices) {
-                                    val defaultPlayMarqueeData = DefaultPlayMarqueeData(
-                                        playMarqueeList[i].marqueeId, playMarqueeList[i].name, playMarqueeList[i].content)
-                                    defaultPlayMarqueeDataDB!!.defaultPlayMarqueeDataDao().insert(defaultPlayMarqueeData)
-                                }
-                                defaultMarqueePlayList = defaultPlayMarqueeDataDB!!.defaultPlayMarqueeDataDao().getAll() as ArrayList<DefaultPlayMarqueeData>
-                                Log.e(mTag, "defaultMarqueePlayList.size = ${defaultMarqueePlayList!!.size}")
-                            }
-
 
                             //then download images
-
-                            val imagesArray = adSettingList[0].plan_images.split(",")
                             imageList.clear()
-                            for (i in imagesArray.indices) {
-                                imageList.add(imagesArray[i])
+                            downloadImageReadyArray.clear()
+                            if (adSettingList[0].plan_images.isNotEmpty()) {
+                                val imagesArray = adSettingList[0].plan_images.split(",")
+
+                                if (imagesArray.isNotEmpty()) {
+
+                                    for (i in imagesArray.indices) {
+                                        imageList.add(imagesArray[i])
+                                        downloadImageReadyArray.add(false)
+                                    }
+
+                                    Log.e(mTag, "imageList = $imageList, downloadImageReadyArray = $downloadImageReadyArray")
+                                    //downloadImageComplete = 0
+                                    checkImagesExists()
+                                    clearImagesNotInImageList()
+                                    downloadImages()
+                                } else { //no images, start download videos
+                                    defaultImagesPlayList!!.clear()
+                                    defaultPlayImagesDataDB!!.defaultPlayImagesDataDao().clearTable()
+                                    //downloadVideoComplete = 0
+                                    checkVideosExists()
+                                    clearVideosNotInVideoList()
+                                    downloadVideos()
+                                }
+                            } else {
+                                Log.e(mTag, "adSettingList[0].plan_images.isEmpty")
+                                defaultImagesPlayList!!.clear()
+                                defaultPlayImagesDataDB!!.defaultPlayImagesDataDao().clearTable()
+
+
+
+                                //then download videos
+                                Log.e(mTag, "Download Images complete, then download videos.")
+                                Log.e(mTag, "adSettingList[0].plan_videos.length = ${adSettingList[0].plan_videos.length}")
+                                if (adSettingList[0].plan_videos.isNotEmpty()) {
+                                    val videosArray = adSettingList[0].plan_videos.split(",")
+
+                                    if (videosArray.isNotEmpty()) {
+                                        videoList.clear()
+                                        downloadVideoReadyArray.clear()
+                                        for (i in videosArray.indices) {
+                                            videoList.add(videosArray[i])
+                                            downloadVideoReadyArray.add(false)
+                                        }
+
+                                        Log.e(mTag, "videoList = $videoList, downloadVideoReadyArray = $downloadVideoReadyArray")
+
+
+                                        //then download videos
+                                        //downloadVideoComplete = 0
+                                        checkVideosExists()
+                                        clearVideosNotInVideoList()
+                                        downloadVideos()
+                                    } else { //no videos, start ads
+                                        defaultVideosPlayList!!.clear()
+                                        defaultPlayVideosDataDB!!.defaultPlayVideosDataDao().clearTable()
+
+                                        //start to play
+                                        if (infoRenew) {
+                                            Log.d(mTag, "start to play!")
+                                            playAd()
+                                        }
+                                    }
+                                } else {
+                                    Log.e(mTag, "adSettingList[0].plan_videos.isEmpty()")
+                                    videoList.clear()
+                                    defaultVideosPlayList!!.clear()
+                                    defaultPlayVideosDataDB!!.defaultPlayVideosDataDao().clearTable()
+
+                                    //start to play
+                                    if (infoRenew) {
+                                        Log.d(mTag, "start to play!")
+                                        playAd()
+                                    }
+                                }
                             }
 
-                            Log.e(mTag, "imageList = $imageList")
-
-                            downloadImages()
                         } else {
                             Log.e(mTag, "No AdSetting")
                         }
-                    } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_MARQUEE_EMPTY, ignoreCase = true)) {
-                        Log.d(mTag, "ACTION_GET_MARQUEE_EMPTY")
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_IMAGES_FAILED, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_IMAGES_FAILED")
-
+                        if (downloadImageComplete < imageList.size) {
+                            downloadImages()
+                        }
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_IMAGES_SUCCESS, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_IMAGES_SUCCESS")
+
+                        if (downloadImageComplete < imageList.size) {
+                            downloadImages()
+                        }
+                    } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_IMAGES_EMPTY, ignoreCase = true)) {
+                        Log.d(mTag, "ACTION_GET_IMAGES_EMPTY")
+
+                        imageList.clear()
+                        defaultImagesPlayList!!.clear()
+                        defaultPlayImagesDataDB!!.defaultPlayImagesDataDao().clearTable()
+
+                        //then download videos
+                        Log.e(mTag, "Download Images complete, then download videos.")
+
+                        if (adSettingList[0].plan_videos.isNotEmpty()) {
+                            val videosArray = adSettingList[0].plan_videos.split(",")
+
+                            if (videosArray.isNotEmpty()) {
+                                videoList.clear()
+                                downloadVideoReadyArray.clear()
+                                for (i in videosArray.indices) {
+                                    videoList.add(videosArray[i])
+                                    downloadVideoReadyArray.add(false)
+                                }
+
+                                Log.e(mTag, "videoList = $videoList, downloadVideoReadyArray = $downloadVideoReadyArray")
+
+
+                                //then download videos
+                                //downloadVideoComplete = 0
+                                checkVideosExists()
+                                clearVideosNotInVideoList()
+                                downloadVideos()
+                            } else { //no videos, start ads
+                                defaultVideosPlayList!!.clear()
+                                defaultPlayVideosDataDB!!.defaultPlayVideosDataDao().clearTable()
+
+                                //start to play
+                                if (infoRenew) {
+                                    Log.d(mTag, "start to play!")
+                                    playAd()
+                                }
+                            }
+                        } else {
+                            Log.e(mTag, "adSettingList[0].plan_videos.isEmpty()")
+                            videoList.clear()
+                            defaultVideosPlayList!!.clear()
+                            defaultPlayVideosDataDB!!.defaultPlayVideosDataDao().clearTable()
+
+                            //start to play
+                            if (infoRenew) {
+                                Log.d(mTag, "start to play!")
+                                playAd()
+                            }
+                        }
+                    } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_IMAGES_COMPLETE, ignoreCase = true)) {
+                        Log.d(mTag, "ACTION_GET_IMAGES_COMPLETE")
 
                         if (imageList.size > 0) {
                             //clear before add
@@ -613,33 +883,65 @@ class MainActivity : AppCompatActivity() {
                         }
 
                         //then download videos
+                        Log.e(mTag, "Download Images complete, then download videos.")
+                        if (adSettingList[0].plan_videos.isNotEmpty()) {
+                            val videosArray = adSettingList[0].plan_videos.split(",")
+                            videoList.clear()
+                            downloadVideoReadyArray.clear()
+                            for (i in videosArray.indices) {
+                                videoList.add(videosArray[i])
+                                downloadVideoReadyArray.add(false)
+                            }
 
-                        val videosArray = adSettingList[0].plan_videos.split(",")
-                        videoList.clear()
-                        downloadVideoReadyArray.clear()
-                        for (i in videosArray.indices) {
-                            videoList.add(videosArray[i])
-                            downloadVideoReadyArray.add(false)
+                            Log.e(mTag, "videoList = $videoList, downloadVideoReadyArray = $downloadVideoReadyArray")
+
+
+                            //then download videos
+                            //downloadVideoComplete = 0
+                            checkVideosExists()
+                            clearVideosNotInVideoList()
+                            downloadVideos()
+                        } else {
+                            Log.e(mTag, "adSettingList[0].plan_videos.isEmpty()")
+                            videoList.clear()
+                            defaultVideosPlayList!!.clear()
+                            defaultPlayVideosDataDB!!.defaultPlayVideosDataDao().clearTable()
+
+                            //start to play
+                            if (infoRenew) {
+                                Log.d(mTag, "start to play!")
+                                playAd()
+                            }
                         }
 
-                        Log.e(mTag, "videoList = $videoList")
 
-
-                        //then download videos
-                        downloadVideos()
-
-                    } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_IMAGES_EMPTY, ignoreCase = true)) {
-                        Log.d(mTag, "ACTION_GET_IMAGES_EMPTY")
-                    } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_VIDEOS_FAILED, ignoreCase = true)) {
+                    }  else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_VIDEOS_FAILED, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_VIDEOS_FAILED")
-
+                        if (downloadVideoComplete < videoList.size) {
+                            downloadVideos()
+                        }
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_VIDEOS_SUCCESS, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_VIDEOS_SUCCESS")
-
                         val fileName = intent.getStringExtra("fileName")
                         val idx = intent.getStringExtra("fileName")
 
+                        if (isFirstVideoDownload) {
+                            isFirstVideoDownload = false
+                            //start to play
+                            if (infoRenew) {
+                                Log.d(mTag, "start to play!")
+                                playAd()
+                            }
+                        }
+
+                        if (downloadVideoComplete < videoList.size) {
+                            downloadVideos()
+                        }
+                        /*
+
+
                         Log.e(mTag, "fileName: $fileName download complete!")
+                        Log.e(mTag, "downloadVideoReadyArray = $downloadVideoReadyArray")
 
                         if (downloadVideoComplete == videoList.size) {
                             if (videoList.size > 0) {
@@ -656,15 +958,57 @@ class MainActivity : AppCompatActivity() {
                             }
 
                             //start to play
+                            if (infoRenew) {
+                                Log.d(mTag, "start to play!")
+                                playAd()
+                            }
+
+                        } else {
+                            Log.e(mTag, "Not Yet")
+                        }
+                        */
+
+                    } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_VIDEOS_EMPTY, ignoreCase = true)) {
+                        Log.d(mTag, "ACTION_GET_VIDEOS_EMPTY")
+                        videoList.clear()
+                        defaultVideosPlayList!!.clear()
+
+                        defaultPlayVideosDataDB!!.defaultPlayVideosDataDao().clearTable()
+
+                        //start to play
+                        if (infoRenew) {
                             Log.d(mTag, "start to play!")
                             playAd()
+                        }
+
+                    } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_VIDEOS_COMPLETE, ignoreCase = true)) {
+                        Log.d(mTag, "ACTION_GET_VIDEOS_COMPLETE")
+
+                        if (downloadVideoComplete == videoList.size) {
+                            if (videoList.size > 0) {
+
+                                //clear before add
+                                defaultPlayVideosDataDB!!.defaultPlayVideosDataDao().clearTable()
+                                for (i in videoList.indices) {
+                                    val defaultPlayVideosData = DefaultPlayVideosData(videoList[i])
+                                    defaultPlayVideosDataDB!!.defaultPlayVideosDataDao().insert(defaultPlayVideosData)
+                                }
+                                defaultVideosPlayList!!.clear()
+                                defaultVideosPlayList = defaultPlayVideosDataDB!!.defaultPlayVideosDataDao().getAll() as ArrayList<DefaultPlayVideosData>
+                                Log.e(mTag, "defaultVideosPlayList.size = ${defaultVideosPlayList!!.size}")
+                            }
+
+                            //start to play
+                            if (infoRenew) {
+                                Log.d(mTag, "start to play!")
+                                playAd()
+                            }
+
                         } else {
                             Log.e(mTag, "Not Yet")
                         }
 
 
-                    } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_VIDEOS_EMPTY, ignoreCase = true)) {
-                        Log.d(mTag, "ACTION_GET_VIDEOS_EMPTY")
                     }
                 }
             }
@@ -687,16 +1031,19 @@ class MainActivity : AppCompatActivity() {
 
             filter.addAction(Constants.ACTION.ACTION_GET_AD_SETTING_SUCCESS)
             filter.addAction(Constants.ACTION.ACTION_GET_AD_SETTING_FAILED)
+            filter.addAction(Constants.ACTION.ACTION_GET_AD_SETTING_EMPTY)
 
             filter.addAction(Constants.ACTION.ACTION_GET_MARQUEE_SUCCESS)
             filter.addAction(Constants.ACTION.ACTION_GET_MARQUEE_FAILED)
             filter.addAction(Constants.ACTION.ACTION_GET_MARQUEE_EMPTY)
 
             filter.addAction(Constants.ACTION.ACTION_GET_IMAGES_SUCCESS)
+            filter.addAction(Constants.ACTION.ACTION_GET_IMAGES_COMPLETE)
             filter.addAction(Constants.ACTION.ACTION_GET_IMAGES_FAILED)
             filter.addAction(Constants.ACTION.ACTION_GET_IMAGES_EMPTY)
 
             filter.addAction(Constants.ACTION.ACTION_GET_VIDEOS_SUCCESS)
+            filter.addAction(Constants.ACTION.ACTION_GET_VIDEOS_COMPLETE)
             filter.addAction(Constants.ACTION.ACTION_GET_VIDEOS_FAILED)
             filter.addAction(Constants.ACTION.ACTION_GET_VIDEOS_EMPTY)
             mContext!!.registerReceiver(mReceiver, filter)
@@ -767,6 +1114,7 @@ class MainActivity : AppCompatActivity() {
                     if (json["result"] == 0 ) {
                         if (!getfirstPingResonse) {
                             getfirstPingResonse = true
+                            infoRenew = true
 
                             if (server_ip_address != "" && server_webservice_port != "") {
                                 server_images_folder = "$server_ip_address:$server_webservice_port/uploads/images"
@@ -785,6 +1133,7 @@ class MainActivity : AppCompatActivity() {
                         //orientationChanged = false
                         //getLayout()
                         //layout changed, getlayout
+                        infoRenew = true
                         val successIntent = Intent()
                         successIntent.action = Constants.ACTION.ACTION_PING_WEB_SUCCESS
                         mContext?.sendBroadcast(successIntent)
@@ -922,7 +1271,8 @@ class MainActivity : AppCompatActivity() {
                         val defaultPlayAdSettingData = DefaultPlayAdSettingData(adSettingList[0].plan_id, adSettingList[0].plan_name,
                             adSettingList[0].plan_marquee, adSettingList[0].plan_images,
                             adSettingList[0].plan_videos, adSettingList[0].marquee_mode,
-                            adSettingList[0].images_mode, adSettingList[0].videos_mode)
+                            adSettingList[0].images_mode, adSettingList[0].videos_mode,
+                            adSettingList[0].image_interval)
 
                         if (defaultAdSettingPlayList!!.size == 0) {
                             defaultPlayAdSettingDataDB!!.defaultPlayAdSettingDataDao().insert(defaultPlayAdSettingData)
@@ -935,9 +1285,9 @@ class MainActivity : AppCompatActivity() {
                         successIntent.action = Constants.ACTION.ACTION_GET_AD_SETTING_SUCCESS
                         mContext?.sendBroadcast(successIntent)
                     } else {
-                        val failedIntent = Intent()
-                        failedIntent.action = Constants.ACTION.ACTION_GET_AD_SETTING_FAILED
-                        mContext?.sendBroadcast(failedIntent)
+                        val emptyIntent = Intent()
+                        emptyIntent.action = Constants.ACTION.ACTION_GET_AD_SETTING_EMPTY
+                        mContext?.sendBroadcast(emptyIntent)
                     }
                 } catch (ex: Exception) {
 
@@ -951,7 +1301,6 @@ class MainActivity : AppCompatActivity() {
         }//onResponse
     }
 
-    //private fun getMarquee(name: String) {
     private fun getMarquee() {
         /*val jsonObject = JSONObject()
         try {
@@ -1017,41 +1366,88 @@ class MainActivity : AppCompatActivity() {
 
     internal var netErrRunnable: Runnable = Runnable {
         Log.e(mTag, "->Network Error")
+        if (isFirstNetworkError) {
+            isFirstNetworkError = false
+            if (adSettingList.size == 1) {
+                Log.e(mTag, "playMarqueeList.size = ${playMarqueeList.size}")
+                Log.e(mTag, "imageList.size = ${imageList.size}")
+                Log.e(mTag, "videoList.size = ${videoList.size}")
+                playAd()
+            }
+        }
     }
 
     fun downloadImages() {
-        Log.e(mTag, "downloadImages")
+        Log.e(mTag, "=== downloadImages start ===")
+
         if (imageList.size > 0) {
+            var downloadIdx = -1
             for (i in imageList.indices) {
-                val srcPath = "$server_images_folder/${imageList[i]}"
+                val srcPath = server_images_folder
                 val destPath = "$dest_images_folder${imageList[i]}"
                 Log.e(mTag, "srcPath = $srcPath")
                 Log.e(mTag, "destPath = $destPath")
 
                 val file = File(destPath)
                 if(!file.exists()) {
-                    Thread {
-                        try {
-                            val totalSize = download(srcPath, destPath) { progress, length ->
-                                // handling the result on main thread
-                                handler.sendMessage(handler.obtainMessage(0, progress to length))
-                            }
-                        } catch (ex: Exception) {
-
-                            Log.e(mTag, ex.toString())
-
-                        }
-                    }.start()
-                } else {
-                    Log.e(mTag, "file: ${imageList[i]} exist. ")
-                }
-
-
+                    downloadIdx = i
+                    break
+                }/* else {
+                    Log.e(mTag, "download file exist!")
+                    downloadImageComplete += 1
+                    downloadImageReadyArray[i] = true
+                }*/
             }
 
-            val successIntent = Intent()
-            successIntent.action = Constants.ACTION.ACTION_GET_IMAGES_SUCCESS
-            mContext?.sendBroadcast(successIntent)
+            Log.d(mTag, "downloadImageComplete = $downloadImageComplete, downloadImageReadyArray = $downloadImageReadyArray")
+
+            if (downloadIdx >= 0 ) {
+
+                val srcPath = server_images_folder
+                val destPath = "$dest_images_folder${imageList[downloadIdx]}"
+                Log.e(mTag, "start download file : ${imageList[downloadIdx]} to $dest_images_folder")
+                Thread {
+                    try {
+                        val totalSize = download(srcPath, destPath, imageList[downloadIdx]) { progress, length ->
+                            // handling the result on main thread
+                            handler.sendMessage(handler.obtainMessage(0, progress to length))
+                        }
+
+                        downloadImageComplete += 1
+                        downloadImageReadyArray[downloadIdx] = true
+
+                        if (downloadImageComplete == imageList.size) {
+                            val completeIntent = Intent()
+                            completeIntent.action = Constants.ACTION.ACTION_GET_IMAGES_COMPLETE
+                            mContext?.sendBroadcast(completeIntent)
+                        } else {
+                            val successIntent = Intent()
+                            successIntent.action = Constants.ACTION.ACTION_GET_IMAGES_SUCCESS
+                            successIntent.putExtra("idx", downloadIdx)
+                            successIntent.putExtra("fileName", imageList[downloadIdx])
+                            mContext?.sendBroadcast(successIntent)
+                        }
+                    } catch (ex: Exception) {
+                        Log.e(mTag, ex.toString())
+                        //we can't stuck on download failed, keep try next one
+                        downloadImageComplete += 1
+                        downloadImageReadyArray[downloadIdx] = false
+                        val completeIntent = Intent()
+                        completeIntent.action = Constants.ACTION.ACTION_GET_IMAGES_FAILED
+                        mContext?.sendBroadcast(completeIntent)
+
+                    }
+                }.start()
+            } else { //downloadIdx == -1
+                if (downloadImageComplete == imageList.size) {
+                    val completeIntent = Intent()
+                    completeIntent.action = Constants.ACTION.ACTION_GET_IMAGES_COMPLETE
+                    mContext?.sendBroadcast(completeIntent)
+                }
+            }
+
+
+
         } else {
             val emptyIntent = Intent()
             emptyIntent.action = Constants.ACTION.ACTION_GET_IMAGES_EMPTY
@@ -1060,51 +1456,70 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun downloadVideos() {
-        downloadVideoComplete = 0
+        Log.e(mTag, "downloadVideos")
 
         if (videoList.size > 0) {
-
+            var downloadIdx = -1
             for (i in videoList.indices) {
-                val srcPath = "$server_videos_folder/${videoList[i]}"
+                val srcPath = server_videos_folder
                 val destPath = "$dest_videos_folder${videoList[i]}"
+
                 Log.e(mTag, "srcPath = $srcPath")
                 Log.e(mTag, "destPath = $destPath")
 
                 val file = File(destPath)
                 if(!file.exists()) {
-                    Thread {
-                        try {
-                            val totalSize = download(srcPath, destPath) { progress, length ->
-                                // handling the result on main thread
-                                handler.sendMessage(handler.obtainMessage(0, progress to length))
-                            }
-                            downloadVideoComplete += 1
-                            downloadVideoReadyArray[i] = true
-
-                            val successIntent = Intent()
-                            successIntent.action = Constants.ACTION.ACTION_GET_VIDEOS_SUCCESS
-                            successIntent.putExtra("idx", i)
-                            successIntent.putExtra("fileName", videoList[i])
-                            mContext?.sendBroadcast(successIntent)
-
-                        } catch (ex: Exception) {
-
-                            Log.e(mTag, ex.toString())
-
-                        }
-
-                    }.start()
-
-                } else {
-                    Log.e(mTag, "file: ${videoList[i]} exist. ")
+                    downloadIdx = i
+                    break
+                }
+                /*else {
                     downloadVideoComplete += 1
                     downloadVideoReadyArray[i] = true
+                }*/
+            }
 
-                    val successIntent = Intent()
-                    successIntent.action = Constants.ACTION.ACTION_GET_VIDEOS_SUCCESS
-                    successIntent.putExtra("idx", i)
-                    successIntent.putExtra("fileName", videoList[i])
-                    mContext?.sendBroadcast(successIntent)
+            Log.d(mTag, "downloadVideoComplete = $downloadVideoComplete, downloadVideoReadyArray = $downloadVideoReadyArray")
+
+            if (downloadIdx >= 0 ) {
+                val srcPath = server_videos_folder
+                val destPath = "$dest_videos_folder${videoList[downloadIdx]}"
+                Log.e(mTag, "start download file : ${videoList[downloadIdx]} to $dest_videos_folder")
+                Thread {
+                    try {
+                        val totalSize = download(srcPath, destPath, videoList[downloadIdx]) { progress, length ->
+                            // handling the result on main thread
+                            handler.sendMessage(handler.obtainMessage(0, progress to length))
+                        }
+                        downloadVideoComplete += 1
+                        downloadVideoReadyArray[downloadIdx] = true
+
+                        if (downloadVideoComplete == videoList.size) {
+                            val completeIntent = Intent()
+                            completeIntent.action = Constants.ACTION.ACTION_GET_VIDEOS_COMPLETE
+                            mContext?.sendBroadcast(completeIntent)
+                        } else {
+                            val successIntent = Intent()
+                            successIntent.action = Constants.ACTION.ACTION_GET_VIDEOS_SUCCESS
+                            successIntent.putExtra("idx", downloadIdx)
+                            successIntent.putExtra("fileName", videoList[downloadIdx])
+                            mContext?.sendBroadcast(successIntent)
+                        }
+                    } catch (ex: Exception) {
+                        Log.e(mTag, ex.toString())
+                        //we can't stuck on download failed, keep try next one
+                        downloadVideoComplete += 1
+                        downloadVideoReadyArray[downloadIdx] = false
+                        val completeIntent = Intent()
+                        completeIntent.action = Constants.ACTION.ACTION_GET_VIDEOS_FAILED
+                        mContext?.sendBroadcast(completeIntent)
+                    }
+
+                }.start()
+            } else { //downloadIdx == -1
+                if (downloadVideoComplete == videoList.size) {
+                    val completeIntent = Intent()
+                    completeIntent.action = Constants.ACTION.ACTION_GET_VIDEOS_COMPLETE
+                    mContext?.sendBroadcast(completeIntent)
                 }
             }
 
@@ -1116,16 +1531,31 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun download(link: String, path: String, progress: ((Long, Long) -> Unit)? = null): Long {
-        val url = URL(link)
+    private fun download(link: String, path: String, fileName: String, progress: ((Long, Long) -> Unit)? = null): Long {
+        Log.d(mTag, "download ->")
+        var fileNameArray = fileName.split(".")
+
+        var urlUtf8 = "$link/${URLEncoder.encode(fileNameArray[0], "UTF-8")}.${fileNameArray[1]}"
+        if (urlUtf8.contains("+")) {
+            urlUtf8 = urlUtf8.replace("+", "%20")
+        }
+
+        val url = URL(urlUtf8)
+        Log.e(mTag, "url = $url")
         val connection = url.openConnection()
         connection.connect()
+        Log.e(mTag, "link = $link")
+        Log.e(mTag, "path = $path")
+        val file =  File(path)
+
         val length = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) connection.contentLengthLong else
             connection.contentLength.toLong()
         url.openStream().use { input ->
-            FileOutputStream(File(path)).use { output ->
+            FileOutputStream(file).use { output ->
                 val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+                //Log.e(mTag, "-->1")
                 var bytesRead = input.read(buffer)
+                //Log.e(mTag, "-->2")
                 var bytesCopied = 0L
                 while (bytesRead >= 0) {
                     output.write(buffer, 0, bytesRead)
@@ -1138,8 +1568,132 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun checkDownloadImagesAll(): Boolean {
+        var ret = false
+
+        for (i in downloadImageReadyArray.indices) {
+            if (downloadImageReadyArray[i]) {
+                ret = true
+                break
+            }
+        }
+
+        return ret
+    }
+
+    private fun checkDownloadVideosAll(): Boolean {
+        var ret = false
+
+        for (i in downloadVideoReadyArray.indices) {
+            if (downloadVideoReadyArray[i]) {
+                ret = true
+                break
+            }
+        }
+
+        return ret
+    }
+
+    fun checkImagesExists() {
+        downloadImageComplete = 0
+        if (imageList.size > 0) {
+            for (i in imageList.indices) {
+                val srcPath = server_images_folder
+                val destPath = "$dest_images_folder${imageList[i]}"
+                Log.e(mTag, "srcPath = $srcPath")
+                Log.e(mTag, "destPath = $destPath")
+
+                val file = File(destPath)
+                if(file.exists()) {
+                    downloadImageComplete += 1
+                    downloadImageReadyArray[i] = true
+
+                }
+            }
+        }
+    }
+
+    fun checkVideosExists() {
+        downloadVideoComplete = 0
+        if (videoList.size > 0) {
+            for (i in videoList.indices) {
+                val srcPath = server_videos_folder
+                val destPath = "$dest_videos_folder${videoList[i]}"
+                Log.e(mTag, "srcPath = $srcPath")
+                Log.e(mTag, "destPath = $destPath")
+
+                val file = File(destPath)
+                if(file.exists()) {
+                    downloadVideoComplete += 1
+                    downloadVideoReadyArray[i] = true
+
+                }
+            }
+        }
+    }
+
+    fun clearImagesNotInImageList() {
+        Log.e(mTag, "clearImagesNotInImageList")
+        val directory = File(dest_images_folder)
+        val files = directory.listFiles()
+
+        if (directory.isDirectory && files != null) {
+            for (i in files.indices) {
+                var found = false
+
+                for (j in imageList.indices) {
+                    if (files[i].name == imageList[j]) {
+                        found = true
+
+                        break
+                    }
+                }
+
+                if (!found) { //not found in imageList, delete it!
+                    val deletePath = "$dest_images_folder${files[i].name}"
+                    val deleteFile = File(deletePath)
+                    deleteFile.delete()
+                    Log.e(mTag, "Delete $deletePath")
+                }
+            }
+        }
+    }
+
+    fun clearVideosNotInVideoList() {
+        Log.e(mTag, "clearVideosNotInVideoList")
+        val directory = File(dest_videos_folder)
+        val files = directory.listFiles()
+
+        Log.e(mTag, "files -> $files")
+
+        if (directory.isDirectory && files != null) {
+
+            for (i in files.indices) {
+                var found = false
+
+                for (j in videoList.indices) {
+                    if (files[i].name == videoList[j]) {
+                        found = true
+
+                        break
+                    }
+                }
+
+                if (!found) { //not found in imageList, delete it!
+                    val deletePath = "$dest_videos_folder${files[i].name}"
+                    val deleteFile = File(deletePath)
+                    deleteFile.delete()
+                    Log.e(mTag, "Delete $deletePath")
+                }
+            }
+        }
+    }
+
     fun playAd() {
         Log.e(mTag, "playAd Start")
+
+        infoRenew = false
+
         linearLayoutTop!!.visibility = View.GONE
         linearLayoutCenter!!.visibility = View.GONE
         linearLayoutBottom!!.visibility = View.GONE
@@ -1160,19 +1714,39 @@ class MainActivity : AppCompatActivity() {
         imageViewBottom2!!.clearAnimation()
         if (videoViewTop!!.isPlaying) {
             videoViewTop!!.stopPlayback()
+            videoViewTop!!.visibility = View.INVISIBLE
         }
         if (videoViewCenter!!.isPlaying) {
             videoViewCenter!!.stopPlayback()
+            videoViewCenter!!.visibility = View.INVISIBLE
         }
         if (videoViewBottom!!.isPlaying) {
             videoViewBottom!!.stopPlayback()
+            videoViewBottom!!.visibility = View.INVISIBLE
         }
+        //exoplayer
+        /*
+        if (exoPlayerViewTop!!.player!!.isPlaying) {
+            exoPlayerViewTop!!.player!!.stop()
+        }*/
+        /*
+        if (exoPlayerViewCenter!!.player!!.isPlaying) {
+            exoPlayerViewCenter!!.player!!.stop()
+        }*/
+        /*
+        if (exoPlayerViewBottom!!.player!!.isPlaying) {
+            exoPlayerViewBottom!!.player!!.stop()
+        }*/
 
         videoViewLayoutTop!!.visibility = View.GONE
         videoViewLayoutCenter!!.visibility = View.GONE
         videoViewLayoutBottom!!.visibility = View.GONE
 
-        /*
+        //exoPlayerViewTop!!.visibility = View.GONE
+        //exoPlayerViewCenter!!.visibility = View.GONE
+        //exoPlayerViewBottom!!.visibility = View.GONE
+
+
         current_text_index_top = -1
         current_play_index_top = -1
         current_video_index_top = -1
@@ -1183,8 +1757,8 @@ class MainActivity : AppCompatActivity() {
         current_play_index_bottom = -1
         current_video_index_bottom = -1
 
-        */
-        current_video_index_center = -1
+
+
 
         if (countDownTimerMarqueeRunning) {
             countDownTimerMarquee.cancel()
@@ -1193,6 +1767,8 @@ class MainActivity : AppCompatActivity() {
         if (countDownTimerImageRunning) {
             countDownTimerImage.cancel()
         }
+
+
 
         if (layoutList.size > 0 ) {
             if (layoutList.size == 1) { //only one layout
@@ -1205,6 +1781,20 @@ class MainActivity : AppCompatActivity() {
                     val marquee_mode = adSettingList[0].marquee_mode
                     val images_mode = adSettingList[0].images_mode
                     val videos_mode = adSettingList[0].videos_mode
+
+                    val image_interval = adSettingList[0].image_interval
+                    var images_play_interval = 70000
+                    when(image_interval) {
+                        0 -> {
+                            images_play_interval = 7000
+                        }
+                        1 -> {
+                            images_play_interval = 10000
+                        }
+                        2 -> {
+                            images_play_interval = 15000
+                        }
+                    }
 
                     Log.e(mTag, "orientation = $orientation, layout_top = $layout_top, layout_center = $layout_center, layout_bottom = $layout_bottom")
                     //mode = 0 => cycle, mode = 1 => random
@@ -1222,24 +1812,16 @@ class MainActivity : AppCompatActivity() {
                     when (layout_top) {
                         0-> { //no
                             Log.d(mTag, "layout_top => no")
-
                         }
                         1 -> { //text
-
                             val param = LinearLayout.LayoutParams(
                                 LinearLayout.LayoutParams.MATCH_PARENT,
                                 LinearLayout.LayoutParams.MATCH_PARENT,
                                 3.0f
                             )
                             linearLayoutTop!!.layoutParams = param
-
                             linearLayoutTop!!.visibility = View.VISIBLE
-
                             textViewTop!!.visibility = View.VISIBLE
-                            //imageViewTop!!.visibility = View.GONE
-                            //imageViewTop2!!.visibility = View.GONE
-                            //videoViewLayoutTop!!.visibility = View.GONE
-                            //videoViewTop!!.stopPlayback()
                         }
                         2 -> { //image
                             val param = LinearLayout.LayoutParams(
@@ -1249,11 +1831,7 @@ class MainActivity : AppCompatActivity() {
                             )
                             linearLayoutTop!!.layoutParams = param
                             linearLayoutTop!!.visibility = View.VISIBLE
-                            //textViewTop!!.visibility = View.GONE
                             imageViewTop!!.visibility = View.VISIBLE
-                            //imageViewTop2!!.visibility = View.GONE
-                            //videoViewLayoutTop!!.visibility = View.GONE
-                            //videoViewTop!!.stopPlayback()
                         }
                         3 -> { //video
                             val param = LinearLayout.LayoutParams(
@@ -1263,33 +1841,10 @@ class MainActivity : AppCompatActivity() {
                             )
                             linearLayoutTop!!.layoutParams = param
                             linearLayoutTop!!.visibility = View.VISIBLE
-                            //textViewTop!!.visibility = View.GONE
-                            //imageViewTop!!.visibility = View.GONE
-                            //imageViewTop2!!.visibility = View.GONE
                             videoViewLayoutTop!!.visibility = View.VISIBLE
-                            /*
-                            current_video_index_top = 0
-                            val uri = Uri.parse(videoList[0])
-                            videoViewTop!!.setVideoURI(uri)
-
-                            videoViewTop!!.start()
-
-                            videoViewTop!!.setOnCompletionListener {
-                                if (current_video_index_top == videoList.size - 1) {
-                                    current_video_index_top = 0
-                                } else {
-                                    current_video_index_top += 1
-                                }
-
-                                val uri = Uri.parse(videoList[current_video_index_top])
-                                videoViewTop!!.setVideoURI(uri)
-                                videoViewTop!!.start()
-                            }
-                            */
+                            videoViewTop!!.visibility = View.VISIBLE
                         }
-
                     }
-
 
                     //center
                     when (layout_center) {
@@ -1297,36 +1852,14 @@ class MainActivity : AppCompatActivity() {
                             Log.d(mTag, "layout_center => no")
                         }
                         1 -> { //text
-
                             val param = LinearLayout.LayoutParams(
                                 LinearLayout.LayoutParams.MATCH_PARENT,
                                 LinearLayout.LayoutParams.MATCH_PARENT,
                                 3.0f
                             )
                             linearLayoutCenter!!.layoutParams = param
-
                             linearLayoutCenter!!.visibility = View.VISIBLE
-
-                            /*
-                            current_text_index_center = 0
-                            textViewCenter!!.text = marqueeList[current_text_index_center]
-                            val timer = object : CountDownTimer(40000, 40000) {
-                                override fun onTick(millisUntilFinished: Long) {
-                                    Log.e(mTag, "textViewCenter = $millisUntilFinished")
-                                }
-
-                                override fun onFinish() { //结束后的操作
-
-                                    if (current_text_index_center == (marqueeList.size - 1)) {
-                                        current_text_index_center = 0
-                                    } else {
-                                        current_text_index_center += 1
-                                    }
-                                    textViewCenter!!.text = marqueeList[current_text_index_center]
-                                    this.start()
-                                }
-                            }.start()
-                            */
+                            textViewCenter!!.visibility = View.VISIBLE
                         }
                         2 -> { //image
                             val param = LinearLayout.LayoutParams(
@@ -1336,64 +1869,7 @@ class MainActivity : AppCompatActivity() {
                             )
                             linearLayoutCenter!!.layoutParams = param
                             linearLayoutCenter!!.visibility = View.VISIBLE
-                            //textViewCenter!!.visibility = View.GONE
                             imageViewCenter!!.visibility = View.VISIBLE
-                            //imageViewCenter2!!.visibility = View.GONE
-                            //videoViewLayoutCenter!!.visibility = View.GONE
-                            //videoViewCenter!!.stopPlayback()
-                            /*
-                            val animSlideLeft = AnimationUtils.loadAnimation(mContext, R.anim.slide_left)
-                            val animSlideRight = AnimationUtils.loadAnimation(mContext, R.anim.slide_right)
-                            val animMoveFromLeft = AnimationUtils.loadAnimation(mContext, R.anim.move_from_left)
-                            val animMoveToRight = AnimationUtils.loadAnimation(mContext, R.anim.move_to_right)
-                            val animMoveFromRight = AnimationUtils.loadAnimation(mContext, R.anim.move_from_right)
-                            val animMoveToLeft = AnimationUtils.loadAnimation(mContext, R.anim.move_to_left)
-
-                            //current_play_index_center = 0
-                            current_play_index_center = Random.nextInt(advertiseList.size)
-
-                            val imageUrl = advertiseList[current_play_index_center].ad_path
-                            Picasso.with(mContext).load(imageUrl).into(imageViewCenter)
-                            imageViewCenter!!.startAnimation(animMoveFromRight)
-
-                            countDownTimerCenterRunning = true
-                            countDownTimerCenter = object : CountDownTimer(10000, 10000) {
-                                override fun onTick(millisUntilFinished: Long) {
-                                    Log.e(mTag, "imageview center millisUntilFinished = $millisUntilFinished")
-
-                                }
-
-                                override fun onFinish() { //结束后的操作
-                                    countDownTimerCenterRunning = false
-                                    Log.e(mTag, "imageview center finish")
-                                    var next: Int
-                                    do {
-                                        next = Random.nextInt(advertiseList.size)
-                                    } while (next == current_play_index_center)
-                                    current_play_index_center = next
-                                    //current_play_index_center = Random.nextInt(advertiseList.size)
-                                    val imageUrl = advertiseList[current_play_index_center].ad_path
-                                    if (imageViewCenter!!.visibility == View.VISIBLE) {
-                                        imageViewCenter!!.startAnimation(animMoveToLeft)
-                                        imageViewCenter!!.visibility = View.GONE
-
-                                        imageViewCenter2!!.visibility = View.VISIBLE
-                                        Picasso.with(mContext).load(imageUrl).into(imageViewCenter2)
-                                        imageViewCenter2!!.startAnimation(animMoveFromRight)
-                                    } else { //imageViewCenter!!.visibility == View.GONE
-                                        imageViewCenter2!!.startAnimation(animMoveToLeft)
-                                        imageViewCenter2!!.visibility = View.GONE
-
-                                        imageViewCenter!!.visibility = View.VISIBLE
-                                        Picasso.with(mContext).load(imageUrl).into(imageViewCenter)
-                                        imageViewCenter!!.startAnimation(animMoveFromRight)
-                                    }
-
-                                    this.start()
-                                    countDownTimerCenterRunning = true
-                                }
-                            }.start()
-                            */
                         }
                         3 -> { //video
                             val param = LinearLayout.LayoutParams(
@@ -1403,42 +1879,18 @@ class MainActivity : AppCompatActivity() {
                             )
                             linearLayoutCenter!!.layoutParams = param
                             linearLayoutCenter!!.visibility = View.VISIBLE
-                            //textViewCenter!!.visibility = View.GONE
-                            //imageViewCenter!!.visibility = View.GONE
-                            //imageViewCenter2!!.visibility = View.GONE
                             videoViewLayoutCenter!!.visibility = View.VISIBLE
-                            /*
-                            current_video_index_center = 0
-                            val uri = Uri.parse(videoList[0])
-                            videoViewCenter!!.setVideoURI(uri)
-
-                            videoViewCenter!!.start()
-
-                            videoViewCenter!!.setOnCompletionListener {
-                                if (current_video_index_center == videoList.size - 1) {
-                                    current_video_index_center = 0
-                                } else {
-                                    current_video_index_center += 1
-                                }
-
-                                val uri = Uri.parse(videoList[current_video_index_center])
-                                videoViewCenter!!.setVideoURI(uri)
-                                videoViewCenter!!.start()
-                            }
-                            */
+                            videoViewCenter!!.visibility = View.VISIBLE
+                            //exoPlayerViewCenter!!.visibility = View.VISIBLE
                         }
-
                     }
-
 
                     //bottom
                     when (layout_bottom) {
                         0-> { //no
                             Log.d(mTag, "layout_bottom => no")
-
                         }
                         1 -> { //text
-
                             val param = LinearLayout.LayoutParams(
                                 LinearLayout.LayoutParams.MATCH_PARENT,
                                 LinearLayout.LayoutParams.MATCH_PARENT,
@@ -1448,30 +1900,6 @@ class MainActivity : AppCompatActivity() {
 
                             linearLayoutBottom!!.visibility = View.VISIBLE
                             textViewBottom!!.visibility = View.VISIBLE
-                            //imageViewBottom!!.visibility = View.GONE
-                            //imageViewBottom2!!.visibility = View.GONE
-                            //videoViewLayoutBottom!!.visibility = View.GONE
-                            //videoViewBottom!!.stopPlayback()
-                            /*
-                            current_text_index_center = 0
-                            textViewBottom!!.text = marqueeList[current_text_index_center]
-                            val timer = object : CountDownTimer(40000, 40000) {
-                                override fun onTick(millisUntilFinished: Long) {
-                                    Log.e(mTag, "textViewBottom = $millisUntilFinished")
-                                }
-
-                                override fun onFinish() { //结束后的操作
-
-                                    if (current_text_index_bottom == (marqueeList.size - 1)) {
-                                        current_text_index_bottom = 0
-                                    } else {
-                                        current_text_index_bottom += 1
-                                    }
-                                    textViewTop!!.text = marqueeList[current_text_index_bottom]
-                                    this.start()
-                                }
-                            }.start()
-                            */
                         }
                         2 -> { //image
                             val param = LinearLayout.LayoutParams(
@@ -1481,60 +1909,7 @@ class MainActivity : AppCompatActivity() {
                             )
                             linearLayoutBottom!!.layoutParams = param
                             linearLayoutBottom!!.visibility = View.VISIBLE
-                            //textViewBottom!!.visibility = View.GONE
                             imageViewBottom!!.visibility = View.VISIBLE
-                            //imageViewBottom2!!.visibility = View.GONE
-                            //videoViewLayoutBottom!!.visibility = View.GONE
-                            //videoViewBottom!!.stopPlayback()
-                            /*
-                            //current_play_index_bottom = 0
-                            current_play_index_bottom = Random.nextInt(advertiseList.size)
-
-                            val animMoveFromLeft = AnimationUtils.loadAnimation(mContext, R.anim.move_from_left)
-                            val animMoveToRight = AnimationUtils.loadAnimation(mContext, R.anim.move_to_right)
-
-                            val imageUrl = advertiseList[current_play_index_bottom].ad_path
-                            Picasso.with(mContext).load(imageUrl).into(imageViewBottom)
-                            imageViewBottom!!.startAnimation(animMoveFromLeft)
-
-                            countDownTimerBottomRunning = true
-                            countDownTimerBottom = object : CountDownTimer(10000, 10000) {
-                                override fun onTick(millisUntilFinished: Long) {
-                                    Log.e(mTag, "imageview bottom millisUntilFinished = $millisUntilFinished")
-
-                                }
-
-                                override fun onFinish() { //结束后的操作
-                                    Log.e(mTag, "imageview bottom finish")
-                                    countDownTimerBottomRunning = false
-                                    var next: Int
-                                    do {
-                                        next = Random.nextInt(advertiseList.size)
-                                    } while (next == current_play_index_bottom)
-                                    current_play_index_bottom = next
-                                    //current_play_index_bottom = Random.nextInt(advertiseList.size)
-                                    val imageUrl = advertiseList[current_play_index_bottom].ad_path
-                                    if (imageViewBottom!!.visibility == View.VISIBLE) {
-                                        imageViewBottom!!.startAnimation(animMoveToRight)
-                                        imageViewBottom!!.visibility = View.GONE
-
-                                        imageViewBottom2!!.visibility = View.VISIBLE
-                                        Picasso.with(mContext).load(imageUrl).into(imageViewBottom2)
-                                        imageViewBottom2!!.startAnimation(animMoveFromLeft)
-                                    } else {
-                                        imageViewBottom2!!.startAnimation(animMoveToRight)
-                                        imageViewBottom2!!.visibility = View.GONE
-
-                                        imageViewBottom!!.visibility = View.VISIBLE
-                                        Picasso.with(mContext).load(imageUrl).into(imageViewBottom)
-                                        imageViewBottom!!.startAnimation(animMoveFromLeft)
-                                    }
-
-                                    this.start()
-                                    countDownTimerBottomRunning = true
-                                }
-                            }.start()
-                            */
                         }
                         3 -> { //video
                             val param = LinearLayout.LayoutParams(
@@ -1544,140 +1919,134 @@ class MainActivity : AppCompatActivity() {
                             )
                             linearLayoutBottom!!.layoutParams = param
                             linearLayoutBottom!!.visibility = View.VISIBLE
-                            //textViewBottom!!.visibility = View.GONE
-                            //imageViewBottom!!.visibility = View.GONE
-                            //imageViewBottom2!!.visibility = View.GONE
                             videoViewLayoutBottom!!.visibility = View.VISIBLE
-                            /*
-                            current_video_index_bottom = 0
-                            val uri = Uri.parse(videoList[0])
-                            videoViewBottom!!.setVideoURI(uri)
-
-                            videoViewBottom!!.start()
-
-                            videoViewBottom!!.setOnCompletionListener {
-                                if (current_video_index_bottom == videoList.size - 1) {
-                                    current_video_index_bottom = 0
-                                } else {
-                                    current_video_index_bottom += 1
-                                }
-
-                                val uri = Uri.parse(videoList[current_video_index_bottom])
-                                videoViewBottom!!.setVideoURI(uri)
-                                videoViewBottom!!.start()
-                            }
-                            */
+                            videoViewBottom!!.visibility = View.VISIBLE
                         }
-
                     }
 
-
-                    // text play timer
+                    // marquee play timer
                     if (layout_top == 1 || layout_center == 1 || layout_bottom == 1) { //Text
-                        countDownTimerMarqueeRunning = true
+
+                        //init top start
                         if (layout_top == 1) {
-                            if (marquee_mode == 1) { //random
-                                var nextTop: Int
-                                do {
-                                    nextTop = Random.nextInt(playMarqueeList.size)
-                                } while (nextTop == current_text_index_top)
-                                current_text_index_top = nextTop
-                            } else { //circle
-                                current_text_index_top = 0
+                            if (playMarqueeList.size > 0) {
+                                if (marquee_mode == 1) { //random
+                                    var nextTop: Int
+                                    do {
+                                        nextTop = Random.nextInt(playMarqueeList.size)
+                                    } while (nextTop == current_text_index_top && playMarqueeList.size > 1)
+                                    current_text_index_top = nextTop
+                                } else { //circle
+                                    current_text_index_top = 0
+                                }
+                                textViewTop!!.text = playMarqueeList[current_text_index_top].content
+                            } else {
+                                textViewTop!!.text = "請設定文字跑馬燈"
                             }
-                            textViewTop!!.text = playMarqueeList[current_text_index_top].content
-                        }
 
+                        }
+                        //init center start
                         if (layout_center == 1) {
-                            if (marquee_mode == 1) { //random
-                                var nextCenter: Int
-                                do {
-                                    nextCenter = Random.nextInt(playMarqueeList.size)
-                                } while (nextCenter == current_text_index_center)
-                                current_text_index_center = nextCenter
-                            } else { //circle
-                                current_text_index_center = 0
+                            if (playMarqueeList.size > 0) {
+                                if (marquee_mode == 1) { //random
+                                    var nextCenter: Int
+                                    do {
+                                        nextCenter = Random.nextInt(playMarqueeList.size )
+                                    } while (nextCenter == current_text_index_center && playMarqueeList.size > 1)
+                                    current_text_index_center = nextCenter
+                                } else { //circle
+                                    current_text_index_center = 0
+                                }
+                                textViewCenter!!.text = playMarqueeList[current_text_index_center].content
+                            } else {
+                                textViewCenter!!.text = "請設定文字跑馬燈"
                             }
-                            textViewCenter!!.text = playMarqueeList[current_text_index_center].content
                         }
-
+                        //init bottom start
                         if (layout_bottom == 1) {
-                            if (marquee_mode == 1) { //random
-                                var nextBottom: Int
-                                do {
-                                    nextBottom = Random.nextInt(playMarqueeList.size)
-                                } while (nextBottom == current_text_index_bottom)
-                                current_text_index_bottom = nextBottom
-                            } else { //circle
-                                current_text_index_bottom = 0
-                            }
+                            if (playMarqueeList.size > 0) {
+                                if (marquee_mode == 1) { //random
+                                    var nextBottom: Int
+                                    do {
+                                        nextBottom = Random.nextInt(playMarqueeList.size)
+                                    } while (nextBottom == current_text_index_bottom && playMarqueeList.size > 1)
+                                    current_text_index_bottom = nextBottom
+                                } else { //circle
+                                    current_text_index_bottom = 0
+                                }
 
-                            textViewBottom!!.text = playMarqueeList[current_text_index_bottom].content
+                                textViewBottom!!.text = playMarqueeList[current_text_index_bottom].content
+                            } else {
+                                textViewBottom!!.text = "請設定文字跑馬燈"
+                            }
                         }
 
-
-                        countDownTimerMarquee = object : CountDownTimer(40000, 40000) {
-                            override fun onTick(millisUntilFinished: Long) {
-                                Log.e(mTag, "countDownTimerMarquee = $millisUntilFinished")
-                            }
-
-                            override fun onFinish() { //结束后的操作
-                                countDownTimerMarqueeRunning = false
-                                if (layout_top == 1) {
-                                    if (marquee_mode == 1) { //random
-                                        var nextTop: Int
-                                        do {
-                                            nextTop = Random.nextInt(playMarqueeList.size)
-                                        } while (nextTop == current_text_index_top)
-                                        current_text_index_top = nextTop
-                                    } else { //circle
-                                        if (current_text_index_top == playMarqueeList.size - 1) {
-                                            current_text_index_top = 0
-                                        } else {
+                        //if playMarqueeList.size > 0, it would play in loop
+                        if (playMarqueeList.size > 0) {
+                            countDownTimerMarqueeRunning = true
+                            countDownTimerMarquee = object : CountDownTimer(40000, 40000) {
+                                override fun onTick(millisUntilFinished: Long) {
+                                    Log.d(mTag, "countDownTimerMarquee onTick = $millisUntilFinished")
+                                }
+                                override fun onFinish() { //结束後的操作
+                                    Log.e(mTag, "countDownTimerMarquee finish")
+                                    countDownTimerMarqueeRunning = false
+                                    //top
+                                    if (layout_top == 1) {
+                                        if (marquee_mode == 1) { //random
+                                            var nextTop: Int
+                                            do {
+                                                nextTop = Random.nextInt(playMarqueeList.size)
+                                            } while (nextTop == current_text_index_top && playMarqueeList.size > 1)
+                                            current_text_index_top = nextTop
+                                        } else { //circle
                                             current_text_index_top += 1
+                                            if (current_text_index_top >= playMarqueeList.size) {
+                                                current_text_index_top = 0
+                                            }
                                         }
+                                        textViewTop!!.text = playMarqueeList[current_text_index_top].content
                                     }
-                                    textViewTop!!.text = playMarqueeList[current_text_index_top].content
-                                }
 
-                                if (layout_center == 1) {
-                                    if (marquee_mode == 1) { //random
-                                        var nextCenter: Int
-                                        do {
-                                            nextCenter = Random.nextInt(playMarqueeList.size)
-                                        } while (nextCenter == current_text_index_center)
-                                        current_text_index_center = nextCenter
-                                    } else { //circle
-                                        if (current_text_index_center == playMarqueeList.size - 1) {
-                                            current_text_index_center = 0
-                                        } else {
+                                    if (layout_center == 1) {
+                                        if (marquee_mode == 1) { //random
+                                            var nextCenter: Int
+                                            do {
+                                                nextCenter = Random.nextInt(playMarqueeList.size)
+                                            } while (nextCenter == current_text_index_center && playMarqueeList.size > 1)
+                                            current_text_index_center = nextCenter
+                                        } else { //circle
                                             current_text_index_center += 1
+                                            if (current_text_index_center >= playMarqueeList.size) {
+                                                current_text_index_center = 0
+                                            }
                                         }
+                                        textViewCenter!!.text = playMarqueeList[current_text_index_center].content
                                     }
-                                    textViewCenter!!.text = playMarqueeList[current_text_index_center].content
-                                }
 
-                                if (layout_bottom == 1) {
-                                    if (marquee_mode == 1) { //random
-                                        var nextBottom: Int
-                                        do {
-                                            nextBottom = Random.nextInt(playMarqueeList.size)
-                                        } while (nextBottom == current_text_index_bottom)
-                                        current_text_index_bottom = nextBottom
-                                    } else { //circle
-                                        if (current_text_index_bottom == playMarqueeList.size - 1) {
-                                            current_text_index_bottom = 0
-                                        } else {
+                                    if (layout_bottom == 1) {
+                                        if (marquee_mode == 1) { //random
+                                            var nextBottom: Int
+                                            do {
+                                                nextBottom = Random.nextInt(playMarqueeList.size)
+                                            } while (nextBottom == current_text_index_bottom && playMarqueeList.size > 1)
+                                            current_text_index_bottom = nextBottom
+                                        } else { //circle
                                             current_text_index_bottom += 1
+                                            if (current_text_index_bottom >= playMarqueeList.size) {
+                                                current_text_index_bottom = 0
+                                            }
                                         }
+                                        textViewBottom!!.text = playMarqueeList[current_text_index_bottom].content
                                     }
-                                    textViewBottom!!.text = playMarqueeList[current_text_index_bottom].content
-                                }
 
-                                this.start()
-                                countDownTimerMarqueeRunning = true
-                            }
-                        }.start()
+                                    this.start()
+                                    countDownTimerMarqueeRunning = true
+                                }
+                            }.start()
+                        } else {
+                            Log.e(mTag, "playMarqueeList.size == 0")
+                        }
                     } else { //all is not text
                         if (countDownTimerMarqueeRunning) {
                             countDownTimerMarquee.cancel()
@@ -1687,223 +2056,240 @@ class MainActivity : AppCompatActivity() {
 
                     // image play time
                     if (layout_top == 2 || layout_center == 2 || layout_bottom == 2) {
-                        countDownTimerImageRunning = true
+
+                        //image anime
                         val animMoveFromLeft = AnimationUtils.loadAnimation(mContext, R.anim.move_from_left)
                         val animMoveToRight = AnimationUtils.loadAnimation(mContext, R.anim.move_to_right)
                         val animMoveFromRight = AnimationUtils.loadAnimation(mContext, R.anim.move_from_right)
                         val animMoveToLeft = AnimationUtils.loadAnimation(mContext, R.anim.move_to_left)
-
+                        //init image start
                         if (layout_top == 2) {
-                            if (images_mode == 1) { //random
-                                var nextTop: Int
-                                do {
-                                    nextTop = Random.nextInt(imageList.size)
-                                } while (nextTop == current_play_index_top)
-                                current_play_index_top = nextTop
-                            } else { //circle
-                                if (current_play_index_top == imageList.size - 1) {
-                                    current_play_index_top = 0
-                                } else {
-                                    current_play_index_top += 1
+                            if (imageList.size > 0 && checkDownloadImagesAll()) { //at least one image cant play
+                                if (images_mode == 1) { //random
+                                    var nextTop: Int
+                                    do {
+                                        nextTop = Random.nextInt(imageList.size)
+                                    } while (nextTop == current_play_index_top && imageList.size > 1 && !downloadImageReadyArray[nextTop])
+                                    current_play_index_top = nextTop
+                                } else { //circle
+                                    do { //if next downloadImageReadyArray is false, next one
+                                        current_play_index_top += 1
+                                        if (current_play_index_top >= imageList.size) {
+                                            current_play_index_top = 0
+                                        }
+                                    } while (!downloadImageReadyArray[current_play_index_top])
+
+                                }
+                                //top
+                                imageViewTop!!.visibility = View.VISIBLE
+                                //Picasso.with(mContext).load(imageUrlTop).into(imageViewTop)
+                                val srcPath = "$dest_images_folder/${imageList[current_play_index_top]}"
+                                val file = File(srcPath)
+                                if (file.exists()) {
+                                    imageViewTop!!.setImageURI(Uri.fromFile(file))
+                                    imageViewTop!!.startAnimation(animMoveFromLeft)
                                 }
                             }
-                            //top
-                            //val imageUrlTop = advertiseList[current_play_index_top].ad_path
-                            imageViewTop!!.visibility = View.VISIBLE
-                            //Picasso.with(mContext).load(imageUrlTop).into(imageViewTop)
-                            val srcPath = "$dest_images_folder/${imageList[current_play_index_top]}"
-                            val file = File(srcPath)
-                            imageViewTop!!.setImageURI(Uri.fromFile(file))
 
-                            imageViewTop!!.startAnimation(animMoveFromLeft)
                         } else {
                             imageViewTop!!.visibility = View.GONE
                             imageViewTop2!!.visibility = View.GONE
                         }
-
+                        //init center start
                         if (layout_center == 2) {
-                            if (images_mode == 1) { //random
-                                var nextCenter: Int
-                                do {
-                                    nextCenter = Random.nextInt(imageList.size)
-                                } while (nextCenter == current_play_index_center)
-                                current_play_index_center = nextCenter
-                            } else { //circle
-                                if (current_play_index_center == imageList.size - 1) {
-                                    current_play_index_center = 0
-                                } else {
-                                    current_play_index_center += 1
+                            if (imageList.size > 0 && checkDownloadImagesAll()) {
+                                if (images_mode == 1) { //random
+                                    var nextCenter: Int
+                                    do {
+                                        nextCenter = Random.nextInt(imageList.size)
+                                    } while (nextCenter == current_play_index_center && imageList.size > 1)
+                                    current_play_index_center = nextCenter
+                                } else { //circle
+                                    do {
+                                        current_play_index_center += 1
+                                        if (current_play_index_center >= imageList.size) {
+                                            current_play_index_center = 0
+                                        }
+                                    } while (!downloadImageReadyArray[current_play_index_center])
+                                }
+                                //center
+                                imageViewCenter!!.visibility = View.VISIBLE
+                                //Picasso.with(mContext).load(imageUrlCenter).into(imageViewCenter)
+                                val srcPath = "$dest_images_folder/${imageList[current_play_index_center]}"
+                                val file = File(srcPath)
+                                if (file.exists()) {
+                                    imageViewCenter!!.setImageURI(Uri.fromFile(file))
+                                    imageViewCenter!!.startAnimation(animMoveFromLeft)
                                 }
                             }
-
-
-                            //center
-                            //val imageUrlCenter = advertiseList[current_play_index_center].ad_path
-                            imageViewCenter!!.visibility = View.VISIBLE
-                            //Picasso.with(mContext).load(imageUrlCenter).into(imageViewCenter)
-                            val srcPath = "$dest_images_folder/${imageList[current_play_index_center]}"
-                            val file = File(srcPath)
-                            imageViewCenter!!.setImageURI(Uri.fromFile(file))
-                            imageViewCenter!!.startAnimation(animMoveFromLeft)
                         } else {
                             imageViewCenter!!.visibility = View.GONE
                             imageViewCenter2!!.visibility = View.GONE
                         }
-
+                        //init bottom start
                         if (layout_bottom == 2) {
-                            if (images_mode == 1) { //random
-                                var nextBottom: Int
-                                do {
-                                    nextBottom = Random.nextInt(imageList.size)
-                                } while (nextBottom == current_play_index_bottom)
-                                current_play_index_bottom = nextBottom
-                            } else { //circle
-                                if (current_play_index_bottom == imageList.size - 1) {
-                                    current_play_index_bottom = 0
-                                } else {
-                                    current_play_index_bottom += 1
+                            if (imageList.size > 0 && checkDownloadImagesAll()) {
+                                if (images_mode == 1) { //random
+                                    var nextBottom: Int
+                                    do {
+                                        nextBottom = Random.nextInt(imageList.size)
+                                    } while (nextBottom == current_play_index_bottom && imageList.size > 1)
+                                    current_play_index_bottom = nextBottom
+                                } else { //circle
+                                    do {
+                                        current_play_index_bottom += 1
+                                        if (current_play_index_bottom >= imageList.size) {
+                                            current_play_index_bottom = 0
+                                        }
+                                    } while (!downloadImageReadyArray[current_play_index_bottom])
+                                }
+                                //bottom
+                                imageViewBottom!!.visibility = View.VISIBLE
+                                //Picasso.with(mContext).load(imageUrlBottom).into(imageViewBottom)
+                                val srcPath = "$dest_images_folder/${imageList[current_play_index_bottom]}"
+                                val file = File(srcPath)
+                                if (file.exists()) {
+                                    imageViewBottom!!.setImageURI(Uri.fromFile(file))
+                                    imageViewBottom!!.startAnimation(animMoveFromLeft)
                                 }
                             }
-
-
-                            //center
-                            //val imageUrlBottom = advertiseList[current_play_index_bottom].ad_path
-                            imageViewBottom!!.visibility = View.VISIBLE
-                            //Picasso.with(mContext).load(imageUrlBottom).into(imageViewBottom)
-                            val srcPath = "$dest_images_folder/${imageList[current_play_index_bottom]}"
-                            val file = File(srcPath)
-                            imageViewBottom!!.setImageURI(Uri.fromFile(file))
-                            imageViewBottom!!.startAnimation(animMoveFromLeft)
                         } else {
                             imageViewBottom!!.visibility = View.GONE
                             imageViewBottom2!!.visibility = View.GONE
                         }
 
+                        //if imageList.size > 0, then play in loop
+                        if (imageList.size > 0 && checkDownloadImagesAll()) {
+                            countDownTimerImageRunning = true
+                            countDownTimerImage = object : CountDownTimer(images_play_interval.toLong(), images_play_interval.toLong()) {
+                                override fun onTick(millisUntilFinished: Long) {
+                                    Log.e(mTag, "countDownTimerImage millisUntilFinished = $millisUntilFinished")
+                                }
+                                override fun onFinish() { //结束后的操作
+                                    Log.e(mTag, "countDownTimerImage finish")
+                                    if (imageList.size > 0 && checkDownloadImagesAll()) {
+                                        countDownTimerImageRunning = false
+                                        if (layout_top == 2) {
+                                            if (images_mode == 1) { //random
+                                                var nextTop: Int
+                                                do {
+                                                    nextTop = Random.nextInt(imageList.size)
+                                                } while (nextTop == current_play_index_top && imageList.size > 1)
+                                                current_play_index_top = nextTop
+                                            } else { //circle
+                                                do {
+                                                    current_play_index_top += 1
+                                                    if (current_play_index_top >= imageList.size) {
+                                                        current_play_index_top = 0
+                                                    }
+                                                } while (!downloadVideoReadyArray[current_play_index_top])
+                                            }
 
-                        countDownTimerImage = object : CountDownTimer(10000, 10000) {
-                            override fun onTick(millisUntilFinished: Long) {
-                                Log.e(mTag, "countDownTimerImage millisUntilFinished = $millisUntilFinished")
-
-                            }
-
-                            override fun onFinish() { //结束后的操作
-                                Log.e(mTag, "countDownTimerImage finish")
-                                countDownTimerImageRunning = false
-                                if (layout_top == 2) {
-                                    if (images_mode == 1) { //random
-                                        var nextTop: Int
-                                        do {
-                                            nextTop = Random.nextInt(imageList.size)
-                                        } while (nextTop == current_play_index_top)
-                                        current_play_index_top = nextTop
-                                    } else { //circle
-                                        if (current_play_index_top == imageList.size - 1) {
-                                            current_play_index_top = 0
-                                        } else {
-                                            current_play_index_top += 1
+                                            //top
+                                            val srcPath = "$dest_images_folder/${imageList[current_play_index_top]}"
+                                            val file = File(srcPath)
+                                            if (file.exists()) {
+                                                if (imageViewTop!!.visibility == View.VISIBLE) {
+                                                    imageViewTop!!.startAnimation(animMoveToRight)
+                                                    imageViewTop!!.visibility = View.GONE
+                                                    imageViewTop2!!.setImageURI(Uri.fromFile(file))
+                                                    imageViewTop2!!.visibility = View.VISIBLE
+                                                    //Picasso.with(mContext).load(imageUrlTop).into(imageViewTop2)
+                                                    imageViewTop2!!.startAnimation(animMoveFromLeft)
+                                                } else {
+                                                    imageViewTop2!!.startAnimation(animMoveToRight)
+                                                    imageViewTop2!!.visibility = View.GONE
+                                                    imageViewTop!!.setImageURI(Uri.fromFile(file))
+                                                    imageViewTop!!.visibility = View.VISIBLE
+                                                    //Picasso.with(mContext).load(imageUrlTop).into(imageViewTop)
+                                                    imageViewTop!!.startAnimation(animMoveFromLeft)
+                                                }
+                                            }
                                         }
-                                    }
 
+                                        if (layout_center == 2) {
+                                            if (images_mode == 1) { //random
+                                                var nextCenter: Int
+                                                do {
+                                                    nextCenter = Random.nextInt(imageList.size)
+                                                } while (nextCenter == current_play_index_center && imageList.size > 1)
+                                                current_play_index_center = nextCenter
+                                            } else { //circle
+                                                do {
+                                                    current_play_index_center += 1
+                                                    if (current_play_index_center >= imageList.size) {
+                                                        current_play_index_center = 0
+                                                    }
+                                                } while (!downloadImageReadyArray[current_play_index_center])
+                                            }
 
-                                    //top
-                                    //val imageUrlTop = advertiseList[current_play_index_top].ad_path
-                                    val srcPath = "$dest_images_folder/${imageList[current_play_index_top]}"
-                                    val file = File(srcPath)
+                                            //center
+                                            //val imageUrlCenter = advertiseList[current_play_index_center].ad_path
+                                            val srcPath = "$dest_images_folder/${imageList[current_play_index_center]}"
+                                            val file = File(srcPath)
+                                            if (file.exists()) {
+                                                if (imageViewCenter!!.visibility == View.VISIBLE) {
+                                                    imageViewCenter!!.startAnimation(animMoveToLeft)
+                                                    imageViewCenter!!.visibility = View.GONE
+                                                    imageViewCenter2!!.setImageURI(Uri.fromFile(file))
+                                                    imageViewCenter2!!.visibility = View.VISIBLE
+                                                    //Picasso.with(mContext).load(imageUrlCenter).into(imageViewCenter2)
+                                                    imageViewCenter2!!.startAnimation(animMoveFromRight)
+                                                } else { //imageViewCenter!!.visibility == View.GONE
+                                                    imageViewCenter2!!.startAnimation(animMoveToLeft)
+                                                    imageViewCenter2!!.visibility = View.GONE
+                                                    imageViewCenter!!.setImageURI(Uri.fromFile(file))
+                                                    imageViewCenter!!.visibility = View.VISIBLE
+                                                    //Picasso.with(mContext).load(imageUrlCenter).into(imageViewCenter)
+                                                    imageViewCenter!!.startAnimation(animMoveFromRight)
+                                                }
+                                            }
+                                        }
 
-                                    if (imageViewTop!!.visibility == View.VISIBLE) {
-                                        imageViewTop!!.startAnimation(animMoveToRight)
-                                        imageViewTop!!.visibility = View.GONE
-                                        imageViewTop2!!.setImageURI(Uri.fromFile(file))
-                                        imageViewTop2!!.visibility = View.VISIBLE
-                                        //Picasso.with(mContext).load(imageUrlTop).into(imageViewTop2)
-                                        imageViewTop2!!.startAnimation(animMoveFromLeft)
-                                    } else {
-                                        imageViewTop2!!.startAnimation(animMoveToRight)
-                                        imageViewTop2!!.visibility = View.GONE
-                                        imageViewTop!!.setImageURI(Uri.fromFile(file))
-                                        imageViewTop!!.visibility = View.VISIBLE
-                                        //Picasso.with(mContext).load(imageUrlTop).into(imageViewTop)
-                                        imageViewTop!!.startAnimation(animMoveFromLeft)
+                                        if (layout_bottom == 2) {
+                                            if (images_mode == 1) { //random
+                                                var nextBottom: Int
+                                                do {
+                                                    nextBottom = Random.nextInt(imageList.size)
+                                                } while (nextBottom == current_play_index_bottom && imageList.size > 1)
+                                                current_play_index_bottom = nextBottom
+                                            } else { //circle
+                                                do {
+                                                    current_play_index_bottom += 1
+                                                    if (current_play_index_bottom >= imageList.size) {
+                                                        current_play_index_bottom = 0
+                                                    }
+                                                } while (!downloadImageReadyArray[current_play_index_bottom])
+                                            }
+
+                                            //bottom
+                                            val srcPath = "$dest_images_folder/${imageList[current_play_index_bottom]}"
+                                            val file = File(srcPath)
+                                            if (file.exists()) {
+                                                if (imageViewBottom!!.visibility == View.VISIBLE) {
+                                                    imageViewBottom!!.startAnimation(animMoveToRight)
+                                                    imageViewBottom!!.visibility = View.GONE
+                                                    imageViewBottom2!!.setImageURI(Uri.fromFile(file))
+                                                    imageViewBottom2!!.visibility = View.VISIBLE
+                                                    //Picasso.with(mContext).load(imageUrlBottom).into(imageViewBottom2)
+                                                    imageViewBottom2!!.startAnimation(animMoveFromLeft)
+                                                } else {
+                                                    imageViewBottom2!!.startAnimation(animMoveToRight)
+                                                    imageViewBottom2!!.visibility = View.GONE
+                                                    imageViewBottom!!.setImageURI(Uri.fromFile(file))
+                                                    imageViewBottom!!.visibility = View.VISIBLE
+                                                    //Picasso.with(mContext).load(imageUrlBottom).into(imageViewBottom)
+                                                    imageViewBottom!!.startAnimation(animMoveFromLeft)
+                                                }
+                                            }
+                                        }
+
+                                        this.start()
+                                        countDownTimerImageRunning = true
                                     }
                                 }
-
-                                if (layout_center == 2) {
-                                    if (images_mode == 1) { //random
-                                        var nextCenter: Int
-                                        do {
-                                            nextCenter = Random.nextInt(imageList.size)
-                                        } while (nextCenter == current_play_index_center)
-                                        current_play_index_center = nextCenter
-                                    } else { //circle
-                                        if (current_play_index_center == imageList.size - 1) {
-                                            current_play_index_center = 0
-                                        } else {
-                                            current_play_index_center += 1
-                                        }
-                                    }
-
-                                    //center
-                                    //val imageUrlCenter = advertiseList[current_play_index_center].ad_path
-                                    val srcPath = "$dest_images_folder/${imageList[current_play_index_center]}"
-                                    val file = File(srcPath)
-                                    if (imageViewCenter!!.visibility == View.VISIBLE) {
-                                        imageViewCenter!!.startAnimation(animMoveToLeft)
-                                        imageViewCenter!!.visibility = View.GONE
-                                        imageViewCenter2!!.setImageURI(Uri.fromFile(file))
-                                        imageViewCenter2!!.visibility = View.VISIBLE
-                                        //Picasso.with(mContext).load(imageUrlCenter).into(imageViewCenter2)
-                                        imageViewCenter2!!.startAnimation(animMoveFromRight)
-                                    } else { //imageViewCenter!!.visibility == View.GONE
-                                        imageViewCenter2!!.startAnimation(animMoveToLeft)
-                                        imageViewCenter2!!.visibility = View.GONE
-                                        imageViewCenter!!.setImageURI(Uri.fromFile(file))
-                                        imageViewCenter!!.visibility = View.VISIBLE
-                                        //Picasso.with(mContext).load(imageUrlCenter).into(imageViewCenter)
-                                        imageViewCenter!!.startAnimation(animMoveFromRight)
-                                    }
-                                }
-
-                                if (layout_bottom == 2) {
-                                    if (images_mode == 1) { //random
-                                        var nextBottom: Int
-                                        do {
-                                            nextBottom = Random.nextInt(imageList.size)
-                                        } while (nextBottom == current_play_index_bottom)
-                                        current_play_index_bottom = nextBottom
-                                    } else { //circle
-                                        if (current_play_index_bottom == imageList.size - 1) {
-                                            current_play_index_bottom = 0
-                                        } else {
-                                            current_play_index_bottom += 1
-                                        }
-                                    }
-
-
-                                    //bottom
-                                    //val imageUrlBottom = advertiseList[current_play_index_bottom].ad_path
-                                    val srcPath = "$dest_images_folder/${imageList[current_play_index_bottom]}"
-                                    val file = File(srcPath)
-                                    if (imageViewBottom!!.visibility == View.VISIBLE) {
-                                        imageViewBottom!!.startAnimation(animMoveToRight)
-                                        imageViewBottom!!.visibility = View.GONE
-                                        imageViewBottom2!!.setImageURI(Uri.fromFile(file))
-                                        imageViewBottom2!!.visibility = View.VISIBLE
-                                        //Picasso.with(mContext).load(imageUrlBottom).into(imageViewBottom2)
-                                        imageViewBottom2!!.startAnimation(animMoveFromLeft)
-                                    } else {
-                                        imageViewBottom2!!.startAnimation(animMoveToRight)
-                                        imageViewBottom2!!.visibility = View.GONE
-                                        imageViewBottom!!.setImageURI(Uri.fromFile(file))
-                                        imageViewBottom!!.visibility = View.VISIBLE
-                                        //Picasso.with(mContext).load(imageUrlBottom).into(imageViewBottom)
-                                        imageViewBottom!!.startAnimation(animMoveFromLeft)
-                                    }
-                                }
-
-                                this.start()
-                                countDownTimerImageRunning = true
-                            }
-                        }.start()
+                            }.start()
+                        }
                     } else { //all is not image
                         if (countDownTimerImageRunning) {
                             countDownTimerImage.cancel()
@@ -1914,226 +2300,291 @@ class MainActivity : AppCompatActivity() {
 
                     //video
                     if (layout_top == 3 || layout_center == 3 || layout_bottom == 3) { //video
-
+                        Log.e(mTag, "video play time")
                         //top
                         if (layout_top == 3) {
-                            if (videos_mode == 1) { //random
-                                var nextTop: Int
-                                do {
-                                    nextTop = Random.nextInt(videoList.size)
-                                } while (nextTop == current_video_index_top)
-                                current_video_index_top = nextTop
-                            } else { //circle
-                                if (current_video_index_top == videoList.size - 1) {
-                                    current_video_index_top = 0
-                                } else {
-                                    current_video_index_top += 1
-                                }
-                            }
-
-
-                            //top
-                            val filePath = "$dest_videos_folder${videoList[current_video_index_top]}"
-                            val file = File(filePath)
-                            val uriTop = Uri.fromFile(file)
-                            //val uriTop = Uri.parse(videoList[current_video_index_top])
-                            videoViewTop!!.setVideoURI(uriTop)
-                            videoViewTop!!.start()
-                            countDownTimerVideoRunningTop = true
-                            /*
-                            videoViewTop!!.setOnPreparedListener { mp->
-                                Log.d(mTag, "videoViewTop prepared")
-                                //mp.start()
-                                //countDownTimerVideoRunningTop = true
-                            }*/
-
-                            videoViewTop!!.setOnErrorListener { mp, what, extra ->
-                                Log.d("video", "setOnErrorListener ")
-                                true
-                            }
-                            videoViewTop!!.setOnCompletionListener {
-                                countDownTimerVideoRunningTop = false
+                            if (videoList.size > 0 && checkDownloadVideosAll()) { //at least one video can play
                                 if (videos_mode == 1) { //random
-                                    var next: Int
+                                    var nextTop: Int
                                     do {
-                                        next = Random.nextInt(videoList.size)
-                                    } while (next == current_video_index_top)
-                                    current_video_index_top = next
+                                        nextTop = Random.nextInt(videoList.size)
+                                    } while (nextTop == current_video_index_top && videoList.size > 1)
+                                    current_video_index_top = nextTop
                                 } else { //circle
-                                    if (current_video_index_top == videoList.size - 1) {
-                                        current_video_index_top = 0
-                                    } else {
+                                    do {
                                         current_video_index_top += 1
+                                        if (current_video_index_top >= videoList.size) {
+                                            current_video_index_top = 0
+                                        }
+                                    } while (!downloadVideoReadyArray[current_video_index_top])
+
+                                }
+
+                                //top
+                                val filePath = "$dest_videos_folder${videoList[current_video_index_top]}"
+                                val file = File(filePath)
+                                if (file.exists()) {
+                                    val uriTop = Uri.fromFile(file)
+                                    //val uriTop = Uri.parse(videoList[current_video_index_top])
+                                    videoViewTop!!.setVideoURI(uriTop)
+                                    //videoViewTop!!.start()
+                                    //videoRunningTop = true
+
+                                    videoViewTop!!.setOnPreparedListener { mp->
+                                        Log.d(mTag, "videoViewTop prepared")
+                                        //mp.setWakeMode(mContext, PowerManager.PARTIAL_WAKE_LOCK)
+                                        mp.start()
+                                        mp.seekTo(0)
+                                        videoRunningTop = true
+                                    }
+
+                                    videoViewTop!!.setOnErrorListener { mp, what, extra ->
+                                        Log.d("video", "setOnErrorListener ")
+                                        true
+                                    }
+                                    videoViewTop!!.setOnCompletionListener { mp->
+                                        mp.stop()
+                                        mp.reset()
+                                        videoRunningTop = false
+
+                                        if (videoList.size > 0 && checkDownloadVideosAll()) {
+                                            if (videos_mode == 1) { //random
+                                                var next: Int
+                                                do {
+                                                    next = Random.nextInt(videoList.size)
+                                                } while (next == current_video_index_top && videoList.size > 1)
+                                                current_video_index_top = next
+                                            } else { //circle
+                                                do {
+                                                    current_video_index_top += 1
+                                                    if (current_video_index_top >= videoList.size) {
+                                                        current_video_index_top = 0
+                                                    }
+                                                } while (!downloadVideoReadyArray[current_video_index_top])
+                                            }
+                                            val srcPath = "$dest_videos_folder${videoList[current_video_index_top]}"
+                                            val fileVideo = File(srcPath)
+                                            if (fileVideo.exists()) {
+                                                val uriTopVideo = Uri.fromFile(fileVideo)
+
+                                                //val uri = Uri.parse(videoList[current_video_index_top])
+                                                videoViewTop!!.setVideoURI(uriTopVideo)
+                                                //videoViewTop!!.start()
+                                                //videoRunningTop = true
+                                            }
+
+                                        } else {
+                                            Log.e(mTag, "videoList.size == 0")
+                                            videoViewTop!!.visibility = View.GONE
+                                        }
                                     }
                                 }
-                                val srcPath = "$dest_videos_folder${videoList[current_video_index_top]}"
-                                val fileVideo = File(srcPath)
-                                val uriTopVideo = Uri.fromFile(fileVideo)
-
-                                //val uri = Uri.parse(videoList[current_video_index_top])
-                                videoViewTop!!.setVideoURI(uriTopVideo)
-                                videoViewTop!!.start()
-                                countDownTimerVideoRunningTop = true
                             }
                         } else {
                             videoViewTop!!.stopPlayback()
-                            countDownTimerVideoRunningTop = false
+                            //exoPlayerViewTop!!.player!!.stop()
+                            videoRunningTop = false
                         }
 
                         //center
                         if (layout_center == 3) {
-                            if (videos_mode == 1) { //random
-                                var nextTop: Int
-                                do {
-                                    nextTop = Random.nextInt(videoList.size)
-                                } while (nextTop == current_video_index_center)
-                                current_video_index_center = nextTop
-                            } else { //circle
-                                current_video_index_center += 1
-                                if (current_video_index_center >= videoList.size) {
-                                    current_video_index_center = 0
-                                }
-                            }
-
-                            //top
-                            val filePath = "$dest_videos_folder${videoList[current_video_index_center]}"
-                            val file = File(filePath)
-                            val uriCenter = Uri.fromFile(file)
-
-
-                            //center
-                            //val uriCenter = Uri.parse(videoList[current_video_index_center])
-                            videoViewCenter!!.setVideoURI(uriCenter)
-                            //videoViewCenter!!.start()
-                            //countDownTimerVideoRunningCenter = true
-
-                            videoViewCenter!!.setOnPreparedListener { mp->
-                                Log.d(mTag, "videoViewCenter prepared")
-                                mp.start()
-                                countDownTimerVideoRunningCenter = true
-                            }
-                            videoViewCenter!!.setOnErrorListener { mp, what, extra ->
-                                Log.d("video", "setOnErrorListener ")
-                                true
-                            }
-
-                            videoViewCenter!!.setOnCompletionListener { mp->
-                                Log.e(mTag, "videoViewCenter play complete")
-                                //mp.reset()
-                                countDownTimerVideoRunningCenter = false
+                            if (videoList.size > 0 && checkDownloadVideosAll()) {
                                 if (videos_mode == 1) { //random
-                                    var next: Int
+                                    var nextTop: Int
                                     do {
-                                        next = Random.nextInt(videoList.size)
-                                    } while (next == current_video_index_center)
-                                    current_video_index_center = next
+                                        nextTop = Random.nextInt(videoList.size)
+                                    } while (nextTop == current_video_index_center && videoList.size > 1)
+                                    current_video_index_center = nextTop
                                 } else { //circle
-                                    current_video_index_center += 1
-                                    if (current_video_index_center >= videoList.size) {
-                                        current_video_index_center = 0
+                                    do {
+                                        current_video_index_center += 1
+                                        if (current_video_index_center >= videoList.size) {
+                                            current_video_index_center = 0
+                                        }
+                                    } while (!downloadVideoReadyArray[current_video_index_center])
+                                }
+
+                                //top
+                                val filePath = "$dest_videos_folder${videoList[current_video_index_center]}"
+                                val file = File(filePath)
+                                val uriCenter = Uri.fromFile(file)
+                                if (file.exists()) {
+                                    //center
+                                    //val uriCenter = Uri.parse(videoList[current_video_index_center])
+
+
+                                    videoViewCenter!!.setVideoURI(uriCenter)
+                                    //videoViewCenter!!.start()
+                                    //videoRunningCenter = true
+
+                                    videoViewCenter!!.setOnPreparedListener { mp->
+                                        Log.d(mTag, "videoViewCenter prepared")
+                                        //mp.setWakeMode(mContext, PowerManager.PARTIAL_WAKE_LOCK)
+                                        mp.start()
+                                        mp.seekTo(0)
+                                        videoRunningCenter = true
+                                    }
+                                    videoViewCenter!!.setOnErrorListener { mp, what, extra ->
+                                        Log.d("video", "setOnErrorListener ")
+                                        true
+                                    }
+
+                                    videoViewCenter!!.setOnCompletionListener { mp->
+                                        Log.e(mTag, "videoViewCenter play complete")
+                                        mp.stop()
+                                        mp.reset()
+                                        if (videoList.size > 0 && checkDownloadVideosAll()) {
+                                            videoRunningCenter = false
+                                            if (videos_mode == 1) { //random
+                                                var next: Int
+                                                do {
+                                                    next = Random.nextInt(videoList.size)
+                                                } while (next == current_video_index_center && videoList.size > 1)
+                                                current_video_index_center = next
+                                            } else { //circle
+                                                do {
+                                                    current_video_index_center += 1
+                                                    if (current_video_index_center >= videoList.size) {
+                                                        current_video_index_center = 0
+                                                    }
+                                                } while (!downloadVideoReadyArray[current_video_index_center])
+
+                                            }
+                                            val srcPath = "$dest_videos_folder${videoList[current_video_index_center]}"
+                                            val fileVideo = File(srcPath)
+                                            if (fileVideo.exists()) {
+                                                val uriCenterVideo = Uri.fromFile(fileVideo)
+
+                                                //val uri = Uri.parse(videoList[current_video_index_center])
+                                                videoViewCenter!!.setVideoURI(uriCenterVideo)
+                                                //videoViewCenter!!.start()
+                                                //videoRunningCenter = true
+                                            }
+                                        } else {
+                                            Log.e(mTag, "videoList.size == 0")
+                                            videoViewCenter!!.visibility = View.GONE
+                                        }
+
                                     }
                                 }
-                                val srcPath = "$dest_videos_folder${videoList[current_video_index_center]}"
-                                val fileVideo = File(srcPath)
-                                val uriCenterVideo = Uri.fromFile(fileVideo)
 
-                                //val uri = Uri.parse(videoList[current_video_index_center])
-                                videoViewCenter!!.setVideoURI(uriCenterVideo)
-                                //videoViewCenter!!.start()
-                                //countDownTimerVideoRunningCenter = true
                             }
                         } else {
                             videoViewCenter!!.stopPlayback()
-                            countDownTimerVideoRunningCenter = false
+                            //exoPlayerViewCenter!!.player!!.stop()
+                            videoRunningCenter = false
                         }
 
                         //bottom
                         if (layout_bottom == 3) {
-                            if (videos_mode == 1) { //random
-                                var nextBottom: Int
-                                do {
-                                    nextBottom = Random.nextInt(videoList.size)
-                                } while (nextBottom == current_video_index_bottom)
-                                current_video_index_bottom = nextBottom
-                            } else { //circle
-                                current_video_index_bottom += 1
-                                if (current_video_index_bottom >= videoList.size) {
-                                    current_video_index_bottom = 0
-                                }
-                            }
-
-                            Log.e(mTag, "start => current_video_index_bottom = $current_video_index_bottom")
-
-
-                            val filePath = "$dest_videos_folder${videoList[current_video_index_bottom]}"
-                            Log.e(mTag, "=> filePath = $filePath")
-                            val file = File(filePath)
-                            val uriBottom = Uri.fromFile(file)
-
-                            //val uriBottom = Uri.parse(videoList[current_video_index_bottom])
-                            videoViewBottom!!.setVideoURI(uriBottom)
-                            videoViewBottom!!.start()
-                            countDownTimerVideoRunningBottom = true
-                            /*
-                            videoViewBottom!!.setOnPreparedListener { mp->
-
-                                Log.d(mTag, "videoViewBottom prepared")
-                                //mp.start()
-                                //countDownTimerVideoRunningBottom = true
-                            }
-                            */
-                            //videoViewBottom!!.start()
-                            //countDownTimerVideoRunningBottom = true
-                            videoViewBottom!!.setOnErrorListener { mp, what, extra ->
-                                Log.d("video", "setOnErrorListener ")
-                                true
-                            }
-                            videoViewBottom!!.setOnCompletionListener { mp->
-                                Log.e(mTag, "videoViewBottom play complete")
-                                //mp.reset()
-                                countDownTimerVideoRunningBottom = false
+                            if (videoList.size > 0 && checkDownloadVideosAll()) {
                                 if (videos_mode == 1) { //random
                                     var nextBottom: Int
                                     do {
                                         nextBottom = Random.nextInt(videoList.size)
-                                    } while (nextBottom == current_video_index_bottom)
+                                    } while (nextBottom == current_video_index_bottom && videoList.size > 1)
                                     current_video_index_bottom = nextBottom
                                 } else { //circle
-                                    current_video_index_bottom += 1
-                                    if (current_video_index_bottom >= videoList.size) {
-                                        current_video_index_bottom = 0
+                                    do {
+                                        current_video_index_bottom += 1
+                                        if (current_video_index_bottom >= videoList.size) {
+                                            current_video_index_bottom = 0
+                                        }
+                                    } while (!downloadVideoReadyArray[current_video_index_bottom])
+                                }
+
+                                Log.e(mTag, "start => current_video_index_bottom = $current_video_index_bottom")
+
+
+                                val filePath = "$dest_videos_folder${videoList[current_video_index_bottom]}"
+                                Log.e(mTag, "=> filePath = $filePath")
+                                val file = File(filePath)
+                                if (file.exists()) {
+                                    val uriBottom = Uri.fromFile(file)
+
+                                    //val uriBottom = Uri.parse(videoList[current_video_index_bottom])
+                                    videoViewBottom!!.setVideoURI(uriBottom)
+                                    //videoViewBottom!!.start()
+                                    //videoRunningBottom = true
+
+                                    videoViewBottom!!.setOnPreparedListener { mp->
+                                        Log.d(mTag, "videoViewBottom prepared, path = $filePath")
+                                        //mp.setWakeMode(mContext, PowerManager.PARTIAL_WAKE_LOCK)
+                                        mp.start()
+                                        mp.seekTo(0)
+                                        videoRunningBottom = true
+                                    }
+
+                                    //videoViewBottom!!.start()
+                                    //videoRunningBottom = true
+                                    videoViewBottom!!.setOnErrorListener { mp, what, extra ->
+                                        Log.d("video", "setOnErrorListener ")
+                                        true
+                                    }
+                                    videoViewBottom!!.setOnCompletionListener { mp->
+                                        Log.e(mTag, "videoViewBottom play complete")
+                                        mp.stop()
+                                        mp.reset()
+                                        if (videoList.size > 0 && checkDownloadVideosAll()) {
+                                            videoRunningBottom = false
+                                            if (videos_mode == 1) { //random
+                                                var nextBottom: Int
+                                                do {
+                                                    nextBottom = Random.nextInt(videoList.size)
+                                                } while (nextBottom == current_video_index_bottom && videoList.size > 1)
+                                                current_video_index_bottom = nextBottom
+                                            } else { //circle
+                                                do {
+                                                    current_video_index_bottom += 1
+                                                    if (current_video_index_bottom >= videoList.size) {
+                                                        current_video_index_bottom = 0
+                                                    }
+                                                } while (!downloadVideoReadyArray[current_video_index_bottom])
+
+                                            }
+                                            Log.e(mTag, "videoList.size = ${videoList.size}, current_video_index_bottom = $current_video_index_bottom")
+                                            val srcPath = "$dest_videos_folder${videoList[current_video_index_bottom]}"
+                                            Log.e(mTag, "==>srcPath = $srcPath")
+
+                                            val fileVideo = File(srcPath)
+                                            if (fileVideo.exists()) {
+                                                val uriBottomVideo = Uri.fromFile(fileVideo)
+
+                                                //val uri = Uri.parse(videoList[current_video_index_bottom])
+                                                videoViewBottom!!.setVideoURI(uriBottomVideo)
+                                                //videoViewBottom!!.start()
+                                                //videoRunningBottom = true
+                                            }
+                                        } else {
+                                            Log.e(mTag, "videoList.size == 0")
+                                            videoViewBottom!!.visibility = View.GONE
+                                        }
                                     }
                                 }
-                                Log.e(mTag, "videoList.size = ${videoList.size}, current_video_index_bottom = $current_video_index_bottom")
-                                val srcPath = "$dest_videos_folder${videoList[current_video_index_bottom]}"
-                                Log.e(mTag, "==>srcPath = $srcPath")
 
-                                val fileVideo = File(srcPath)
-                                val uriBottomVideo = Uri.fromFile(fileVideo)
-
-                                //val uri = Uri.parse(videoList[current_video_index_bottom])
-                                videoViewBottom!!.setVideoURI(uriBottomVideo)
-                                videoViewBottom!!.start()
-                                countDownTimerVideoRunningBottom = true
                             }
                         } else {
                             videoViewBottom!!.stopPlayback()
-                            countDownTimerVideoRunningBottom = false
+                            //exoPlayerViewBottom!!.player!!.stop()
+                            videoRunningBottom = false
                         }
                     } else { //all are not video
-                        if (countDownTimerVideoRunningTop) {
+                        if (videoRunningTop) {
                             videoViewTop!!.stopPlayback()
-                            countDownTimerVideoRunningTop = false
+                            //exoPlayerViewTop!!.player!!.stop()
+                            videoRunningTop = false
                         }
 
-                        if (countDownTimerVideoRunningCenter) {
+                        if (videoRunningCenter) {
                             videoViewCenter!!.stopPlayback()
-                            countDownTimerVideoRunningCenter = false
+                            //exoPlayerViewCenter!!.player!!.stop()
+                            videoRunningCenter = false
                         }
 
-                        if (countDownTimerVideoRunningBottom) {
+                        if (videoRunningBottom) {
                             videoViewBottom!!.stopPlayback()
-                            countDownTimerVideoRunningBottom = false
+                            //exoPlayerViewBottom!!.player!!.stop()
+                            videoRunningBottom = false
                         }
                     }
                 } else {
@@ -2382,17 +2833,20 @@ class MainActivity : AppCompatActivity() {
         alertDialogBuilder.setView(promptView)
 
         //final EditText editFileName = (EditText) promptView.findViewById(R.id.editFileName);
-        val editTextDialogServerIP = promptView.findViewById<TextView>(R.id.editTextDialogServerIP)
-        val editTextDialogServerPort = promptView.findViewById<TextView>(R.id.editTextDialogServerPort)
+        val editTextDialogServerIP = promptView.findViewById<EditText>(R.id.editTextDialogServerIP)
+        val editTextDialogServerPort = promptView.findViewById<EditText>(R.id.editTextDialogServerPort)
         val btnClear = promptView.findViewById<Button>(R.id.btnDialogClear)
         val btnConfirm = promptView.findViewById<Button>(R.id.btnDialogConfirm)
 
-        editTextDialogServerIP.text = "http://"
+        //editTextDialogServerIP.text = "http://"
+        editTextDialogServerIP.setText("http://")
+        editTextDialogServerPort.setText("")
 
         alertDialogBuilder.setCancelable(false)
         btnClear!!.setOnClickListener {
-            editTextDialogServerIP.text = "http://"
-            editTextDialogServerPort.text = ""
+            editTextDialogServerIP.setText("http://")
+            //editTextDialogServerIP.text = "http://"
+            editTextDialogServerPort.setText("")
         }
         btnConfirm!!.setOnClickListener {
 
@@ -2403,6 +2857,7 @@ class MainActivity : AppCompatActivity() {
                 Log.e(mTag,"Port = ${ editTextDialogServerPort.text}")
 
                 server_ip_address = editTextDialogServerIP.text.toString()
+                editTextDialogServerIP.setSelection(editTextDialogServerIP.length())
                 server_webservice_port = editTextDialogServerPort.text.toString()
 
                 editor = pref!!.edit()

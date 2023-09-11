@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     tools:context=".MainActivity"
     android:background="@color/black">
@@ -66,6 +67,15 @@
                 android:layout_height="match_parent"
                 android:layout_centerInParent="true"
                 android:layout_gravity="center" />
+
+            <androidx.media3.ui.PlayerView
+                android:id="@+id/exoPlayerViewTop"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_centerInParent="true"
+                android:layout_gravity="center"
+                android:visibility="gone" />
+
         </RelativeLayout>
     </LinearLayout>
 
@@ -117,6 +127,16 @@
                 android:layout_height="match_parent"
                 android:layout_centerInParent="true"
                 android:layout_gravity="center"/>
+
+            <androidx.media3.ui.PlayerView
+                android:id="@+id/exoPlayerViewCenter"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_centerInParent="true"
+                android:layout_gravity="center"
+                app:show_buffering="always"
+                app:use_controller="true"
+                android:visibility="gone" />
         </RelativeLayout>
     </LinearLayout>
 
@@ -172,6 +192,14 @@
                 android:layout_height="match_parent"
                 android:layout_centerInParent="true"
                 android:layout_gravity="center"/>
+
+            <androidx.media3.ui.PlayerView
+                android:id="@+id/exoPlayerViewBottom"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_centerInParent="true"
+                android:layout_gravity="center"
+                android:visibility="gone" />
         </RelativeLayout>
     </LinearLayout>
 </LinearLayout>
