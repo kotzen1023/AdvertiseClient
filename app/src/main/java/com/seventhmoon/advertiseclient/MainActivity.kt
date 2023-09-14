@@ -112,6 +112,8 @@ class MainActivity : AppCompatActivity() {
     private var current_play_index_bottom = -1
     private var current_video_index_bottom = -1
 
+    //main Linearlayout
+    private var mainLinearLayout : LinearLayout ?= null
     //top
     private var linearLayoutTop : LinearLayout ?= null
     private var textViewTop : TextView ?= null
@@ -212,6 +214,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+
+
         mContext = applicationContext
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -275,6 +279,8 @@ class MainActivity : AppCompatActivity() {
         Log.e(mTag, "currentOrientation = $currentOrientation")
 
         //var macAddress = getWIFIMAC()
+        mainLinearLayout = findViewById(R.id.mainLinearLayout)
+        Log.e(mTag, "mainLinearLayout orientation = ${mainLinearLayout!!.orientation}")
         //top
         linearLayoutTop = findViewById(R.id.linearLayoutTop)
         textViewTop = findViewById(R.id.textViewTop)
@@ -419,7 +425,7 @@ class MainActivity : AppCompatActivity() {
             recvLayout.layout_id = defaultLayoutPlayList!![0].getLayout_id()
             recvLayout.screenWidth = defaultLayoutPlayList!![0].getScreenWidth()
             recvLayout.screenHeight = defaultLayoutPlayList!![0].getScreenHeight()
-            recvLayout.layoutOrientation = defaultLayoutPlayList!![0].getOrientation()
+            recvLayout.orientation = defaultLayoutPlayList!![0].getOrientation()
             recvLayout.layout_top = defaultLayoutPlayList!![0].getLayout_top()
             recvLayout.layout_center = defaultLayoutPlayList!![0].getLayout_center()
             recvLayout.layout_bottom = defaultLayoutPlayList!![0].getLayout_bottom()
@@ -1782,6 +1788,8 @@ class MainActivity : AppCompatActivity() {
                     val images_mode = adSettingList[0].images_mode
                     val videos_mode = adSettingList[0].videos_mode
 
+                    val layoutOrientation = layoutList[0].layoutOrientation
+
                     val image_interval = adSettingList[0].image_interval
                     var images_play_interval = 70000
                     when(image_interval) {
@@ -1798,14 +1806,20 @@ class MainActivity : AppCompatActivity() {
 
                     Log.e(mTag, "orientation = $orientation, layout_top = $layout_top, layout_center = $layout_center, layout_bottom = $layout_bottom")
                     //mode = 0 => cycle, mode = 1 => random
-                    Log.e(mTag, "marquee_mode = $marquee_mode, images_mode = $images_mode, videos_mode = $videos_mode")
+                    Log.e(mTag, "marquee_mode = $marquee_mode, images_mode = $images_mode, videos_mode = $videos_mode, layoutOrientation = $layoutOrientation")
 
-                    if (orientation == 2) { //landscape
+                    if (orientation == 2) { //screen landscape
                         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
                         currentOrientation = 2
                     } else { //orientation == 1
                         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
                         currentOrientation = 1
+                    }
+
+                    if (layoutOrientation == 0) { //vertical
+                        mainLinearLayout!!.orientation = LinearLayout.VERTICAL
+                    } else { //Horizontal
+                        mainLinearLayout!!.orientation = LinearLayout.HORIZONTAL
                     }
 
                     //top

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">AdvertiseClient</string>
+    <string name="app_name">廣告機</string>
     <string name="dialog_title">輸入Server IP與Port</string>
     <string name="app_clear">清除</string>
     <string name="app_confirm">確定</string>
