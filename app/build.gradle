@@ -6,12 +6,12 @@ plugins {
 
 android {
     namespace 'com.seventhmoon.advertiseclient'
-    compileSdk 33
+    compileSdk 34
 
     defaultConfig {
         applicationId "com.seventhmoon.advertiseclient"
         minSdk 22
-        targetSdk 33
+        targetSdk 34
         versionCode 1
         versionName "1.0"
 
@@ -62,8 +62,8 @@ dependencies {
     //implementation 'com.google.android.exoplayer:exoplayer-smoothstreaming:2.19.1'
 
 
-    implementation 'androidx.media3:media3-exoplayer:1.1.1'
-    implementation 'androidx.media3:media3-exoplayer-dash:1.1.1'
-    implementation 'androidx.media3:media3-ui:1.1.1'
-    implementation 'androidx.media3:media3-common:1.1.1'
+    //implementation 'androidx.media3:media3-exoplayer:1.1.1'
+    //implementation 'androidx.media3:media3-exoplayer-dash:1.1.1'
+    //implementation 'androidx.media3:media3-ui:1.1.1'
+    //implementation 'androidx.media3:media3-common:1.1.1'
 }

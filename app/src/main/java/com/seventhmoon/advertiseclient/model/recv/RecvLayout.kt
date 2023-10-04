@@ -12,4 +12,11 @@ class RecvLayout {
     var layout_bottom = 0
     var layoutOrientation = 0
     var plan_id = 0
+    var plan2_id = 0
+    var plan3_id = 0
+    var plan4_id = 0
+    var plan_start_time = "--:--"
+    var plan2_start_time = "--:--"
+    var plan3_start_time = "--:--"
+    var plan4_start_time = "--:--"
 }
