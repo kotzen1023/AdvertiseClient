@@ -3,6 +3,7 @@ package com.seventhmoon.advertiseclient
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.app.AlertDialog
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -70,6 +71,7 @@ import com.seventhmoon.advertiseclient.persistence.DefaultPlayVideosDataDB
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.Response
+import okhttp3.internal.notifyAll
 import org.json.JSONException
 import org.json.JSONObject
 import java.io.File
@@ -81,6 +83,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import kotlin.random.Random
+import kotlin.system.exitProcess
 
 
 class MainActivity : AppCompatActivity() {
@@ -220,22 +223,35 @@ class MainActivity : AppCompatActivity() {
     private var process: Process? = null
     private var debugLog: Boolean = true
 
-    private var planStartTime : String = "--:--"
-    private var plan2StartTime : String = "--:--"
-    private var plan3StartTime : String = "--:--"
-    private var plan4StartTime : String = "--:--"
+    private var planStartTimeString : String = "--:--"
+    private var plan2StartTimeString : String = "--:--"
+    private var plan3StartTimeString : String = "--:--"
+    private var plan4StartTimeString : String = "--:--"
 
+    private var planStartTime: Long = 0
+    private var plan2StartTime: Long = 0
+    private var plan3StartTime: Long = 0
+    private var plan4StartTime: Long = 0
+
+    private var previousPlanId: Int = 0
     private var currentPlanId: Int = 0
+    private var currentAdSettingIdx: Int = -1
 
+    private var myPid = -1
     @SuppressLint("HardwareIds")
     @RequiresApi(Build.VERSION_CODES.R)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        myPid = android.os.Process.myPid()
+        Log.d(mTag, "myPid = $myPid")
+
         rootView = findViewById<View>(android.R.id.content) as ViewGroup
 
         mContext = applicationContext
+
+        handleUncaughtException()
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             checkAndRequestPermissions()
@@ -343,10 +359,10 @@ class MainActivity : AppCompatActivity() {
             receiveLayout.plan3_start_time = defaultLayoutPlayList!![0].getPlan3_start_time()
             receiveLayout.plan4_start_time = defaultLayoutPlayList!![0].getPlan4_start_time()
 
-            planStartTime = layoutList[0].plan_start_time
-            plan2StartTime = layoutList[0].plan2_start_time
-            plan3StartTime = layoutList[0].plan3_start_time
-            plan4StartTime = layoutList[0].plan4_start_time
+            planStartTimeString = receiveLayout.plan_start_time
+            plan2StartTimeString = receiveLayout.plan2_start_time
+            plan3StartTimeString = receiveLayout.plan3_start_time
+            plan4StartTimeString = receiveLayout.plan4_start_time
 
             layoutList.add(receiveLayout)
         }
@@ -452,7 +468,54 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        if (layoutList.size == 1 && adSettingList.size == 1 &&
+        //get current plan id, index
+        if (layoutList.size > 0) {
+            planStartTime = getTimeStampFromString(layoutList[0].plan_start_time)
+            plan2StartTime = getTimeStampFromString(layoutList[0].plan2_start_time)
+            plan3StartTime = getTimeStampFromString(layoutList[0].plan3_start_time)
+            plan4StartTime = getTimeStampFromString(layoutList[0].plan4_start_time)
+
+            //Log.d(mTag, "planStartTime = $planStartTime")
+            //Log.d(mTag, "plan2StartTime = $plan2StartTime")
+            //Log.d(mTag, "plan3StartTime = $plan3StartTime")
+            //Log.d(mTag, "plan4StartTime = $plan4StartTime")
+
+            val currentTimestamp = getCurrentTimeStamp()
+            Log.d(mTag, "currentTimestamp = $currentTimestamp")
+            Log.d(mTag, "planStartTime = $planStartTime")
+            Log.d(mTag, "plan2StartTime = $plan2StartTime")
+            Log.d(mTag, "plan3StartTime = $plan3StartTime")
+            Log.d(mTag, "plan4StartTime = $plan4StartTime")
+
+            currentPlanId = if (plan4StartTime in 1..currentTimestamp) { //plan4
+                Log.d(mTag, "plan4")
+                layoutList[0].plan4_id
+            } else if (plan3StartTime in 1..currentTimestamp) { //plan3
+                Log.d(mTag, "plan3")
+                layoutList[0].plan3_id
+            } else if (plan2StartTime in 1..currentTimestamp) { //plan2
+                Log.d(mTag, "plan2")
+                layoutList[0].plan2_id
+            } //else if (planStartTime in 1..currentTimestamp) { //plan1
+            else { //plan1
+                Log.d(mTag, "plan1")
+                layoutList[0].plan_id
+            }
+
+            //get current plan idx
+            if (currentPlanId > 0) {
+                for (i in adSettingList.indices) {
+                    if (currentPlanId == adSettingList[i].plan_id) {
+                        currentAdSettingIdx = i
+                        break
+                    }
+                }
+                previousPlanId = currentPlanId
+            }
+        }
+
+
+        if (layoutList.size == 1 && adSettingList.size >= 1 &&
             (playMarqueeList.size > 0 || imageList.size > 0 || videoList.size > 0 )) {
             //because marquee download is unnecessary, start with image
             //downloadImageComplete = 0
@@ -472,8 +535,6 @@ class MainActivity : AppCompatActivity() {
 
             pingWeb()
         }
-
-        getTimeStampFromString(planStartTime)
 
         val filter: IntentFilter
         @SuppressLint("CommitPrefEdits")
@@ -613,16 +674,35 @@ class MainActivity : AppCompatActivity() {
                         }
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_MARQUEE_SUCCESS, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_MARQUEE_SUCCESS")
-
+                        //clear before add
                         playMarqueeList.clear()
                         defaultMarqueePlayList!!.clear()
                         defaultPlayMarqueeDataDB!!.defaultPlayMarqueeDataDao().clearTable()
+                        //add all marquee
+                        if (marqueeList.size > 0) {
+                            for (i in marqueeList.indices) {
+                                val defaultPlayMarqueeData = DefaultPlayMarqueeData(
+                                    marqueeList[i].marqueeId, marqueeList[i].name, marqueeList[i].content)
+                                defaultPlayMarqueeDataDB!!.defaultPlayMarqueeDataDao().insert(defaultPlayMarqueeData)
+                            }
+                            defaultMarqueePlayList = defaultPlayMarqueeDataDB!!.defaultPlayMarqueeDataDao().getAll() as ArrayList<DefaultPlayMarqueeData>
+                            Log.d(mTag, "defaultMarqueePlayList.size = ${defaultMarqueePlayList!!.size}")
+                        }
+
                         //then find match marquee
                         if (adSettingList.size > 0) {
-                            Log.d(mTag, "plan_marquee = ${adSettingList[0].plan_marquee}")
+                            //var playIdx = -1
+                            for (i in adSettingList.indices) {
+                                if (currentPlanId == adSettingList[i].plan_id) {
+                                    currentAdSettingIdx = i
+                                    break
+                                }
+                            }
+                            //Log.d(mTag, "plan_marquee = ${adSettingList[0].plan_marquee}")
+                            Log.d(mTag, "plan_marquee = ${adSettingList[currentAdSettingIdx].plan_marquee}")
 
-                            if (adSettingList[0].plan_marquee.isNotEmpty()) {
-                                val marqueeArray = adSettingList[0].plan_marquee.split(",")
+                            if (adSettingList[currentAdSettingIdx].plan_marquee.isNotEmpty()) {
+                                val marqueeArray = adSettingList[currentAdSettingIdx].plan_marquee.split(",")
                                 Log.d(mTag, "marqueeArray.size = ${marqueeArray.size}")
 
                                 for (i in marqueeArray.indices) {
@@ -640,27 +720,14 @@ class MainActivity : AppCompatActivity() {
                                         playMarqueeList.add(marqueeList[foundIdx])
                                     }
                                 }
-
                                 Log.d(mTag, "playMarqueeList = $playMarqueeList")
-                                //write db
-
-                                //clear before add
-                                if (playMarqueeList.size > 0) {
-                                    for (i in playMarqueeList.indices) {
-                                        val defaultPlayMarqueeData = DefaultPlayMarqueeData(
-                                            playMarqueeList[i].marqueeId, playMarqueeList[i].name, playMarqueeList[i].content)
-                                        defaultPlayMarqueeDataDB!!.defaultPlayMarqueeDataDao().insert(defaultPlayMarqueeData)
-                                    }
-                                    defaultMarqueePlayList = defaultPlayMarqueeDataDB!!.defaultPlayMarqueeDataDao().getAll() as ArrayList<DefaultPlayMarqueeData>
-                                    Log.d(mTag, "defaultMarqueePlayList.size = ${defaultMarqueePlayList!!.size}")
-                                }
                             }
 
                             //then download images
                             imageList.clear()
                             downloadImageReadyArray.clear()
-                            if (adSettingList[0].plan_images.isNotEmpty()) {
-                                val imagesArray = adSettingList[0].plan_images.split(",")
+                            if (adSettingList[currentAdSettingIdx].plan_images.isNotEmpty()) {
+                                val imagesArray = adSettingList[currentAdSettingIdx].plan_images.split(",")
 
                                 if (imagesArray.isNotEmpty()) {
 
@@ -687,13 +754,11 @@ class MainActivity : AppCompatActivity() {
                                 defaultImagesPlayList!!.clear()
                                 defaultPlayImagesDataDB!!.defaultPlayImagesDataDao().clearTable()
 
-
-
                                 //then download videos
                                 Log.d(mTag, "Download Images complete, then download videos.")
-                                Log.d(mTag, "adSettingList[0].plan_videos.length = ${adSettingList[0].plan_videos.length}")
-                                if (adSettingList[0].plan_videos.isNotEmpty()) {
-                                    val videosArray = adSettingList[0].plan_videos.split(",")
+                                Log.d(mTag, "adSettingList[0].plan_videos.length = ${adSettingList[currentAdSettingIdx].plan_videos.length}")
+                                if (adSettingList[currentAdSettingIdx].plan_videos.isNotEmpty()) {
+                                    val videosArray = adSettingList[currentAdSettingIdx].plan_videos.split(",")
 
                                     if (videosArray.isNotEmpty()) {
                                         videoList.clear()
@@ -759,8 +824,8 @@ class MainActivity : AppCompatActivity() {
                         //then download videos
                         Log.d(mTag, "Download Images complete, then download videos.")
 
-                        if (adSettingList[0].plan_videos.isNotEmpty()) {
-                            val videosArray = adSettingList[0].plan_videos.split(",")
+                        if (adSettingList[currentAdSettingIdx].plan_videos.isNotEmpty()) {
+                            val videosArray = adSettingList[currentAdSettingIdx].plan_videos.split(",")
 
                             if (videosArray.isNotEmpty()) {
                                 videoList.clear()
@@ -817,8 +882,8 @@ class MainActivity : AppCompatActivity() {
 
                         //then download videos
                         Log.d(mTag, "Download Images complete, then download videos.")
-                        if (adSettingList[0].plan_videos.isNotEmpty()) {
-                            val videosArray = adSettingList[0].plan_videos.split(",")
+                        if (adSettingList[currentAdSettingIdx].plan_videos.isNotEmpty()) {
+                            val videosArray = adSettingList[currentAdSettingIdx].plan_videos.split(",")
                             videoList.clear()
                             downloadVideoReadyArray.clear()
                             for (i in videosArray.indices) {
@@ -1062,12 +1127,63 @@ class MainActivity : AppCompatActivity() {
             runOnUiThread {
                 try {
                     Log.d(mTag, "getPingCallback json = $json")
-                    getCurrentTimeString()
-                    if (pingCount >= 1440) {
+                    val currentTimestamp = getCurrentTimeStamp()
+                    Log.d(mTag, "currentTimestamp = $currentTimestamp")
+                    if (layoutList.size > 0) {
+                        planStartTime = getTimeStampFromString(layoutList[0].plan_start_time)
+                        plan2StartTime = getTimeStampFromString(layoutList[0].plan2_start_time)
+                        plan3StartTime = getTimeStampFromString(layoutList[0].plan3_start_time)
+                        plan4StartTime = getTimeStampFromString(layoutList[0].plan4_start_time)
+                    }
+
+                    Log.d(mTag, "planStartTime = $planStartTime")
+                    Log.d(mTag, "plan2StartTime = $plan2StartTime")
+                    Log.d(mTag, "plan3StartTime = $plan3StartTime")
+                    Log.d(mTag, "plan4StartTime = $plan4StartTime")
+
+                    if (layoutList.size > 0) {
+                        currentPlanId = if (plan4StartTime in 1..currentTimestamp) { //plan4
+                            Log.d(mTag, "plan4")
+                            layoutList[0].plan4_id
+                        } else if (plan3StartTime in 1..currentTimestamp) { //plan3
+                            Log.d(mTag, "plan3")
+                            layoutList[0].plan3_id
+                        } else if (plan2StartTime in 1..currentTimestamp) { //plan2
+                            Log.d(mTag, "plan2")
+                            layoutList[0].plan2_id
+                        } //else if (planStartTime in 1..currentTimestamp) { //plan1
+                        else { //plan1
+                            Log.d(mTag, "plan1")
+                            layoutList[0].plan_id
+                        }
+
+                        //get current plan idx
+                        if (currentPlanId > 0) {
+                            if (adSettingList.size > 0) {
+                                //get current plan idx
+                                for (i in adSettingList.indices) {
+                                    if (currentPlanId == adSettingList[i].plan_id) {
+                                        currentAdSettingIdx = i
+                                        break
+                                    }
+                                }
+                            } else {
+                                currentAdSettingIdx = -1
+                            }
+                        }
+                    }
+
+                    if (previousPlanId != currentPlanId) {
+                        Log.d(mTag, "Time Plan change!!!")
+                        previousPlanId = currentPlanId
+                        getFirstPingResponse = false
+                    }
+
+                    /*if (pingCount >= 1440) { // 1 day
                         Log.d(mTag, "pingCount >= 1440")
                         pingCount = 0
                         getFirstPingResponse = false
-                    }
+                    }*/
 
                     if (json["result"] == 0 ) {
                         if (!getFirstPingResponse) {
@@ -1163,13 +1279,45 @@ class MainActivity : AppCompatActivity() {
                             defaultPlayLayoutDataDB!!.defaultPlayLayoutDataDao().update(defaultPlayLayoutData)
                         }
 
-                        planStartTime = layoutList[0].plan_start_time
-                        plan2StartTime = layoutList[0].plan2_start_time
-                        plan3StartTime = layoutList[0].plan3_start_time
-                        plan4StartTime = layoutList[0].plan4_start_time
+                        //planStartTimeString = layoutList[0].plan_start_time
+                        //plan2StartTimeString = layoutList[0].plan2_start_time
+                        //plan3StartTimeString = layoutList[0].plan3_start_time
+                        //plan4StartTimeString = layoutList[0].plan4_start_time
+
+                        planStartTime = getTimeStampFromString(layoutList[0].plan_start_time)
+                        plan2StartTime = getTimeStampFromString(layoutList[0].plan2_start_time)
+                        plan3StartTime = getTimeStampFromString(layoutList[0].plan3_start_time)
+                        plan4StartTime = getTimeStampFromString(layoutList[0].plan4_start_time)
 
                         //defaultLayoutPlayList = defaultPlayLayoutDataDB!!.defaultPlayLayoutDataDao().getAll() as ArrayList<DefaultPlayLayoutData>
                         //Log.d(mTag, "defaultLayoutPlayList = ${defaultLayoutPlayList!!.size}")
+                        val currentTimestamp = getCurrentTimeStamp()
+                        Log.d(mTag, "currentTimestamp = $currentTimestamp")
+                        Log.d(mTag, "planStartTime = $planStartTime")
+                        Log.d(mTag, "plan2StartTime = $plan2StartTime")
+                        Log.d(mTag, "plan3StartTime = $plan3StartTime")
+                        Log.d(mTag, "plan4StartTime = $plan4StartTime")
+
+
+
+                        currentPlanId = if (plan4StartTime in 1..currentTimestamp) { //plan4
+                            Log.d(mTag, "plan4")
+                            layoutList[0].plan4_id
+                        } else if (plan3StartTime in 1..currentTimestamp) { //plan3
+                            Log.d(mTag, "plan3")
+                            layoutList[0].plan3_id
+                        } else if (plan2StartTime in 1..currentTimestamp) { //plan2
+                            Log.d(mTag, "plan2")
+                            layoutList[0].plan2_id
+                        } //else if (planStartTime in 1..currentTimestamp) { //plan1
+                        else { //plan1
+                            Log.d(mTag, "plan1")
+                            layoutList[0].plan_id
+                        }
+
+                        if (previousPlanId != currentPlanId) {
+                            previousPlanId = currentPlanId
+                        }
 
                         val successIntent = Intent()
                         successIntent.action = Constants.ACTION.ACTION_GET_LAYOUT_SUCCESS
@@ -1252,8 +1400,15 @@ class MainActivity : AppCompatActivity() {
                             }*/
                         }
 
-
-
+                        //get current plan idx
+                        if (currentPlanId > 0) {
+                            for (i in adSettingList.indices) {
+                                if (currentPlanId == adSettingList[i].plan_id) {
+                                    currentAdSettingIdx = i
+                                    break
+                                }
+                            }
+                        }
 
                         val successIntent = Intent()
                         successIntent.action = Constants.ACTION.ACTION_GET_AD_SETTING_SUCCESS
@@ -1342,7 +1497,7 @@ class MainActivity : AppCompatActivity() {
         Log.e(mTag, "->Network Error")
         if (isFirstNetworkError) {
             isFirstNetworkError = false
-            if (adSettingList.size == 1) {
+            if (adSettingList.size >= 1) {
                 Log.d(mTag, "playMarqueeList.size = ${playMarqueeList.size}")
                 Log.d(mTag, "imageList.size = ${imageList.size}")
                 Log.d(mTag, "videoList.size = ${videoList.size}")
@@ -1657,6 +1812,21 @@ class MainActivity : AppCompatActivity() {
             for (i in files.indices) {
                 var found = false
 
+                if (adSettingList.size > 0) {
+                    for (j in adSettingList.indices) {
+                        if (adSettingList[j].plan_images.isNotEmpty()) {
+                            val imagesArray = adSettingList[j].plan_images.split(",")
+                            for (k in imagesArray.indices) {
+                                if (files[i].name == imagesArray[k]) {
+                                    found = true
+                                    break
+                                }
+                            }
+                        }
+                    }
+                }
+
+                /*
                 for (j in imageList.indices) {
                     if (files[i].name == imageList[j]) {
                         found = true
@@ -1664,13 +1834,27 @@ class MainActivity : AppCompatActivity() {
                         break
                     }
                 }
-
+                */
                 if (!found) { //not found in imageList, delete it!
                     val deletePath = "$dest_images_folder${files[i].name}"
                     val deleteFile = File(deletePath)
-                    deleteFile.delete()
-                    Log.d(mTag, "Delete $deletePath")
+                    val deleteUri  = Uri.fromFile(deleteFile)
+                    Log.d(mTag, "deleteUri = $deleteUri")
+                    try {
+                        if (deleteFile.exists()) {
+                            deleteFile.delete()
+                            //val cr = contentResolver
+                            //cr.delete(deleteUri, null, null)
+                            Log.d(mTag, "Delete $deletePath")
+                        }
+
+                    } catch (e: java.lang.Exception) {
+                        e.printStackTrace()
+                    }
+
+
                 }
+
             }
         }
     }
@@ -1687,6 +1871,21 @@ class MainActivity : AppCompatActivity() {
             for (i in files.indices) {
                 var found = false
 
+
+                if (adSettingList.size > 0) {
+                    for (j in adSettingList.indices) {
+                        if (adSettingList[j].plan_images.isNotEmpty()) {
+                            val videosArray = adSettingList[j].plan_videos.split(",")
+                            for (k in videosArray.indices) {
+                                if (files[i].name == videosArray[k]) {
+                                    found = true
+                                    break
+                                }
+                            }
+                        }
+                    }
+                }
+                /*
                 for (j in videoList.indices) {
                     if (files[i].name == videoList[j]) {
                         found = true
@@ -1694,12 +1893,24 @@ class MainActivity : AppCompatActivity() {
                         break
                     }
                 }
+                */
 
                 if (!found) { //not found in imageList, delete it!
                     val deletePath = "$dest_videos_folder${files[i].name}"
                     val deleteFile = File(deletePath)
-                    deleteFile.delete()
-                    Log.d(mTag, "Delete $deletePath")
+                    val deleteUri  = Uri.fromFile(deleteFile)
+                    Log.d(mTag, "deleteUri = $deleteUri")
+                    try {
+                        if (deleteFile.exists()) {
+                            deleteFile.delete()
+                            //val cr = contentResolver
+                            //cr.delete(deleteUri, null, null)
+                            Log.d(mTag, "Delete $deletePath")
+                        }
+
+                    } catch (e: java.lang.Exception) {
+                        e.printStackTrace()
+                    }
                 }
             }
         }
@@ -1737,6 +1948,7 @@ class MainActivity : AppCompatActivity() {
         rootView!!.removeAllViews()
         rootView!!.setBackgroundColor(Color.BLACK)
         rootView!!.setBackgroundResource(R.drawable.customborder)
+
         //init play index
         currentTextIndexTop = -1
         currentImageIndexTop = -1
@@ -1756,14 +1968,13 @@ class MainActivity : AppCompatActivity() {
                     val layoutTop = layoutList[0].layout_top
                     val layoutCenter = layoutList[0].layout_center
                     val layoutBottom = layoutList[0].layout_bottom
-
-                    val marqueeMode = adSettingList[0].marquee_mode
-                    val imagesMode = adSettingList[0].images_mode
-                    val videosMode = adSettingList[0].videos_mode
-
                     val layoutOrientation = layoutList[0].layoutOrientation
 
-                    val imageInterval = adSettingList[0].image_interval
+                    val marqueeMode = adSettingList[currentAdSettingIdx].marquee_mode
+                    val imagesMode = adSettingList[currentAdSettingIdx].images_mode
+                    val videosMode = adSettingList[currentAdSettingIdx].videos_mode
+
+                    val imageInterval = adSettingList[currentAdSettingIdx].image_interval
                     var imagesPlayInterval = 7000
                     when(imageInterval) {
                         0 -> {
@@ -3263,23 +3474,74 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    private fun getCurrentTimeString(): String {
+    private fun getCurrentTimeStamp(): Long {
 
-        val currentTime = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())
-        Log.d(mTag, "currentTime = $currentTime")
-        return currentTime
+        //val currentTime = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
+        //Log.d(mTag, "currentTime = $currentTime")
+
+        val tsLong = System.currentTimeMillis() / 1000
+        //val ts = tsLong.toString()
+
+        Log.d(mTag, "tsLong = $tsLong")
+
+        return tsLong
     }
 
-    private fun getTimeStampFromString(startTime: String) {
+    private fun getTimeStampFromString(startTime: String): Long {
+
+        var timestampRet: Long = 0
+
         val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
         Log.d(mTag, "Today = $today")
-        val combineString = "$today $startTime"
+        var combineString = ""
+        if (startTime == "--:--") {
+            combineString = "$today 00:00"
+        } else {
+            combineString = "$today $startTime"
+        }
+
+
+
         val format = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
         try {
             val date: Date = format.parse(combineString) as Date
             Log.d(mTag, "date = $date")
+
+            timestampRet = date.time
+            Log.d(mTag, "timestampRet = ${timestampRet/1000}")
+
+            return timestampRet/1000
+
         } catch (e: ParseException) {
             e.printStackTrace()
+        }
+
+        return timestampRet
+    }
+
+    private fun Activity.handleUncaughtException() {
+        Thread.setDefaultUncaughtExceptionHandler { _, throwable ->
+            // here you can report the throwable exception to Sentry or Crashlytics or whatever crash reporting service you're using, otherwise you may set the throwable variable to _ if it'll remain unused
+            val intent = Intent(this, MainActivity::class.java).apply {
+                putExtra("isCrashed", true)
+                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            startActivity(intent)
+            finish()
+            //Process.killProcess(Process.myPid())
+            android.os.Process.killProcess(myPid)
+            exitProcess(2)
+        }
+    }
+
+
+    fun Activity.showUncaughtExceptionDialog() {
+        if (intent.getBooleanExtra("isCrashed", false)) {
+            AlertDialog.Builder(this).apply {
+                setTitle("Something went wrong.")
+                setMessage("Something went wrong.\nWe'll work on fixing it.")
+                setPositiveButton("OK") { _, _ -> }
+            }.show()
         }
     }
 }
