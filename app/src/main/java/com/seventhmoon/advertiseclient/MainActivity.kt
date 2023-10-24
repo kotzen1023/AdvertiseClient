@@ -71,7 +71,6 @@ import com.seventhmoon.advertiseclient.persistence.DefaultPlayVideosDataDB
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.Response
-import okhttp3.internal.notifyAll
 import org.json.JSONException
 import org.json.JSONObject
 import java.io.File
@@ -1143,18 +1142,18 @@ class MainActivity : AppCompatActivity() {
 
                     if (layoutList.size > 0) {
                         currentPlanId = if (plan4StartTime in 1..currentTimestamp) { //plan4
-                            Log.d(mTag, "plan4")
-                            layoutList[0].plan4_id
+                            Log.d(mTag, "plan4, id = ${layoutList[0].plan4_id}")
+
                         } else if (plan3StartTime in 1..currentTimestamp) { //plan3
-                            Log.d(mTag, "plan3")
-                            layoutList[0].plan3_id
+                            Log.d(mTag, "plan3, id = ${layoutList[0].plan3_id}")
+
                         } else if (plan2StartTime in 1..currentTimestamp) { //plan2
-                            Log.d(mTag, "plan2")
-                            layoutList[0].plan2_id
+                            Log.d(mTag, "plan2, id = ${layoutList[0].plan2_id}")
+
                         } //else if (planStartTime in 1..currentTimestamp) { //plan1
                         else { //plan1
-                            Log.d(mTag, "plan1")
-                            layoutList[0].plan_id
+                            Log.d(mTag, "plan1, id = ${layoutList[0].plan_id}")
+
                         }
 
                         //get current plan idx
@@ -1268,8 +1267,12 @@ class MainActivity : AppCompatActivity() {
                     if (layoutList.size > 0) {
                         val defaultPlayLayoutData = DefaultPlayLayoutData(layoutList[0].layout_id, layoutList[0].screenWidth,
                             layoutList[0].screenHeight, layoutList[0].orientation,
-                            layoutList[0].layout_top, layoutList[0].layout_center,
-                            layoutList[0].layout_bottom, layoutList[0].layoutOrientation,
+                            layoutList[0].border,
+                            layoutList[0].layout_top, layoutList[0].layout_center, layoutList[0].layout_bottom,
+                            layoutList[0].layout2_top, layoutList[0].layout2_center, layoutList[0].layout2_bottom,
+                            layoutList[0].layout3_top, layoutList[0].layout3_center, layoutList[0].layout3_bottom,
+                            layoutList[0].layout4_top, layoutList[0].layout4_center, layoutList[0].layout4_bottom,
+                            layoutList[0].layoutOrientation,
                             layoutList[0].plan_id, layoutList[0].plan2_id, layoutList[0].plan3_id, layoutList[0].plan4_id,
                             layoutList[0].plan_start_time, layoutList[0].plan2_start_time, layoutList[0].plan3_start_time, layoutList[0].plan4_start_time)
 
@@ -1947,7 +1950,7 @@ class MainActivity : AppCompatActivity() {
         //clear layout
         rootView!!.removeAllViews()
         rootView!!.setBackgroundColor(Color.BLACK)
-        rootView!!.setBackgroundResource(R.drawable.customborder)
+        //rootView!!.setBackgroundResource(R.drawable.customborder)
 
         //init play index
         currentTextIndexTop = -1
@@ -1965,9 +1968,40 @@ class MainActivity : AppCompatActivity() {
             if (layoutList.size == 1) { //only one layout
                 if (adSettingList.size > 0) { // must have adSetting
                     val orientation = layoutList[0].orientation
-                    val layoutTop = layoutList[0].layout_top
-                    val layoutCenter = layoutList[0].layout_center
-                    val layoutBottom = layoutList[0].layout_bottom
+                    var layoutTop = 0
+                    var layoutCenter = 0
+                    var layoutBottom = 0
+                    when(layoutList[0].border) {
+                        1 -> rootView!!.setBackgroundResource(R.drawable.border_gold)
+                        2 -> rootView!!.setBackgroundResource(R.drawable.border_silver)
+
+                    }
+
+                    when(currentAdSettingIdx) {
+                        0 -> { //plan1
+                            layoutTop = layoutList[0].layout_top
+                            layoutCenter = layoutList[0].layout_center
+                            layoutBottom = layoutList[0].layout_bottom
+                        }
+                        1 -> { //plan2
+                            layoutTop = layoutList[0].layout2_top
+                            layoutCenter = layoutList[0].layout2_center
+                            layoutBottom = layoutList[0].layout2_bottom
+                        }
+                        2 -> { //plan3
+                            layoutTop = layoutList[0].layout3_top
+                            layoutCenter = layoutList[0].layout3_center
+                            layoutBottom = layoutList[0].layout3_bottom
+                        }
+                        3 -> { //plan4
+                            layoutTop = layoutList[0].layout4_top
+                            layoutCenter = layoutList[0].layout4_center
+                            layoutBottom = layoutList[0].layout4_bottom
+                        }
+                    }
+                    //val layoutTop = layoutList[0].layout_top
+                    //val layoutCenter = layoutList[0].layout_center
+                    //val layoutBottom = layoutList[0].layout_bottom
                     val layoutOrientation = layoutList[0].layoutOrientation
 
                     val marqueeMode = adSettingList[currentAdSettingIdx].marquee_mode
@@ -2061,6 +2095,7 @@ class MainActivity : AppCompatActivity() {
                     linearLayoutTop!!.removeAllViews()
                     linearLayoutTop!!.layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT, linearLayoutTopWeight)
                     linearLayoutTop!!.orientation = LinearLayout.VERTICAL
+                    linearLayoutTop!!.setBackgroundColor(Color.BLACK)
                     //linearLayoutTop!!.weightSum = 2.0F
 
                     //textViewTop
@@ -2148,6 +2183,7 @@ class MainActivity : AppCompatActivity() {
                     linearLayoutCenter!!.removeAllViews()
                     linearLayoutCenter!!.layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT, linearLayoutCenterWeight)
                     linearLayoutCenter!!.orientation = LinearLayout.VERTICAL
+                    linearLayoutCenter!!.setBackgroundColor(Color.BLACK)
                     //linearLayoutCenter!!.weightSum = 2.0F
 
                     //textViewCenter
@@ -2226,6 +2262,7 @@ class MainActivity : AppCompatActivity() {
                     linearLayoutBottom!!.removeAllViews()
                     linearLayoutBottom!!.layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT, linearLayoutBottomWeight)
                     linearLayoutBottom!!.orientation = LinearLayout.VERTICAL
+                    linearLayoutBottom!!.setBackgroundColor(Color.BLACK)
                     //linearLayoutBottom!!.weightSum = 2.0F
 
                     //textViewBottom

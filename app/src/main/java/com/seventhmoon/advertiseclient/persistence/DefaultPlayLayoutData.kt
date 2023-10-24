@@ -6,7 +6,12 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = DefaultPlayLayoutData.TABLE_NAME)
 class DefaultPlayLayoutData(layout_id: Int, screenWidth: Int, screenHeight: Int, orientation: Int,
-                            layout_top: Int, layout_center: Int, layout_bottom: Int, layoutOrientation: Int,
+                            border: Int,
+                            layout_top: Int, layout_center: Int, layout_bottom: Int,
+                            layout2_top: Int, layout2_center: Int, layout2_bottom: Int,
+                            layout3_top: Int, layout3_center: Int, layout3_bottom: Int,
+                            layout4_top: Int, layout4_center: Int, layout4_bottom: Int,
+                            layoutOrientation: Int,
                             plan_id: Int, plan2_id: Int, plan3_id: Int, plan4_id: Int,
                             plan_start_time: String, plan2_start_time: String, plan3_start_time: String, plan4_start_time: String) {
     companion object {
@@ -22,6 +27,9 @@ class DefaultPlayLayoutData(layout_id: Int, screenWidth: Int, screenHeight: Int,
     @ColumnInfo(name = "screenHeight")
     private var screenHeight: Int = 0
 
+    @ColumnInfo(name = "border")
+    private var border: Int = 0
+
     @ColumnInfo(name = "orientation")
     private var orientation: Int = 0
 
@@ -33,6 +41,33 @@ class DefaultPlayLayoutData(layout_id: Int, screenWidth: Int, screenHeight: Int,
 
     @ColumnInfo(name = "layout_bottom")
     private var layout_bottom: Int = 0
+
+    @ColumnInfo(name = "layout2_top")
+    private var layout2_top: Int = 0
+
+    @ColumnInfo(name = "layout2_center")
+    private var layout2_center: Int = 0
+
+    @ColumnInfo(name = "layout2_bottom")
+    private var layout2_bottom: Int = 0
+
+    @ColumnInfo(name = "layout3_top")
+    private var layout3_top: Int = 0
+
+    @ColumnInfo(name = "layout3_center")
+    private var layout3_center: Int = 0
+
+    @ColumnInfo(name = "layout3_bottom")
+    private var layout3_bottom: Int = 0
+
+    @ColumnInfo(name = "layout4_top")
+    private var layout4_top: Int = 0
+
+    @ColumnInfo(name = "layout4_center")
+    private var layout4_center: Int = 0
+
+    @ColumnInfo(name = "layout4_bottom")
+    private var layout4_bottom: Int = 0
 
     @ColumnInfo(name = "layoutOrientation")
     private var layoutOrientation: Int = 0
@@ -69,6 +104,15 @@ class DefaultPlayLayoutData(layout_id: Int, screenWidth: Int, screenHeight: Int,
         this.layout_top = layout_top
         this.layout_center = layout_center
         this.layout_bottom = layout_bottom
+        this.layout2_top = layout2_top
+        this.layout2_center = layout2_center
+        this.layout2_bottom = layout2_bottom
+        this.layout3_top = layout3_top
+        this.layout3_center = layout3_center
+        this.layout3_bottom = layout3_bottom
+        this.layout4_top = layout4_top
+        this.layout4_center = layout4_center
+        this.layout4_bottom = layout4_bottom
         this.layoutOrientation = layoutOrientation
         this.plan_id = plan_id
         this.plan2_id = plan2_id
@@ -104,6 +148,14 @@ class DefaultPlayLayoutData(layout_id: Int, screenWidth: Int, screenHeight: Int,
         this.screenHeight = screenHeight
     }
 
+    fun getBorder(): Int {
+        return border
+    }
+
+    fun setBorder(border : Int) {
+        this.border = border
+    }
+
     fun getOrientation(): Int {
         return orientation
     }
@@ -111,7 +163,7 @@ class DefaultPlayLayoutData(layout_id: Int, screenWidth: Int, screenHeight: Int,
     fun setOrientation(orientation : Int) {
         this.orientation = orientation
     }
-
+    //layout1
     fun getLayout_top(): Int {
         return layout_top
     }
@@ -134,6 +186,79 @@ class DefaultPlayLayoutData(layout_id: Int, screenWidth: Int, screenHeight: Int,
 
     fun setLayout_bottom(layout_bottom : Int) {
         this.layout_bottom = layout_bottom
+    }
+    //layout2
+    fun getLayout2_top(): Int {
+        return layout2_top
+    }
+
+    fun setLayout2_top(layout2_top : Int) {
+        this.layout2_top = layout2_top
+    }
+
+    fun getLayout2_center(): Int {
+        return layout2_center
+    }
+
+    fun setLayout2_center(layout2_center : Int) {
+        this.layout2_center = layout2_center
+    }
+
+    fun getLayout2_bottom(): Int {
+        return layout2_bottom
+    }
+
+    fun setLayout2_bottom(layout2_bottom : Int) {
+        this.layout2_bottom = layout2_bottom
+    }
+    //layout3
+    fun getLayout3_top(): Int {
+        return layout3_top
+    }
+
+    fun setLayout3_top(layout3_top : Int) {
+        this.layout3_top = layout3_top
+    }
+
+    fun getLayout3_center(): Int {
+        return layout3_center
+    }
+
+    fun setLayout3_center(layout3_center : Int) {
+        this.layout3_center = layout3_center
+    }
+
+    fun getLayout3_bottom(): Int {
+        return layout3_bottom
+    }
+
+    fun setLayout3_bottom(layout3_bottom : Int) {
+        this.layout3_bottom = layout3_bottom
+    }
+
+    //layout4
+    fun getLayout4_top(): Int {
+        return layout4_top
+    }
+
+    fun setLayout4_top(layout4_top : Int) {
+        this.layout4_top = layout4_top
+    }
+
+    fun getLayout4_center(): Int {
+        return layout4_center
+    }
+
+    fun setLayout4_center(layout4_center : Int) {
+        this.layout4_center = layout4_center
+    }
+
+    fun getLayout4_bottom(): Int {
+        return layout4_bottom
+    }
+
+    fun setLayout4_bottom(layout4_bottom : Int) {
+        this.layout4_bottom = layout4_bottom
     }
 
     fun getLayoutOrientation(): Int {
