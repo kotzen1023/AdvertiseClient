@@ -1394,7 +1394,7 @@ class MainActivity : AppCompatActivity() {
                                 adSettingList[i].plan_marquee, adSettingList[i].plan_images,
                                 adSettingList[i].plan_videos, adSettingList[i].marquee_mode,
                                 adSettingList[i].images_mode, adSettingList[i].videos_mode,
-                                adSettingList[i].image_interval)
+                                adSettingList[i].marquee_interval, adSettingList[i].image_interval)
                             defaultPlayAdSettingDataDB!!.defaultPlayAdSettingDataDao().insert(defaultPlayAdSettingData)
                             /*if (defaultAdSettingPlayList!!.size == 0) {
                                 defaultPlayAdSettingDataDB!!.defaultPlayAdSettingDataDao().insert(defaultPlayAdSettingData)
@@ -2009,6 +2009,21 @@ class MainActivity : AppCompatActivity() {
                     val videosMode = adSettingList[currentAdSettingIdx].videos_mode
 
                     val imageInterval = adSettingList[currentAdSettingIdx].image_interval
+                    val marqueeInterval = adSettingList[currentAdSettingIdx].marquee_interval
+                    var marqueePlayInterval = 60000 // 60 seconds
+
+                    when(marqueeInterval) {
+                        0 -> {
+                            marqueePlayInterval = 60000
+                        }
+                        1 -> {
+                            marqueePlayInterval = 90000
+                        }
+                        2 -> {
+                            marqueePlayInterval = 120000
+                        }
+                    }
+
                     var imagesPlayInterval = 7000
                     when(imageInterval) {
                         0 -> {
@@ -2612,7 +2627,7 @@ class MainActivity : AppCompatActivity() {
                         //if playMarqueeList.size > 0, it would play in loop
                         if (playMarqueeList.size > 0) {
                             countDownTimerMarqueeRunning = true
-                            countDownTimerMarquee = object : CountDownTimer(40000, 40000) {
+                            countDownTimerMarquee = object : CountDownTimer(marqueePlayInterval.toLong(), marqueePlayInterval.toLong()) {
                                 override fun onTick(millisUntilFinished: Long) {
                                     Log.d(mTag, "countDownTimerMarquee onTick = $millisUntilFinished")
                                 }

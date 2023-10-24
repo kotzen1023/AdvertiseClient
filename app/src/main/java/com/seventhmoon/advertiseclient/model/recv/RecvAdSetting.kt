@@ -9,5 +9,6 @@ class RecvAdSetting {
     var marquee_mode = 0
     var images_mode = 0
     var videos_mode = 0
+    var marquee_interval = 0
     var image_interval = 0
 }
