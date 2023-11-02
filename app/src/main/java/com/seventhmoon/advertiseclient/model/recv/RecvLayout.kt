@@ -29,4 +29,5 @@ class RecvLayout {
     var plan2_start_time = "--:--"
     var plan3_start_time = "--:--"
     var plan4_start_time = "--:--"
+    var pingWebInterval = 0
 }

@@ -13,7 +13,8 @@ class DefaultPlayLayoutData(layout_id: Int, screenWidth: Int, screenHeight: Int,
                             layout4_top: Int, layout4_center: Int, layout4_bottom: Int,
                             layoutOrientation: Int,
                             plan_id: Int, plan2_id: Int, plan3_id: Int, plan4_id: Int,
-                            plan_start_time: String, plan2_start_time: String, plan3_start_time: String, plan4_start_time: String) {
+                            plan_start_time: String, plan2_start_time: String, plan3_start_time: String, plan4_start_time: String,
+                            pingWebInterval: Int) {
     companion object {
         const val TABLE_NAME = "DefaultPlayLayoutData"
     }
@@ -96,6 +97,9 @@ class DefaultPlayLayoutData(layout_id: Int, screenWidth: Int, screenHeight: Int,
     @ColumnInfo(name = "plan4_start_time")
     private var plan4_start_time: String = ""
 
+    @ColumnInfo(name = "pingWebInterval")
+    private var pingWebInterval: Int = 0
+
     init {
         this.layout_id = layout_id
         this.screenWidth = screenWidth
@@ -122,6 +126,7 @@ class DefaultPlayLayoutData(layout_id: Int, screenWidth: Int, screenHeight: Int,
         this.plan2_start_time = plan2_start_time
         this.plan3_start_time = plan3_start_time
         this.plan4_start_time = plan4_start_time
+        this.pingWebInterval = pingWebInterval
     }
 
     fun getLayout_id (): Int {
@@ -331,5 +336,13 @@ class DefaultPlayLayoutData(layout_id: Int, screenWidth: Int, screenHeight: Int,
 
     fun setPlan4_start_time(plan4_start_time : String) {
         this.plan4_start_time = plan4_start_time
+    }
+
+    fun getPingWebInterval(): Int {
+        return pingWebInterval
+    }
+
+    fun setPingWebInterval(pingWebInterval : Int) {
+        this.pingWebInterval = pingWebInterval
     }
 }

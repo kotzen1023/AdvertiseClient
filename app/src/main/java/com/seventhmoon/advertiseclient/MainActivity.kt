@@ -165,6 +165,11 @@ class MainActivity : AppCompatActivity() {
 
     private var toastHandle: Toast? = null
 
+    private lateinit var countDownTimerPingWeb : CountDownTimer
+    var countDownTimerPingWebRunning : Boolean = false
+    private var pingWebInterval : Long = 60000
+    private var prevPingWebInterval : Long = 60000
+
     private lateinit var countDownTimerMarquee : CountDownTimer
     var countDownTimerMarqueeRunning : Boolean = false
     private lateinit var countDownTimerImage : CountDownTimer
@@ -357,6 +362,18 @@ class MainActivity : AppCompatActivity() {
             receiveLayout.plan2_start_time = defaultLayoutPlayList!![0].getPlan2_start_time()
             receiveLayout.plan3_start_time = defaultLayoutPlayList!![0].getPlan3_start_time()
             receiveLayout.plan4_start_time = defaultLayoutPlayList!![0].getPlan4_start_time()
+            receiveLayout.pingWebInterval = defaultLayoutPlayList!![0].getPingWebInterval()
+
+            pingWebInterval = when(receiveLayout.pingWebInterval) {
+                1 -> 1000
+                2 -> 5000
+                3 -> 10000
+                4 -> 15000
+                5 -> 30000
+                else -> 60000
+            }
+
+            prevPingWebInterval = pingWebInterval
 
             planStartTimeString = receiveLayout.plan_start_time
             plan2StartTimeString = receiveLayout.plan2_start_time
@@ -1091,22 +1108,34 @@ class MainActivity : AppCompatActivity() {
             jsonObject.put("screenWidth", screenWidth)
             jsonObject.put("screenHeight", screenHeight)
             jsonObject.put("orientation", currentOrientation)
+            jsonObject.put("androidVersion", Build.VERSION.RELEASE)
         } catch (e: JSONException) {
             e.printStackTrace()
         }
 
         ApiFunc().getServerPingResponse(jsonObject, getPingCallback)
 
-        val timer = object : CountDownTimer(60000, 60000) {
+        if (countDownTimerPingWebRunning) {
+            countDownTimerPingWeb.cancel()
+        }
+
+        countDownTimerPingWebRunning = true
+        countDownTimerPingWeb = object : CountDownTimer(pingWebInterval, pingWebInterval) {
             override fun onTick(millisUntilFinished: Long) {
-                Log.d(mTag, "60 second passed...")
+                Log.d(mTag, "$pingWebInterval ms passed...")
             }
 
             override fun onFinish() { //结束后的操作
+                countDownTimerPingWebRunning = false
                 pingCount += 1
-                Log.d(mTag, "pingCount = $pingCount")
+                Log.d(mTag, "pingCount = $pingCount, pingWebInterval = $pingWebInterval")
                 ApiFunc().getServerPingResponse(jsonObject, getPingCallback)
                 this.start()
+                countDownTimerPingWebRunning = true
+
+                /*if (pingCount > 2) {
+                    rebootDevice()
+                }*/
             }
         }.start()
     }
@@ -1141,17 +1170,21 @@ class MainActivity : AppCompatActivity() {
                     Log.d(mTag, "plan4StartTime = $plan4StartTime")
 
                     if (layoutList.size > 0) {
-                        currentPlanId = if (plan4StartTime in 1..currentTimestamp) { //plan4
+                        if (plan4StartTime in 1..currentTimestamp) { //plan4
+                            currentPlanId = layoutList[0].plan4_id
                             Log.d(mTag, "plan4, id = ${layoutList[0].plan4_id}")
 
                         } else if (plan3StartTime in 1..currentTimestamp) { //plan3
+                            currentPlanId = layoutList[0].plan3_id
                             Log.d(mTag, "plan3, id = ${layoutList[0].plan3_id}")
 
                         } else if (plan2StartTime in 1..currentTimestamp) { //plan2
+                            currentPlanId = layoutList[0].plan2_id
                             Log.d(mTag, "plan2, id = ${layoutList[0].plan2_id}")
 
                         } //else if (planStartTime in 1..currentTimestamp) { //plan1
                         else { //plan1
+                            currentPlanId = layoutList[0].plan_id
                             Log.d(mTag, "plan1, id = ${layoutList[0].plan_id}")
 
                         }
@@ -1171,6 +1204,8 @@ class MainActivity : AppCompatActivity() {
                             }
                         }
                     }
+
+                    Log.d(mTag, "previousPlanId = $previousPlanId, currentPlanId = $currentPlanId ")
 
                     if (previousPlanId != currentPlanId) {
                         Log.d(mTag, "Time Plan change!!!")
@@ -1274,7 +1309,8 @@ class MainActivity : AppCompatActivity() {
                             layoutList[0].layout4_top, layoutList[0].layout4_center, layoutList[0].layout4_bottom,
                             layoutList[0].layoutOrientation,
                             layoutList[0].plan_id, layoutList[0].plan2_id, layoutList[0].plan3_id, layoutList[0].plan4_id,
-                            layoutList[0].plan_start_time, layoutList[0].plan2_start_time, layoutList[0].plan3_start_time, layoutList[0].plan4_start_time)
+                            layoutList[0].plan_start_time, layoutList[0].plan2_start_time, layoutList[0].plan3_start_time, layoutList[0].plan4_start_time,
+                            layoutList[0].pingWebInterval)
 
                         if (defaultLayoutPlayList!!.size == 0) {
                             defaultPlayLayoutDataDB!!.defaultPlayLayoutDataDao().insert(defaultPlayLayoutData)
@@ -1320,6 +1356,22 @@ class MainActivity : AppCompatActivity() {
 
                         if (previousPlanId != currentPlanId) {
                             previousPlanId = currentPlanId
+                        }
+
+                        when(layoutList[0].pingWebInterval) {
+                            0 -> pingWebInterval = 60000
+                            1 -> pingWebInterval = 1000
+                            2 -> pingWebInterval = 5000
+                            3 -> pingWebInterval = 10000
+                            4 -> pingWebInterval = 15000
+                            5 -> pingWebInterval = 30000
+                            else -> pingWebInterval = 60000
+                        }
+
+                        Log.e(mTag, "prevPingWebInterval = $prevPingWebInterval, pingWebInterval = $pingWebInterval")
+                        if (prevPingWebInterval != pingWebInterval) {
+                            prevPingWebInterval = pingWebInterval
+                            pingWeb()
                         }
 
                         val successIntent = Intent()
@@ -1934,15 +1986,18 @@ class MainActivity : AppCompatActivity() {
             countDownTimerImage.cancel()
         }
         //if video view is playing, stop it
-        if (videoViewTop != null && videoViewTop!!.isPlaying) {
+        //if (videoViewTop != null && videoViewTop!!.isPlaying) {
+        if (videoViewTop != null) {
             videoViewTop!!.stopPlayback()
             //videoViewTop!!.visibility = View.INVISIBLE
         }
-        if (videoViewCenter != null && videoViewCenter!!.isPlaying) {
+        //if (videoViewCenter != null && videoViewCenter!!.isPlaying) {
+        if (videoViewCenter != null) {
             videoViewCenter!!.stopPlayback()
             //videoViewCenter!!.visibility = View.INVISIBLE
         }
-        if (videoViewBottom != null && videoViewBottom!!.isPlaying) {
+        //if (videoViewBottom != null && videoViewBottom!!.isPlaying) {
+        if (videoViewBottom != null) {
             videoViewBottom!!.stopPlayback()
             //videoViewBottom!!.visibility = View.INVISIBLE
         }
@@ -2113,83 +2168,58 @@ class MainActivity : AppCompatActivity() {
                     linearLayoutTop!!.setBackgroundColor(Color.BLACK)
                     //linearLayoutTop!!.weightSum = 2.0F
 
-                    //textViewTop
-                    if (textViewTop == null) {
-                        textViewTop = TextView(mContext)
+                    when (layoutTop) {
+                        1 -> {
+                            //textViewTop
+                            if (textViewTop == null) {
+                                textViewTop = TextView(mContext)
+                            }
+                            textViewTop!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                            textViewTop!!.setBackgroundColor(Color.BLACK)
+                            textViewTop!!.textSize = 40.0F
+                            textViewTop!!.setTextColor(Color.WHITE)
+                            textViewTop!!.ellipsize = TextUtils.TruncateAt.MARQUEE
+                            textViewTop!!.isSingleLine = true
+                            textViewTop!!.freezesText = true
+                            textViewTop!!.gravity = Gravity.CENTER_VERTICAL
+                            textViewTop!!.marqueeRepeatLimit = -1
+                            textViewTop!!.visibility = View.GONE
+                            linearLayoutTop!!.addView(textViewTop)
+                        }
+                        2 -> {
+                            //imageViewTop
+                            if (imageViewTop == null) {
+                                imageViewTop = ImageView(mContext)
+                            }
+                            imageViewTop!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                            imageViewTop!!.visibility = View.GONE
+                            linearLayoutTop!!.addView(imageViewTop)
+                            //imageViewTop2
+                            if (imageViewTop2 == null) {
+                                imageViewTop2 = ImageView(mContext)
+                            }
+                            imageViewTop2!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                            imageViewTop2!!.visibility = View.GONE
+                            linearLayoutTop!!.addView(imageViewTop2)
+                        }
+                        3 -> {
+                            //videoViewLayoutTop
+                            if (videoViewLayoutTop == null) {
+                                videoViewLayoutTop = RelativeLayout(mContext)
+                            }
+                            videoViewLayoutTop!!.removeAllViews()
+                            videoViewLayoutTop!!.layoutParams = RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT)
+                            videoViewLayoutTop!!.gravity = Gravity.CENTER
+                            videoViewLayoutTop!!.visibility = View.GONE
+                            linearLayoutTop!!.addView(videoViewLayoutTop)
+                            //videoViewTop
+                            if (videoViewTop == null) {
+                                videoViewTop = VideoView(mContext)
+                            }
+                            videoViewTop!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                            videoViewLayoutTop!!.addView(videoViewTop)
+                        }
                     }
-                    textViewTop!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-                    textViewTop!!.setBackgroundColor(Color.BLACK)
-                    textViewTop!!.textSize = 40.0F
-                    textViewTop!!.setTextColor(Color.WHITE)
-                    textViewTop!!.ellipsize = TextUtils.TruncateAt.MARQUEE
-                    textViewTop!!.isSingleLine = true
-                    textViewTop!!.freezesText = true
-                    textViewTop!!.gravity = Gravity.CENTER_VERTICAL
-                    textViewTop!!.marqueeRepeatLimit = -1
-                    textViewTop!!.visibility = View.GONE
-                    linearLayoutTop!!.addView(textViewTop)
-                    //imageViewTop
-                    if (imageViewTop == null) {
-                        imageViewTop = ImageView(mContext)
-                    }
-                    imageViewTop!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-                    imageViewTop!!.visibility = View.GONE
-                    linearLayoutTop!!.addView(imageViewTop)
-                    //imageViewTop2
-                    if (imageViewTop2 == null) {
-                        imageViewTop2 = ImageView(mContext)
-                    }
-                    imageViewTop2!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-                    imageViewTop2!!.visibility = View.GONE
-                    linearLayoutTop!!.addView(imageViewTop2)
-                    //videoViewLayoutTop
-                    if (videoViewLayoutTop == null) {
-                        videoViewLayoutTop = RelativeLayout(mContext)
-                    }
-                    videoViewLayoutTop!!.removeAllViews()
-                    videoViewLayoutTop!!.layoutParams = RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT)
-                    videoViewLayoutTop!!.gravity = Gravity.CENTER
-                    videoViewLayoutTop!!.visibility = View.GONE
-                    linearLayoutTop!!.addView(videoViewLayoutTop)
-                    //videoViewTop
-                    if (videoViewTop == null) {
-                        videoViewTop = VideoView(mContext)
-                    }
-                    videoViewTop!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-                    videoViewLayoutTop!!.addView(videoViewTop)
-
-                    //top pack
-                    /*
-                    when(layoutOrientation) {
-                        1 -> { //horizontal
-                            mainLinearLayout!!.addView(linearLayoutTop)
-                        }
-                        2 -> { //left triangle
-                            Log.d(mTag, "left triangle")
-                            mainLinearLayout!!.addView(linearLayoutTop)
-                            Log.d(mTag, "linearLayoutTop add to mainLinearLayout")
-                            mainLinearLayout!!.addView(linearLayoutTriangle)
-                            Log.d(mTag, "linearLayoutTriangle add to mainLinearLayout")
-                        }
-                        3 -> { //right triangle
-                            Log.d(mTag, "right triangle")
-                            linearLayoutTriangle!!.addView(linearLayoutTop)
-                            mainLinearLayout!!.addView(linearLayoutTriangle)
-                        }
-                        4 -> { //top triangle
-                            Log.d(mTag, "top triangle")
-                            mainLinearLayout!!.addView(linearLayoutTop)
-                            mainLinearLayout!!.addView(linearLayoutTriangle)
-                        }
-                        5 -> { //down triangle
-                            Log.d(mTag, "down triangle")
-                            linearLayoutTriangle!!.addView(linearLayoutTop)
-                            mainLinearLayout!!.addView(linearLayoutTriangle)
-                        }
-                        else -> { //0 vertical
-                            mainLinearLayout!!.addView(linearLayoutTop)
-                        }
-                    }*/
 
                     //LinearLayoutCenter
                     if (linearLayoutCenter == null) {
@@ -2201,74 +2231,58 @@ class MainActivity : AppCompatActivity() {
                     linearLayoutCenter!!.setBackgroundColor(Color.BLACK)
                     //linearLayoutCenter!!.weightSum = 2.0F
 
-                    //textViewCenter
-                    if (textViewCenter == null) {
-                        textViewCenter = TextView(mContext)
+                    when (layoutCenter) {
+                        1 -> {
+                            //textViewCenter
+                            if (textViewCenter == null) {
+                                textViewCenter = TextView(mContext)
+                            }
+                            textViewCenter!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                            textViewCenter!!.setBackgroundColor(Color.BLACK)
+                            textViewCenter!!.textSize = 40.0F
+                            textViewCenter!!.setTextColor(Color.WHITE)
+                            textViewCenter!!.ellipsize = TextUtils.TruncateAt.MARQUEE
+                            textViewCenter!!.isSingleLine = true
+                            textViewCenter!!.freezesText = true
+                            textViewCenter!!.gravity = Gravity.CENTER_VERTICAL
+                            textViewCenter!!.marqueeRepeatLimit = -1
+                            textViewCenter!!.visibility = View.GONE
+                            linearLayoutCenter!!.addView(textViewCenter)
+                        }
+                        2 -> {
+                            //imageViewCenter
+                            if (imageViewCenter == null) {
+                                imageViewCenter = ImageView(mContext)
+                            }
+                            imageViewCenter!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                            imageViewCenter!!.visibility = View.GONE
+                            linearLayoutCenter!!.addView(imageViewCenter)
+                            //imageViewCenter2
+                            if (imageViewCenter2 == null) {
+                                imageViewCenter2 = ImageView(mContext)
+                            }
+                            imageViewCenter2!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                            imageViewCenter2!!.visibility = View.GONE
+                            linearLayoutCenter!!.addView(imageViewCenter2)
+                        }
+                        3 -> {
+                            //videoViewLayoutCenter
+                            if (videoViewLayoutCenter == null) {
+                                videoViewLayoutCenter = RelativeLayout(mContext)
+                            }
+                            videoViewLayoutCenter!!.removeAllViews()
+                            videoViewLayoutCenter!!.layoutParams = RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT)
+                            videoViewLayoutCenter!!.gravity = Gravity.CENTER
+                            videoViewLayoutCenter!!.visibility = View.GONE
+                            linearLayoutCenter!!.addView(videoViewLayoutCenter)
+                            //videoViewCenter
+                            if (videoViewCenter == null) {
+                                videoViewCenter = VideoView(mContext)
+                            }
+                            videoViewCenter!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                            videoViewLayoutCenter!!.addView(videoViewCenter)
+                        }
                     }
-                    textViewCenter!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-                    textViewCenter!!.setBackgroundColor(Color.BLACK)
-                    textViewCenter!!.textSize = 40.0F
-                    textViewCenter!!.setTextColor(Color.WHITE)
-                    textViewCenter!!.ellipsize = TextUtils.TruncateAt.MARQUEE
-                    textViewCenter!!.isSingleLine = true
-                    textViewCenter!!.freezesText = true
-                    textViewCenter!!.gravity = Gravity.CENTER_VERTICAL
-                    textViewCenter!!.marqueeRepeatLimit = -1
-                    textViewCenter!!.visibility = View.GONE
-                    linearLayoutCenter!!.addView(textViewCenter)
-                    //imageViewCenter
-                    if (imageViewCenter == null) {
-                        imageViewCenter = ImageView(mContext)
-                    }
-                    imageViewCenter!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-                    imageViewCenter!!.visibility = View.GONE
-                    linearLayoutCenter!!.addView(imageViewCenter)
-                    //imageViewCenter2
-                    if (imageViewCenter2 == null) {
-                        imageViewCenter2 = ImageView(mContext)
-                    }
-                    imageViewCenter2!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-                    imageViewCenter2!!.visibility = View.GONE
-                    linearLayoutCenter!!.addView(imageViewCenter2)
-                    //videoViewLayoutCenter
-                    if (videoViewLayoutCenter == null) {
-                        videoViewLayoutCenter = RelativeLayout(mContext)
-                    }
-                    videoViewLayoutCenter!!.removeAllViews()
-                    videoViewLayoutCenter!!.layoutParams = RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT)
-                    videoViewLayoutCenter!!.gravity = Gravity.CENTER
-                    videoViewLayoutCenter!!.visibility = View.GONE
-                    linearLayoutCenter!!.addView(videoViewLayoutCenter)
-                    //videoViewCenter
-                    if (videoViewCenter == null) {
-                        videoViewCenter = VideoView(mContext)
-                    }
-                    videoViewCenter!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-                    videoViewLayoutCenter!!.addView(videoViewCenter)
-
-                    //center pack
-                    /*
-                    when(layoutOrientation) {
-                        1 -> { //horizontal
-                            mainLinearLayout!!.addView(linearLayoutCenter)
-                        }
-                        2 -> { //left triangle
-                            linearLayoutTriangle!!.addView(linearLayoutCenter)
-                            Log.d(mTag, "linearLayoutCenter add to linearLayoutTriangle")
-                        }
-                        3 -> { //left triangle
-                            linearLayoutTriangle!!.addView(linearLayoutCenter)
-                        }
-                        4 -> { //left triangle
-                            linearLayoutTriangle!!.addView(linearLayoutCenter)
-                        }
-                        5 -> { //left triangle
-                            linearLayoutTriangle!!.addView(linearLayoutCenter)
-                        }
-                        else -> { //0 vertical
-                            mainLinearLayout!!.addView(linearLayoutCenter)
-                        }
-                    }*/
 
                     //LinearLayoutBottom
                     if (linearLayoutBottom == null) {
@@ -2279,74 +2293,59 @@ class MainActivity : AppCompatActivity() {
                     linearLayoutBottom!!.orientation = LinearLayout.VERTICAL
                     linearLayoutBottom!!.setBackgroundColor(Color.BLACK)
                     //linearLayoutBottom!!.weightSum = 2.0F
-
-                    //textViewBottom
-                    if (textViewBottom == null) {
-                        textViewBottom = TextView(mContext)
-                    }
-                    textViewBottom!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-                    textViewBottom!!.setBackgroundColor(Color.BLACK)
-                    textViewBottom!!.textSize = 40.0F
-                    textViewBottom!!.setTextColor(Color.WHITE)
-                    textViewBottom!!.ellipsize = TextUtils.TruncateAt.MARQUEE
-                    textViewBottom!!.isSingleLine = true
-                    textViewBottom!!.freezesText = true
-                    textViewBottom!!.gravity = Gravity.CENTER_VERTICAL
-                    textViewBottom!!.marqueeRepeatLimit = -1
-                    textViewBottom!!.visibility = View.GONE
-                    linearLayoutBottom!!.addView(textViewBottom)
-                    //imageViewBottom
-                    if (imageViewBottom == null) {
-                        imageViewBottom = ImageView(mContext)
-                    }
-                    imageViewBottom!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-                    imageViewBottom!!.visibility = View.GONE
-                    linearLayoutBottom!!.addView(imageViewBottom)
-                    //imageViewBottom2
-                    if (imageViewBottom2 == null) {
-                        imageViewBottom2 = ImageView(mContext)
-                    }
-                    imageViewBottom2!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-                    imageViewBottom2!!.visibility = View.GONE
-                    linearLayoutBottom!!.addView(imageViewBottom2)
-                    //videoViewLayoutBottom
-                    if (videoViewLayoutBottom == null) {
-                        videoViewLayoutBottom = RelativeLayout(mContext)
-                    }
-                    videoViewLayoutBottom!!.removeAllViews()
-                    videoViewLayoutBottom!!.layoutParams = RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT)
-                    videoViewLayoutBottom!!.gravity = Gravity.CENTER
-                    videoViewLayoutBottom!!.visibility = View.GONE
-                    linearLayoutBottom!!.addView(videoViewLayoutBottom)
-                    //videoViewBottom
-                    if (videoViewBottom == null) {
-                        videoViewBottom = VideoView(mContext)
-                    }
-                    videoViewBottom!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-                    videoViewLayoutBottom!!.addView(videoViewBottom)
-                    //bottom pack
-                    /*
-                    when(layoutOrientation) {
+                    when (layoutBottom) {
                         1 -> {
-                            mainLinearLayout!!.addView(linearLayoutBottom)
+                            //textViewBottom
+                            if (textViewBottom == null) {
+                                textViewBottom = TextView(mContext)
+                            }
+                            textViewBottom!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                            textViewBottom!!.setBackgroundColor(Color.BLACK)
+                            textViewBottom!!.textSize = 40.0F
+                            textViewBottom!!.setTextColor(Color.WHITE)
+                            textViewBottom!!.ellipsize = TextUtils.TruncateAt.MARQUEE
+                            textViewBottom!!.isSingleLine = true
+                            textViewBottom!!.freezesText = true
+                            textViewBottom!!.gravity = Gravity.CENTER_VERTICAL
+                            textViewBottom!!.marqueeRepeatLimit = -1
+                            textViewBottom!!.visibility = View.GONE
+                            linearLayoutBottom!!.addView(textViewBottom)
                         }
                         2 -> {
-                            linearLayoutTriangle!!.addView(linearLayoutBottom)
-                            Log.d(mTag, "linearLayoutBottom add to linearLayoutTriangle")
+                            //imageViewBottom
+                            if (imageViewBottom == null) {
+                                imageViewBottom = ImageView(mContext)
+                            }
+                            imageViewBottom!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                            imageViewBottom!!.visibility = View.GONE
+                            linearLayoutBottom!!.addView(imageViewBottom)
+                            //imageViewBottom2
+                            if (imageViewBottom2 == null) {
+                                imageViewBottom2 = ImageView(mContext)
+                            }
+                            imageViewBottom2!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                            imageViewBottom2!!.visibility = View.GONE
+                            linearLayoutBottom!!.addView(imageViewBottom2)
                         }
                         3 -> {
-                            mainLinearLayout!!.addView(linearLayoutBottom)
+                            //videoViewLayoutBottom
+                            if (videoViewLayoutBottom == null) {
+                                videoViewLayoutBottom = RelativeLayout(mContext)
+                            }
+                            videoViewLayoutBottom!!.removeAllViews()
+                            videoViewLayoutBottom!!.layoutParams = RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT)
+                            videoViewLayoutBottom!!.gravity = Gravity.CENTER
+                            videoViewLayoutBottom!!.visibility = View.GONE
+                            linearLayoutBottom!!.addView(videoViewLayoutBottom)
+                            //videoViewBottom
+                            if (videoViewBottom == null) {
+                                videoViewBottom = VideoView(mContext)
+                            }
+                            videoViewBottom!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                            videoViewLayoutBottom!!.addView(videoViewBottom)
                         }
-                        4 -> {
-                            linearLayoutTriangle!!.addView(linearLayoutBottom)
-                        }
-                        5 -> {
-                            mainLinearLayout!!.addView(linearLayoutBottom)
-                        }
-                        else -> {
-                            mainLinearLayout!!.addView(linearLayoutBottom)
-                        }
-                    }*/
+                    }
+
                     when(layoutOrientation) {
                         1 -> { //horizontal
                             mainLinearLayout!!.addView(linearLayoutTop)
@@ -2391,12 +2390,20 @@ class MainActivity : AppCompatActivity() {
                     }
 
                     //for marquee
-                    textViewTop!!.isSelected = true
-                    textViewCenter!!.isSelected = true
-                    textViewBottom!!.isSelected = true
+                    if (textViewTop != null) {
+                        textViewTop!!.isSelected = true
+                    }
+                    if (textViewCenter != null) {
+                        textViewCenter!!.isSelected = true
+                    }
+                    if (textViewBottom != null) {
+                        textViewBottom!!.isSelected = true
+                    }
 
-                    if (mediaControllerTop == null) {
-                        mediaControllerTop = MediaController(mContext)
+                    if (videoViewTop != null) {
+                        if (mediaControllerTop == null) {
+                            mediaControllerTop = MediaController(mContext)
+                        }
                         // anchor view for the videoView
                         mediaControllerTop!!.setAnchorView(videoViewTop)
                         // sets the media player to the videoView
@@ -2404,8 +2411,11 @@ class MainActivity : AppCompatActivity() {
                         // sets the media controller to the videoView
                         videoViewTop!!.setMediaController(mediaControllerTop)
                     }
-                    if (mediaControllerCenter == null) {
-                        mediaControllerCenter = MediaController(mContext)
+
+                    if (videoViewCenter != null) {
+                        if (mediaControllerCenter == null) {
+                            mediaControllerCenter = MediaController(mContext)
+                        }
                         // anchor view for the videoView
                         mediaControllerCenter!!.setAnchorView(videoViewCenter)
                         // sets the media player to the videoView
@@ -2413,8 +2423,11 @@ class MainActivity : AppCompatActivity() {
                         // sets the media controller to the videoView
                         videoViewCenter!!.setMediaController(mediaControllerCenter)
                     }
-                    if (mediaControllerBottom == null) {
-                        mediaControllerBottom = MediaController(mContext)
+
+                    if (videoViewBottom != null) {
+                        if (mediaControllerBottom == null) {
+                            mediaControllerBottom = MediaController(mContext)
+                        }
                         // anchor view for the videoView
                         mediaControllerBottom!!.setAnchorView(videoViewBottom)
                         // sets the media player to the videoView
@@ -2423,7 +2436,11 @@ class MainActivity : AppCompatActivity() {
                         videoViewBottom!!.setMediaController(mediaControllerBottom)
                     }
 
+
+
+
                     //disable controller
+                    /*
                     mediaControllerTop!!.visibility = View.GONE
                     mediaControllerCenter!!.visibility = View.GONE
                     mediaControllerBottom!!.visibility = View.GONE
@@ -2450,7 +2467,7 @@ class MainActivity : AppCompatActivity() {
                     videoViewLayoutTop!!.visibility = View.GONE
                     videoViewLayoutCenter!!.visibility = View.GONE
                     videoViewLayoutBottom!!.visibility = View.GONE
-
+                    */
                     //top
                     when (layoutTop) {
                         0-> { //no
@@ -2735,8 +2752,9 @@ class MainActivity : AppCompatActivity() {
                             }
 
                         } else {
-                            imageViewTop!!.visibility = View.GONE
-                            imageViewTop2!!.visibility = View.GONE
+                            Log.d(mTag, "layoutTop not image")
+                            //imageViewTop!!.visibility = View.GONE
+                            //imageViewTop2!!.visibility = View.GONE
                         }
                         //init center start
                         if (layoutCenter == 2) {
@@ -2766,8 +2784,9 @@ class MainActivity : AppCompatActivity() {
                                 }
                             }
                         } else {
-                            imageViewCenter!!.visibility = View.GONE
-                            imageViewCenter2!!.visibility = View.GONE
+                            Log.d(mTag, "layoutCenter not image")
+                            //imageViewCenter!!.visibility = View.GONE
+                            //imageViewCenter2!!.visibility = View.GONE
                         }
                         //init bottom start
                         if (layoutBottom == 2) {
@@ -2797,8 +2816,9 @@ class MainActivity : AppCompatActivity() {
                                 }
                             }
                         } else {
-                            imageViewBottom!!.visibility = View.GONE
-                            imageViewBottom2!!.visibility = View.GONE
+                            Log.d(mTag, "layoutBottom not image")
+                            //imageViewBottom!!.visibility = View.GONE
+                            //imageViewBottom2!!.visibility = View.GONE
                         }
 
                         //if imageList.size > 0, then play in loop
@@ -3026,7 +3046,9 @@ class MainActivity : AppCompatActivity() {
                                 }
                             }
                         } else {
-                            videoViewTop!!.stopPlayback()
+                            if (videoViewTop != null) {
+                                videoViewTop!!.stopPlayback()
+                            }
                             //exoPlayerViewTop!!.player!!.stop()
                             videoRunningTop = false
                         }
@@ -3116,7 +3138,9 @@ class MainActivity : AppCompatActivity() {
                                 }
                             }
                         } else {
-                            videoViewCenter!!.stopPlayback()
+                            if (videoViewCenter != null) {
+                                videoViewCenter!!.stopPlayback()
+                            }
                             //exoPlayerViewCenter!!.player!!.stop()
                             videoRunningCenter = false
                         }
@@ -3208,11 +3232,18 @@ class MainActivity : AppCompatActivity() {
                                 }
                             }
                         } else {
-                            videoViewBottom!!.stopPlayback()
+                            if (videoViewBottom != null) {
+                                videoViewBottom!!.stopPlayback()
+                            }
                             //exoPlayerViewBottom!!.player!!.stop()
                             videoRunningBottom = false
                         }
                     } else { //all are not video
+                        Log.d(mTag, "all are not video")
+                        videoRunningTop = false
+                        videoRunningCenter = false
+                        videoRunningBottom = false
+                        /*
                         if (videoRunningTop) {
                             videoViewTop!!.stopPlayback()
                             //exoPlayerViewTop!!.player!!.stop()
@@ -3229,7 +3260,7 @@ class MainActivity : AppCompatActivity() {
                             videoViewBottom!!.stopPlayback()
                             //exoPlayerViewBottom!!.player!!.stop()
                             videoRunningBottom = false
-                        }
+                        }*/
                     }
                 } else {
                     Log.d(mTag, "No AdSetting!")
@@ -3255,6 +3286,8 @@ class MainActivity : AppCompatActivity() {
         val changeWifiStatePermissions = ContextCompat.checkSelfPermission(this, Manifest.permission.CHANGE_WIFI_STATE)
 
         val coarsePermission = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
+
+        //val installPackagesPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.REQUEST_INSTALL_PACKAGES)
 
         val listPermissionsNeeded = ArrayList<String>()
 
@@ -3285,6 +3318,11 @@ class MainActivity : AppCompatActivity() {
         if (coarsePermission != PackageManager.PERMISSION_GRANTED) {
             listPermissionsNeeded.add(Manifest.permission.ACCESS_COARSE_LOCATION)
         }
+
+        /*if (installPackagesPermission != PackageManager.PERMISSION_GRANTED) {
+            listPermissionsNeeded.add(Manifest.permission.REQUEST_INSTALL_PACKAGES)
+        }
+        */
 
         if (listPermissionsNeeded.isNotEmpty()) {
             ActivityCompat.requestPermissions(
@@ -3329,6 +3367,7 @@ class MainActivity : AppCompatActivity() {
                 perms[Manifest.permission.ACCESS_WIFI_STATE] = PackageManager.PERMISSION_GRANTED
                 perms[Manifest.permission.CHANGE_WIFI_STATE] = PackageManager.PERMISSION_GRANTED
                 perms[Manifest.permission.ACCESS_COARSE_LOCATION] = PackageManager.PERMISSION_GRANTED
+                //perms[Manifest.permission.REQUEST_INSTALL_PACKAGES] = PackageManager.PERMISSION_GRANTED
                 //perms.put(Manifest.permission.ACCESS_WIFI_STATE, PackageManager.PERMISSION_GRANTED);
                 // Fill with actual results from user
                 //if (grantResults.size > 0) {
@@ -3346,6 +3385,7 @@ class MainActivity : AppCompatActivity() {
                         && perms[Manifest.permission.ACCESS_WIFI_STATE] == PackageManager.PERMISSION_GRANTED
                         && perms[Manifest.permission.CHANGE_WIFI_STATE] == PackageManager.PERMISSION_GRANTED
                         && perms[Manifest.permission.ACCESS_COARSE_LOCATION] == PackageManager.PERMISSION_GRANTED
+                        //&& perms[Manifest.permission.REQUEST_INSTALL_PACKAGES] == PackageManager.PERMISSION_GRANTED
                     ) {
                         Log.d(mTag, "permission granted")
                         //create local folder
@@ -3389,6 +3429,10 @@ class MainActivity : AppCompatActivity() {
                                 this,
                                 Manifest.permission.ACCESS_COARSE_LOCATION
                             )
+                            /*|| ActivityCompat.shouldShowRequestPermissionRationale(
+                                this,
+                                Manifest.permission.REQUEST_INSTALL_PACKAGES
+                            )*/
                         ) {
                             showDialogOK { _, which ->
                                 when (which) {
@@ -3595,5 +3639,24 @@ class MainActivity : AppCompatActivity() {
                 setPositiveButton("OK") { _, _ -> }
             }.show()
         }
+    }
+
+    fun rebootDevice() {
+        // android 5.1.1,
+        Log.e(mTag, "== rebootDevice ==")
+        try {
+            Runtime.getRuntime().exec(arrayOf("/system/bin/su", "-c", "reboot now"))
+
+        } catch (e: IOException) {
+            Log.e(mTag, "first: $e")
+            try {
+                Runtime.getRuntime().exec(arrayOf("/system/xbin/su", "-c", "reboot now"))
+            } catch (ex: IOException) {
+                Log.e(mTag, "second: $ex")
+            }
+
+
+        }
+
     }
 }
