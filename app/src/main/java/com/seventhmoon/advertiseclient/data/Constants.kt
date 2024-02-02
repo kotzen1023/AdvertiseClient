@@ -19,6 +19,11 @@ class Constants {
             const val ACTION_GET_MARQUEE_FAILED: String = "com.seventhmoon.advertiseclient.GetMarqueeFailed"
             const val ACTION_GET_MARQUEE_EMPTY: String = "com.seventhmoon.advertiseclient.GetMarqueeEmpty"
 
+            const val ACTION_GET_BANNER_SUCCESS: String = "com.seventhmoon.advertiseclient.GetBannerSuccess"
+            const val ACTION_GET_BANNER_COMPLETE: String = "com.seventhmoon.advertiseclient.GetBannerComplete"
+            const val ACTION_GET_BANNER_FAILED: String = "com.seventhmoon.advertiseclient.GetBannerFailed"
+            const val ACTION_GET_BANNER_EMPTY: String = "com.seventhmoon.advertiseclient.GetBannerEmpty"
+
             const val ACTION_GET_IMAGES_SUCCESS: String = "com.seventhmoon.advertiseclient.GetImagesSuccess"
             const val ACTION_GET_IMAGES_COMPLETE: String = "com.seventhmoon.advertiseclient.GetImagesComplete"
             const val ACTION_GET_IMAGES_FAILED: String = "com.seventhmoon.advertiseclient.GetImagesFailed"

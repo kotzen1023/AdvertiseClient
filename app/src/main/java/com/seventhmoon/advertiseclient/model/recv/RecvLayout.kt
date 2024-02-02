@@ -30,4 +30,21 @@ class RecvLayout {
     var plan3_start_time = "--:--"
     var plan4_start_time = "--:--"
     var pingWebInterval = 0
+    var plan_layout_top_weight = 0
+    var plan_layout_center_weight = 0
+    var plan_layout_bottom_weight = 0
+    var plan_layout_tri_weight = 0
+    var plan2_layout_top_weight = 0
+    var plan2_layout_center_weight = 0
+    var plan2_layout_bottom_weight = 0
+    var plan2_layout_tri_weight = 0
+    var plan3_layout_top_weight = 0
+    var plan3_layout_center_weight = 0
+    var plan3_layout_bottom_weight = 0
+    var plan3_layout_tri_weight = 0
+    var plan4_layout_top_weight = 0
+    var plan4_layout_center_weight = 0
+    var plan4_layout_bottom_weight = 0
+    var plan4_layout_tri_weight = 0
+
 }

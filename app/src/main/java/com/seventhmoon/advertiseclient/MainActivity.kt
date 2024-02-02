@@ -53,6 +53,7 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import com.rohan.speed_marquee.SpeedMarquee
 import com.seventhmoon.advertiseclient.api.ApiFunc
 import com.seventhmoon.advertiseclient.data.Constants
 import com.seventhmoon.advertiseclient.model.recv.RecvAdSetting
@@ -60,6 +61,8 @@ import com.seventhmoon.advertiseclient.model.recv.RecvLayout
 import com.seventhmoon.advertiseclient.model.recv.RecvMarquee
 import com.seventhmoon.advertiseclient.persistence.DefaultPlayAdSettingData
 import com.seventhmoon.advertiseclient.persistence.DefaultPlayAdSettingDataDB
+import com.seventhmoon.advertiseclient.persistence.DefaultPlayBannerData
+import com.seventhmoon.advertiseclient.persistence.DefaultPlayBannerDataDB
 import com.seventhmoon.advertiseclient.persistence.DefaultPlayImagesData
 import com.seventhmoon.advertiseclient.persistence.DefaultPlayImagesDataDB
 import com.seventhmoon.advertiseclient.persistence.DefaultPlayLayoutData
@@ -97,6 +100,7 @@ class MainActivity : AppCompatActivity() {
 
     var layoutList: ArrayList<RecvLayout> = ArrayList()
 
+    private var bannerList : ArrayList<String> = ArrayList() // for banner
     private var marqueeList : ArrayList<RecvMarquee> = ArrayList() // for text marquee
     private var playMarqueeList : ArrayList<RecvMarquee> = ArrayList() // for text marquee
     private var imageList : ArrayList<String> = ArrayList() // for image
@@ -106,6 +110,7 @@ class MainActivity : AppCompatActivity() {
     private var mReceiver: BroadcastReceiver? = null
     private var isRegister = false
     private var currentTextIndexTop = -1
+
     private var currentImageIndexTop = -1
     private var currentVideoIndexTop = -1
     private var currentTextIndexCenter = -1
@@ -120,29 +125,30 @@ class MainActivity : AppCompatActivity() {
     private var mainLinearLayout : LinearLayout ?= null
     //top
     private var linearLayoutTop : LinearLayout ?= null
-    private var textViewTop : TextView ?= null
-
+    private var textViewTop : SpeedMarquee ?= null
     private var imageViewTop : ImageView ?= null
     private var imageViewTop2 : ImageView ?= null
     private var videoViewLayoutTop: RelativeLayout ?= null
     private var videoViewTop: VideoView ?= null
-    //private var exoPlayerViewTop: PlayerView?= null
+    private var imageViewBannerTop: ImageView?= null
     //center
     private var linearLayoutCenter : LinearLayout ?= null
-    var textViewCenter : TextView ?=     null
+    var textViewCenter : SpeedMarquee ?=     null
     var imageViewCenter : ImageView ?= null
     var imageViewCenter2 : ImageView ?= null
     private var videoViewLayoutCenter: RelativeLayout ?= null
     private var videoViewCenter: VideoView ?= null
-    //private var exoPlayerViewCenter: PlayerView?= null
+    private var imageViewBannerCenter: ImageView?= null
     //bottom
     private var linearLayoutBottom : LinearLayout ?= null
-    var textViewBottom : TextView ?= null
+    //var textViewBottom : TextView ?= null
+    var textViewBottom : SpeedMarquee ?= null
     var imageViewBottom : ImageView ?= null
     var imageViewBottom2 : ImageView ?= null
     private var videoViewLayoutBottom: RelativeLayout ?= null
     private var videoViewBottom: VideoView ?= null
-    //private var exoPlayerViewBottom: PlayerView?= null
+    private var imageViewBannerBottom: ImageView?= null
+
     private var linearLayoutTriangle : LinearLayout ?= null
 
     //layout weight
@@ -185,9 +191,11 @@ class MainActivity : AppCompatActivity() {
         @JvmStatic var server_webservice_port: String = ""
         @JvmStatic var base_ip_address_webservice: String = ""
 
+        @JvmStatic var server_banner_folder: String = ""
         @JvmStatic var server_images_folder: String = ""
         @JvmStatic var server_videos_folder: String = ""
 
+        @JvmStatic var dest_banner_folder: String = ""
         @JvmStatic var dest_images_folder: String = ""
         @JvmStatic var dest_videos_folder: String = ""
     }
@@ -203,19 +211,22 @@ class MainActivity : AppCompatActivity() {
 
     private var defaultPlayLayoutDataDB: DefaultPlayLayoutDataDB? = null
     private var defaultPlayAdSettingDataDB: DefaultPlayAdSettingDataDB? = null
+    private var defaultPlayBannerDataDB: DefaultPlayBannerDataDB? = null
     private var defaultPlayMarqueeDataDB: DefaultPlayMarqueeDataDB? = null
     private var defaultPlayImagesDataDB: DefaultPlayImagesDataDB? = null
     private var defaultPlayVideosDataDB: DefaultPlayVideosDataDB? = null
 
     private var defaultLayoutPlayList: ArrayList<DefaultPlayLayoutData> ?= ArrayList()
     private var defaultAdSettingPlayList: ArrayList<DefaultPlayAdSettingData> ?= ArrayList()
+    private var defaultBannerPlayList: ArrayList<DefaultPlayBannerData> ?= ArrayList()
     private var defaultMarqueePlayList: ArrayList<DefaultPlayMarqueeData> ?= ArrayList()
     private var defaultImagesPlayList: ArrayList<DefaultPlayImagesData> ?= ArrayList()
     private var defaultVideosPlayList: ArrayList<DefaultPlayVideosData> ?= ArrayList()
 
-
+    private var downloadBannerComplete: Int = 0
     private var downloadImageComplete: Int = 0
     private var downloadVideoComplete: Int = 0
+    private var downloadBannerReadyArray: ArrayList<Boolean> = ArrayList()
     private var downloadImageReadyArray: ArrayList<Boolean> = ArrayList()
     private var downloadVideoReadyArray: ArrayList<Boolean> = ArrayList()
 
@@ -239,6 +250,7 @@ class MainActivity : AppCompatActivity() {
 
     private var previousPlanId: Int = 0
     private var currentPlanId: Int = 0
+    private var currentPlanUse: Int = 0
     private var currentAdSettingIdx: Int = -1
 
     private var myPid = -1
@@ -262,8 +274,11 @@ class MainActivity : AppCompatActivity() {
         } else {
             //create default folder
             Log.d(mTag, "create default folder directly!!")
+            dest_banner_folder = Environment.getExternalStorageDirectory().toString() + "/Download/banner/"
             dest_images_folder = Environment.getExternalStorageDirectory().toString() + "/Download/images/"
             dest_videos_folder = Environment.getExternalStorageDirectory().toString() + "/Download/videos/"
+            val bannerDir = File(dest_banner_folder)
+            bannerDir.mkdirs()
             val imagesDir = File(dest_images_folder)
             imagesDir.mkdirs()
             val videoDir = File(dest_videos_folder)
@@ -293,6 +308,7 @@ class MainActivity : AppCompatActivity() {
         Log.d(mTag, "server_webservice_port = $server_webservice_port")
 
         if (server_ip_address != "" && server_webservice_port != "") {
+            server_banner_folder = "$server_ip_address:$server_webservice_port/uploads/banners"
             server_images_folder = "$server_ip_address:$server_webservice_port/uploads/images"
             server_videos_folder = "$server_ip_address:$server_webservice_port/uploads/videos"
         }
@@ -353,6 +369,15 @@ class MainActivity : AppCompatActivity() {
             receiveLayout.layout_top = defaultLayoutPlayList!![0].getLayout_top()
             receiveLayout.layout_center = defaultLayoutPlayList!![0].getLayout_center()
             receiveLayout.layout_bottom = defaultLayoutPlayList!![0].getLayout_bottom()
+            receiveLayout.layout2_top = defaultLayoutPlayList!![0].getLayout2_top()
+            receiveLayout.layout2_center = defaultLayoutPlayList!![0].getLayout2_center()
+            receiveLayout.layout2_bottom = defaultLayoutPlayList!![0].getLayout2_bottom()
+            receiveLayout.layout3_top = defaultLayoutPlayList!![0].getLayout3_top()
+            receiveLayout.layout3_center = defaultLayoutPlayList!![0].getLayout3_center()
+            receiveLayout.layout3_bottom = defaultLayoutPlayList!![0].getLayout3_bottom()
+            receiveLayout.layout4_top = defaultLayoutPlayList!![0].getLayout4_top()
+            receiveLayout.layout4_center = defaultLayoutPlayList!![0].getLayout4_center()
+            receiveLayout.layout4_bottom = defaultLayoutPlayList!![0].getLayout4_bottom()
             receiveLayout.layoutOrientation = defaultLayoutPlayList!![0].getLayoutOrientation()
             receiveLayout.plan_id = defaultLayoutPlayList!![0].getPlan_id()
             receiveLayout.plan2_id = defaultLayoutPlayList!![0].getPlan2_id()
@@ -363,6 +388,25 @@ class MainActivity : AppCompatActivity() {
             receiveLayout.plan3_start_time = defaultLayoutPlayList!![0].getPlan3_start_time()
             receiveLayout.plan4_start_time = defaultLayoutPlayList!![0].getPlan4_start_time()
             receiveLayout.pingWebInterval = defaultLayoutPlayList!![0].getPingWebInterval()
+            receiveLayout.plan_layout_top_weight = defaultLayoutPlayList!![0].getPlan_layout_top_weight()
+            receiveLayout.plan_layout_center_weight = defaultLayoutPlayList!![0].getPlan_layout_center_weight()
+            receiveLayout.plan_layout_bottom_weight = defaultLayoutPlayList!![0].getPlan_layout_bottom_weight()
+            receiveLayout.plan_layout_tri_weight = defaultLayoutPlayList!![0].getPlan_layout_tri_weight()
+
+            receiveLayout.plan2_layout_top_weight = defaultLayoutPlayList!![0].getPlan2_layout_top_weight()
+            receiveLayout.plan2_layout_center_weight = defaultLayoutPlayList!![0].getPlan2_layout_center_weight()
+            receiveLayout.plan2_layout_bottom_weight = defaultLayoutPlayList!![0].getPlan2_layout_bottom_weight()
+            receiveLayout.plan2_layout_tri_weight = defaultLayoutPlayList!![0].getPlan2_layout_tri_weight()
+
+            receiveLayout.plan3_layout_top_weight = defaultLayoutPlayList!![0].getPlan3_layout_top_weight()
+            receiveLayout.plan3_layout_center_weight = defaultLayoutPlayList!![0].getPlan3_layout_center_weight()
+            receiveLayout.plan3_layout_bottom_weight = defaultLayoutPlayList!![0].getPlan3_layout_bottom_weight()
+            receiveLayout.plan3_layout_tri_weight = defaultLayoutPlayList!![0].getPlan3_layout_tri_weight()
+
+            receiveLayout.plan4_layout_top_weight = defaultLayoutPlayList!![0].getPlan4_layout_top_weight()
+            receiveLayout.plan4_layout_center_weight = defaultLayoutPlayList!![0].getPlan4_layout_center_weight()
+            receiveLayout.plan4_layout_bottom_weight = defaultLayoutPlayList!![0].getPlan4_layout_bottom_weight()
+            receiveLayout.plan4_layout_tri_weight = defaultLayoutPlayList!![0].getPlan4_layout_tri_weight()
 
             pingWebInterval = when(receiveLayout.pingWebInterval) {
                 1 -> 1000
@@ -401,9 +445,17 @@ class MainActivity : AppCompatActivity() {
                 adSetting.plan_images = defaultAdSettingPlayList!![i].getPlan_images()
                 adSetting.plan_videos = defaultAdSettingPlayList!![i].getPlan_videos()
                 adSetting.marquee_mode = defaultAdSettingPlayList!![i].getMarquee_mode()
+                adSetting.marquee_background = defaultAdSettingPlayList!![i].getMarquee_background()
+                adSetting.marquee_text = defaultAdSettingPlayList!![i].getMarquee_text()
+                adSetting.marquee_size = defaultAdSettingPlayList!![i].getMarquee_size()
+                adSetting.marquee_locate = defaultAdSettingPlayList!![i].getMarquee_locate()
+                adSetting.marquee_speed = defaultAdSettingPlayList!![i].getMarquee_speed()
                 adSetting.images_mode = defaultAdSettingPlayList!![i].getImages_mode()
                 adSetting.videos_mode = defaultAdSettingPlayList!![i].getVideos_mode()
                 adSetting.image_interval = defaultAdSettingPlayList!![i].getImage_interval()
+                adSetting.image_scale_type = defaultAdSettingPlayList!![i].getImage_scale_type()
+                adSetting.video_scale_type = defaultAdSettingPlayList!![i].getVideo_scale_type()
+                adSetting.banner_scale_type = defaultAdSettingPlayList!![i].getBanner_scale_type()
 
                 adSettingList.add(adSetting)
             }
@@ -427,6 +479,32 @@ class MainActivity : AppCompatActivity() {
                 marquee.name = defaultMarqueePlayList!![i].getName()
                 marquee.content = defaultMarqueePlayList!![i].getContent()
                 playMarqueeList.add(marquee)
+            }
+        }
+
+        //load banner from DB
+        defaultPlayBannerDataDB = Room.databaseBuilder(mContext as Context, DefaultPlayBannerDataDB::class.java, DefaultPlayBannerDataDB.DATABASE_NAME)
+            .allowMainThreadQueries()
+            .addMigrations(migration12)
+            .build()
+        defaultBannerPlayList = defaultPlayBannerDataDB!!.defaultPlayBannerDataDao().getAll() as ArrayList<DefaultPlayBannerData>
+        Log.d(mTag, "defaultBannerPlayList = ${defaultBannerPlayList!!.size}")
+
+        if (defaultBannerPlayList!!.size > 0) {
+            bannerList.clear()
+            downloadBannerReadyArray.clear()
+            for (i in defaultBannerPlayList!!.indices) {
+                bannerList.add(defaultBannerPlayList!![i].getFileName())
+
+                val destPath = "$dest_banner_folder${defaultBannerPlayList!![i].getFileName()}"
+                Log.d(mTag, "destPath = $destPath")
+
+                val file = File(destPath)
+                if(!file.exists()) {
+                    downloadBannerReadyArray.add(false)
+                } else {
+                    downloadBannerReadyArray.add(true)
+                }
             }
         }
 
@@ -503,19 +581,25 @@ class MainActivity : AppCompatActivity() {
             Log.d(mTag, "plan3StartTime = $plan3StartTime")
             Log.d(mTag, "plan4StartTime = $plan4StartTime")
 
-            currentPlanId = if (plan4StartTime in 1..currentTimestamp) { //plan4
-                Log.d(mTag, "plan4")
-                layoutList[0].plan4_id
-            } else if (plan3StartTime in 1..currentTimestamp) { //plan3
-                Log.d(mTag, "plan3")
-                layoutList[0].plan3_id
-            } else if (plan2StartTime in 1..currentTimestamp) { //plan2
-                Log.d(mTag, "plan2")
-                layoutList[0].plan2_id
+            if (plan4StartTime in 1..currentTimestamp && layoutList[0].plan4_id != 0) { //plan4
+                currentPlanId = layoutList[0].plan4_id
+                currentPlanUse = 4
+                Log.d(mTag, "plan4, id = ${layoutList[0].plan4_id}")
+            } else if (plan3StartTime in 1..currentTimestamp && layoutList[0].plan3_id != 0) { //plan3
+                currentPlanId = layoutList[0].plan3_id
+                currentPlanUse = 3
+                Log.d(mTag, "plan3, id = ${layoutList[0].plan3_id}")
+            } else if (plan2StartTime in 1..currentTimestamp && layoutList[0].plan2_id != 0) { //plan2
+                currentPlanId = layoutList[0].plan2_id
+                currentPlanUse = 2
+                Log.d(mTag, "plan2, id = ${layoutList[0].plan2_id}")
             } //else if (planStartTime in 1..currentTimestamp) { //plan1
             else { //plan1
-                Log.d(mTag, "plan1")
-                layoutList[0].plan_id
+                if (layoutList[0].plan_id > 0) {
+                    currentPlanId = layoutList[0].plan_id
+                    currentPlanUse = 1
+                    Log.d(mTag, "plan1, id = ${layoutList[0].plan_id}")
+                }
             }
 
             //get current plan idx
@@ -533,6 +617,12 @@ class MainActivity : AppCompatActivity() {
 
         if (layoutList.size == 1 && adSettingList.size >= 1 &&
             (playMarqueeList.size > 0 || imageList.size > 0 || videoList.size > 0 )) {
+            /*
+            Log.e(mTag, "layoutList[0].layout2_top = ${layoutList[0].layout2_top}")
+            Log.e(mTag, "layoutList[0].layout2_center = ${layoutList[0].layout2_center}")
+            Log.e(mTag, "layoutList[0].layout2_bottom = ${layoutList[0].layout2_bottom}")
+            */
+
             //because marquee download is unnecessary, start with image
             //downloadImageComplete = 0
             checkImagesExists()
@@ -634,59 +724,268 @@ class MainActivity : AppCompatActivity() {
 
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_MARQUEE_FAILED, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_MARQUEE_FAILED")
-                        /*
-                        playMarqueeList.clear()
-                        defaultMarqueePlayList!!.clear()
-                        //clear sqlite table
-                        defaultPlayMarqueeDataDB!!.defaultPlayMarqueeDataDao().clearTable()
 
-                        //ignore error, start download images
-                        val imagesArray = adSettingList[0].plan_images.split(",")
-
-                        if (imagesArray.isNotEmpty()) {
-                            imageList.clear()
-                            downloadImageReadyArray.clear()
-                            for (i in imagesArray.indices) {
-                                imageList.add(imagesArray[i])
-                                downloadImageReadyArray.add(false)
-                            }
-
-                            Log.d(mTag, "imageList = $imageList, downloadImageReadyArray = $downloadImageReadyArray")
-                            downloadImageComplete = 0
-                            downloadImages()
-                        } else { //no images, start download videos
-                            downloadVideoComplete = 0
-                            downloadVideos()
-                        }
-                        */
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_MARQUEE_EMPTY, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_MARQUEE_EMPTY")
                         playMarqueeList.clear()
                         defaultMarqueePlayList!!.clear()
-                        //clear sqlite table
                         defaultPlayMarqueeDataDB!!.defaultPlayMarqueeDataDao().clearTable()
 
-                        //no marquee, start download images
-                        val imagesArray = adSettingList[0].plan_images.split(",")
+                        //no marquee, start download banner
+                        if (adSettingList[0].plan_banner.isNotEmpty()) {
+                            val bannerArray = adSettingList[0].plan_banner.split(",")
+                            if (bannerArray.isNotEmpty()) {
+                                bannerList.clear()
+                                downloadBannerReadyArray.clear()
+                                for (i in bannerArray.indices) {
+                                    bannerList.add(bannerArray[i])
+                                    downloadBannerReadyArray.add(false)
+                                }
 
-                        if (imagesArray.isNotEmpty()) {
-                            imageList.clear()
-                            downloadImageReadyArray.clear()
-                            for (i in imagesArray.indices) {
-                                imageList.add(imagesArray[i])
-                                downloadImageReadyArray.add(false)
+                                Log.d(mTag, "bannerList = $bannerList, downloadBannerReadyArray = $downloadBannerReadyArray")
+
+                                checkBannerExists()
+                                clearBannersNotInBannerList()
+                                downloadBanner()
+                            } else { //no banner, start download images
+                                bannerList.clear()
+                                defaultBannerPlayList!!.clear()
+                                defaultPlayBannerDataDB!!.defaultPlayBannerDataDao().clearTable()
+
+                                if (adSettingList[currentAdSettingIdx].plan_images.isNotEmpty()) {
+                                    val imagesArray =
+                                        adSettingList[currentAdSettingIdx].plan_images.split(",")
+                                    if (imagesArray.isNotEmpty()) {
+                                        imageList.clear()
+                                        downloadImageReadyArray.clear()
+                                        for (i in imagesArray.indices) {
+                                            imageList.add(imagesArray[i])
+                                            downloadImageReadyArray.add(false)
+                                        }
+
+                                        Log.d(
+                                            mTag,
+                                            "imageList = $imageList, downloadImageReadyArray = $downloadImageReadyArray"
+                                        )
+                                        //downloadImageComplete = 0
+                                        checkImagesExists()
+                                        clearImagesNotInImageList()
+                                        downloadImages()
+                                    } else { //no images, start download videos
+                                        imageList.clear()
+                                        defaultImagesPlayList!!.clear()
+                                        defaultPlayImagesDataDB!!.defaultPlayImagesDataDao().clearTable()
+
+                                        if (adSettingList[currentAdSettingIdx].plan_videos.isNotEmpty()) {
+                                            val videosArray = adSettingList[currentAdSettingIdx].plan_videos.split(",")
+
+                                            if (videosArray.isNotEmpty()) {
+                                                videoList.clear()
+                                                downloadVideoReadyArray.clear()
+                                                for (i in videosArray.indices) {
+                                                    videoList.add(videosArray[i])
+                                                    downloadVideoReadyArray.add(false)
+                                                }
+
+                                                Log.d(mTag, "videoList = $videoList, downloadVideoReadyArray = $downloadVideoReadyArray")
+
+
+                                                //then download videos
+                                                //downloadVideoComplete = 0
+                                                checkVideosExists()
+                                                clearVideosNotInVideoList()
+                                                downloadVideos()
+                                            } else { //no videos, start ads
+                                                videoList.clear()
+                                                defaultVideosPlayList!!.clear()
+                                                defaultPlayVideosDataDB!!.defaultPlayVideosDataDao().clearTable()
+
+                                                //start to play
+                                                if (infoRenew) {
+                                                    Log.d(mTag, "start to play!")
+                                                    playAd()
+                                                }
+                                            }
+                                        } else { //no videos, start ads
+                                            videoList.clear()
+                                            defaultVideosPlayList!!.clear()
+                                            defaultPlayVideosDataDB!!.defaultPlayVideosDataDao().clearTable()
+
+                                            //start to play
+                                            if (infoRenew) {
+                                                Log.d(mTag, "start to play!")
+                                                playAd()
+                                            }
+                                        }
+                                    }
+                                } else { //images is empty, download videos
+                                    imageList.clear()
+                                    defaultImagesPlayList!!.clear()
+                                    defaultPlayImagesDataDB!!.defaultPlayImagesDataDao().clearTable()
+
+                                    if (adSettingList[currentAdSettingIdx].plan_videos.isNotEmpty()) {
+                                        val videosArray = adSettingList[currentAdSettingIdx].plan_videos.split(",")
+
+                                        if (videosArray.isNotEmpty()) {
+                                            videoList.clear()
+                                            downloadVideoReadyArray.clear()
+                                            for (i in videosArray.indices) {
+                                                videoList.add(videosArray[i])
+                                                downloadVideoReadyArray.add(false)
+                                            }
+
+                                            Log.d(mTag, "videoList = $videoList, downloadVideoReadyArray = $downloadVideoReadyArray")
+
+
+                                            //then download videos
+                                            //downloadVideoComplete = 0
+                                            checkVideosExists()
+                                            clearVideosNotInVideoList()
+                                            downloadVideos()
+                                        } else { //no videos, start ads
+                                            videoList.clear()
+                                            defaultVideosPlayList!!.clear()
+                                            defaultPlayVideosDataDB!!.defaultPlayVideosDataDao().clearTable()
+
+                                            //start to play
+                                            if (infoRenew) {
+                                                Log.d(mTag, "start to play!")
+                                                playAd()
+                                            }
+                                        }
+                                    } else { //no videos, start ads
+                                        videoList.clear()
+                                        defaultVideosPlayList!!.clear()
+                                        defaultPlayVideosDataDB!!.defaultPlayVideosDataDao().clearTable()
+
+                                        //start to play
+                                        if (infoRenew) {
+                                            Log.d(mTag, "start to play!")
+                                            playAd()
+                                        }
+                                    }
+                                }
+
+
                             }
+                        } else { //banner empty, start download images
+                            bannerList.clear()
+                            defaultBannerPlayList!!.clear()
+                            defaultPlayBannerDataDB!!.defaultPlayBannerDataDao().clearTable()
 
-                            Log.d(mTag, "imageList = $imageList, downloadImageReadyArray = $downloadImageReadyArray")
-                            //downloadImageComplete = 0
-                            checkImagesExists()
-                            clearImagesNotInImageList()
-                            downloadImages()
-                        } else { //no images, start download videos
-                            //downloadVideoComplete = 0
-                            checkVideosExists()
-                            clearVideosNotInVideoList()
-                            downloadVideos()
+                            if (adSettingList[currentAdSettingIdx].plan_images.isNotEmpty()) {
+                                val imagesArray =
+                                    adSettingList[currentAdSettingIdx].plan_images.split(",")
+                                if (imagesArray.isNotEmpty()) {
+                                    imageList.clear()
+                                    downloadImageReadyArray.clear()
+                                    for (i in imagesArray.indices) {
+                                        imageList.add(imagesArray[i])
+                                        downloadImageReadyArray.add(false)
+                                    }
+
+                                    Log.d(
+                                        mTag,
+                                        "imageList = $imageList, downloadImageReadyArray = $downloadImageReadyArray"
+                                    )
+                                    //downloadImageComplete = 0
+                                    checkImagesExists()
+                                    clearImagesNotInImageList()
+                                    downloadImages()
+                                } else { //no images, start download videos
+                                    imageList.clear()
+                                    defaultImagesPlayList!!.clear()
+                                    defaultPlayImagesDataDB!!.defaultPlayImagesDataDao().clearTable()
+
+                                    if (adSettingList[currentAdSettingIdx].plan_videos.isNotEmpty()) {
+                                        val videosArray = adSettingList[currentAdSettingIdx].plan_videos.split(",")
+
+                                        if (videosArray.isNotEmpty()) {
+                                            videoList.clear()
+                                            downloadVideoReadyArray.clear()
+                                            for (i in videosArray.indices) {
+                                                videoList.add(videosArray[i])
+                                                downloadVideoReadyArray.add(false)
+                                            }
+
+                                            Log.d(mTag, "videoList = $videoList, downloadVideoReadyArray = $downloadVideoReadyArray")
+
+
+                                            //then download videos
+                                            //downloadVideoComplete = 0
+                                            checkVideosExists()
+                                            clearVideosNotInVideoList()
+                                            downloadVideos()
+                                        } else { //no videos, start ads
+                                            videoList.clear()
+                                            defaultVideosPlayList!!.clear()
+                                            defaultPlayVideosDataDB!!.defaultPlayVideosDataDao().clearTable()
+
+                                            //start to play
+                                            if (infoRenew) {
+                                                Log.d(mTag, "start to play!")
+                                                playAd()
+                                            }
+                                        }
+                                    } else { //no videos, start ads
+                                        videoList.clear()
+                                        defaultVideosPlayList!!.clear()
+                                        defaultPlayVideosDataDB!!.defaultPlayVideosDataDao().clearTable()
+
+                                        //start to play
+                                        if (infoRenew) {
+                                            Log.d(mTag, "start to play!")
+                                            playAd()
+                                        }
+                                    }
+                                }
+                            } else { //images is empty, download videos
+                                imageList.clear()
+                                defaultImagesPlayList!!.clear()
+                                defaultPlayImagesDataDB!!.defaultPlayImagesDataDao().clearTable()
+
+                                if (adSettingList[currentAdSettingIdx].plan_videos.isNotEmpty()) {
+                                    val videosArray = adSettingList[currentAdSettingIdx].plan_videos.split(",")
+
+                                    if (videosArray.isNotEmpty()) {
+                                        videoList.clear()
+                                        downloadVideoReadyArray.clear()
+                                        for (i in videosArray.indices) {
+                                            videoList.add(videosArray[i])
+                                            downloadVideoReadyArray.add(false)
+                                        }
+
+                                        Log.d(mTag, "videoList = $videoList, downloadVideoReadyArray = $downloadVideoReadyArray")
+
+
+                                        //then download videos
+                                        //downloadVideoComplete = 0
+                                        checkVideosExists()
+                                        clearVideosNotInVideoList()
+                                        downloadVideos()
+                                    } else { //no videos, start ads
+                                        videoList.clear()
+                                        defaultVideosPlayList!!.clear()
+                                        defaultPlayVideosDataDB!!.defaultPlayVideosDataDao().clearTable()
+
+                                        //start to play
+                                        if (infoRenew) {
+                                            Log.d(mTag, "start to play!")
+                                            playAd()
+                                        }
+                                    }
+                                } else { //no videos, start ads
+                                    videoList.clear()
+                                    defaultVideosPlayList!!.clear()
+                                    defaultPlayVideosDataDB!!.defaultPlayVideosDataDao().clearTable()
+
+                                    //start to play
+                                    if (infoRenew) {
+                                        Log.d(mTag, "start to play!")
+                                        playAd()
+                                    }
+                                }
+                            }
                         }
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_MARQUEE_SUCCESS, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_MARQUEE_SUCCESS")
@@ -739,40 +1038,313 @@ class MainActivity : AppCompatActivity() {
                                 Log.d(mTag, "playMarqueeList = $playMarqueeList")
                             }
 
-                            //then download images
-                            imageList.clear()
-                            downloadImageReadyArray.clear()
-                            if (adSettingList[currentAdSettingIdx].plan_images.isNotEmpty()) {
-                                val imagesArray = adSettingList[currentAdSettingIdx].plan_images.split(",")
-
-                                if (imagesArray.isNotEmpty()) {
-
-                                    for (i in imagesArray.indices) {
-                                        imageList.add(imagesArray[i])
-                                        downloadImageReadyArray.add(false)
+                            //then download banners
+                            if (adSettingList[currentAdSettingIdx].plan_banner.isNotEmpty()) {
+                                val bannerArray = adSettingList[currentAdSettingIdx].plan_banner.split(",")
+                                if (bannerArray.isNotEmpty()) {
+                                    bannerList.clear()
+                                    downloadBannerReadyArray.clear()
+                                    for (i in bannerArray.indices) {
+                                        bannerList.add(bannerArray[i])
+                                        downloadBannerReadyArray.add(false)
                                     }
 
-                                    Log.d(mTag, "imageList = $imageList, downloadImageReadyArray = $downloadImageReadyArray")
-                                    //downloadImageComplete = 0
-                                    checkImagesExists()
-                                    clearImagesNotInImageList()
-                                    downloadImages()
-                                } else { //no images, start download videos
+                                    Log.d(mTag, "bannerList = $bannerList, downloadBannerReadyArray = $downloadBannerReadyArray")
+
+                                    checkBannerExists()
+                                    clearBannersNotInBannerList()
+                                    downloadBanner()
+                                } else { //no banner, start download images
+                                    Log.e(mTag, "banner is empty 1")
+                                    bannerList.clear()
+                                    defaultBannerPlayList!!.clear()
+                                    defaultPlayBannerDataDB!!.defaultPlayBannerDataDao().clearTable()
+
+                                    if (adSettingList[currentAdSettingIdx].plan_images.isNotEmpty()) {
+                                        val imagesArray =
+                                            adSettingList[currentAdSettingIdx].plan_images.split(",")
+                                        if (imagesArray.isNotEmpty()) {
+                                            imageList.clear()
+                                            downloadImageReadyArray.clear()
+                                            for (i in imagesArray.indices) {
+                                                imageList.add(imagesArray[i])
+                                                downloadImageReadyArray.add(false)
+                                            }
+
+                                            Log.d(
+                                                mTag,
+                                                "imageList = $imageList, downloadImageReadyArray = $downloadImageReadyArray"
+                                            )
+                                            //downloadImageComplete = 0
+                                            checkImagesExists()
+                                            clearImagesNotInImageList()
+                                            downloadImages()
+                                        } else { //no images, start download videos
+                                            imageList.clear()
+                                            defaultImagesPlayList!!.clear()
+                                            defaultPlayImagesDataDB!!.defaultPlayImagesDataDao().clearTable()
+
+                                            if (adSettingList[currentAdSettingIdx].plan_videos.isNotEmpty()) {
+                                                val videosArray = adSettingList[currentAdSettingIdx].plan_videos.split(",")
+
+                                                if (videosArray.isNotEmpty()) {
+                                                    videoList.clear()
+                                                    downloadVideoReadyArray.clear()
+                                                    for (i in videosArray.indices) {
+                                                        videoList.add(videosArray[i])
+                                                        downloadVideoReadyArray.add(false)
+                                                    }
+
+                                                    Log.d(mTag, "videoList = $videoList, downloadVideoReadyArray = $downloadVideoReadyArray")
+
+
+                                                    //then download videos
+                                                    //downloadVideoComplete = 0
+                                                    checkVideosExists()
+                                                    clearVideosNotInVideoList()
+                                                    downloadVideos()
+                                                } else { //no videos, start ads
+                                                    videoList.clear()
+                                                    defaultVideosPlayList!!.clear()
+                                                    defaultPlayVideosDataDB!!.defaultPlayVideosDataDao().clearTable()
+
+                                                    //start to play
+                                                    if (infoRenew) {
+                                                        Log.d(mTag, "start to play!")
+                                                        playAd()
+                                                    }
+                                                }
+                                            } else { //no videos, start ads
+                                                videoList.clear()
+                                                defaultVideosPlayList!!.clear()
+                                                defaultPlayVideosDataDB!!.defaultPlayVideosDataDao().clearTable()
+
+                                                //start to play
+                                                if (infoRenew) {
+                                                    Log.d(mTag, "start to play!")
+                                                    playAd()
+                                                }
+                                            }
+                                        }
+                                    } else { //images is empty, download videos
+                                        imageList.clear()
+                                        defaultImagesPlayList!!.clear()
+                                        defaultPlayImagesDataDB!!.defaultPlayImagesDataDao().clearTable()
+
+                                        if (adSettingList[currentAdSettingIdx].plan_videos.isNotEmpty()) {
+                                            val videosArray = adSettingList[currentAdSettingIdx].plan_videos.split(",")
+
+                                            if (videosArray.isNotEmpty()) {
+                                                videoList.clear()
+                                                downloadVideoReadyArray.clear()
+                                                for (i in videosArray.indices) {
+                                                    videoList.add(videosArray[i])
+                                                    downloadVideoReadyArray.add(false)
+                                                }
+
+                                                Log.d(mTag, "videoList = $videoList, downloadVideoReadyArray = $downloadVideoReadyArray")
+
+
+                                                //then download videos
+                                                //downloadVideoComplete = 0
+                                                checkVideosExists()
+                                                clearVideosNotInVideoList()
+                                                downloadVideos()
+                                            } else { //no videos, start ads
+                                                videoList.clear()
+                                                defaultVideosPlayList!!.clear()
+                                                defaultPlayVideosDataDB!!.defaultPlayVideosDataDao().clearTable()
+
+                                                //start to play
+                                                if (infoRenew) {
+                                                    Log.d(mTag, "start to play!")
+                                                    playAd()
+                                                }
+                                            }
+                                        } else { //no videos, start ads
+                                            videoList.clear()
+                                            defaultVideosPlayList!!.clear()
+                                            defaultPlayVideosDataDB!!.defaultPlayVideosDataDao().clearTable()
+
+                                            //start to play
+                                            if (infoRenew) {
+                                                Log.d(mTag, "start to play!")
+                                                playAd()
+                                            }
+                                        }
+                                    }
+
+
+                                }
+                            } else { //banner empty, start download images
+                                Log.e(mTag, "banner is empty 2")
+                                bannerList.clear()
+                                defaultBannerPlayList!!.clear()
+                                defaultPlayBannerDataDB!!.defaultPlayBannerDataDao().clearTable()
+
+                                if (adSettingList[currentAdSettingIdx].plan_images.isNotEmpty()) {
+                                    val imagesArray =
+                                        adSettingList[currentAdSettingIdx].plan_images.split(",")
+                                    if (imagesArray.isNotEmpty()) {
+                                        imageList.clear()
+                                        downloadImageReadyArray.clear()
+                                        for (i in imagesArray.indices) {
+                                            imageList.add(imagesArray[i])
+                                            downloadImageReadyArray.add(false)
+                                        }
+
+                                        Log.d(
+                                            mTag,
+                                            "imageList = $imageList, downloadImageReadyArray = $downloadImageReadyArray"
+                                        )
+                                        //downloadImageComplete = 0
+                                        checkImagesExists()
+                                        clearImagesNotInImageList()
+                                        downloadImages()
+                                    } else { //no images, start download videos
+                                        imageList.clear()
+                                        defaultImagesPlayList!!.clear()
+                                        defaultPlayImagesDataDB!!.defaultPlayImagesDataDao().clearTable()
+
+                                        if (adSettingList[currentAdSettingIdx].plan_videos.isNotEmpty()) {
+                                            val videosArray = adSettingList[currentAdSettingIdx].plan_videos.split(",")
+
+                                            if (videosArray.isNotEmpty()) {
+                                                videoList.clear()
+                                                downloadVideoReadyArray.clear()
+                                                for (i in videosArray.indices) {
+                                                    videoList.add(videosArray[i])
+                                                    downloadVideoReadyArray.add(false)
+                                                }
+
+                                                Log.d(mTag, "videoList = $videoList, downloadVideoReadyArray = $downloadVideoReadyArray")
+
+
+                                                //then download videos
+                                                //downloadVideoComplete = 0
+                                                checkVideosExists()
+                                                clearVideosNotInVideoList()
+                                                downloadVideos()
+                                            } else { //no videos, start ads
+                                                videoList.clear()
+                                                defaultVideosPlayList!!.clear()
+                                                defaultPlayVideosDataDB!!.defaultPlayVideosDataDao().clearTable()
+
+                                                //start to play
+                                                if (infoRenew) {
+                                                    Log.d(mTag, "start to play!")
+                                                    playAd()
+                                                }
+                                            }
+                                        } else { //no videos, start ads
+                                            videoList.clear()
+                                            defaultVideosPlayList!!.clear()
+                                            defaultPlayVideosDataDB!!.defaultPlayVideosDataDao().clearTable()
+
+                                            //start to play
+                                            if (infoRenew) {
+                                                Log.d(mTag, "start to play!")
+                                                playAd()
+                                            }
+                                        }
+                                    }
+                                } else { //images is empty, download videos
+                                    imageList.clear()
                                     defaultImagesPlayList!!.clear()
                                     defaultPlayImagesDataDB!!.defaultPlayImagesDataDao().clearTable()
-                                    //downloadVideoComplete = 0
-                                    checkVideosExists()
-                                    clearVideosNotInVideoList()
-                                    downloadVideos()
+
+                                    if (adSettingList[currentAdSettingIdx].plan_videos.isNotEmpty()) {
+                                        val videosArray = adSettingList[currentAdSettingIdx].plan_videos.split(",")
+
+                                        if (videosArray.isNotEmpty()) {
+                                            videoList.clear()
+                                            downloadVideoReadyArray.clear()
+                                            for (i in videosArray.indices) {
+                                                videoList.add(videosArray[i])
+                                                downloadVideoReadyArray.add(false)
+                                            }
+
+                                            Log.d(mTag, "videoList = $videoList, downloadVideoReadyArray = $downloadVideoReadyArray")
+
+
+                                            //then download videos
+                                            //downloadVideoComplete = 0
+                                            checkVideosExists()
+                                            clearVideosNotInVideoList()
+                                            downloadVideos()
+                                        } else { //no videos, start ads
+                                            videoList.clear()
+                                            defaultVideosPlayList!!.clear()
+                                            defaultPlayVideosDataDB!!.defaultPlayVideosDataDao().clearTable()
+
+                                            //start to play
+                                            if (infoRenew) {
+                                                Log.d(mTag, "start to play!")
+                                                playAd()
+                                            }
+                                        }
+                                    } else { //no videos, start ads
+                                        videoList.clear()
+                                        defaultVideosPlayList!!.clear()
+                                        defaultPlayVideosDataDB!!.defaultPlayVideosDataDao().clearTable()
+
+                                        //start to play
+                                        if (infoRenew) {
+                                            Log.d(mTag, "start to play!")
+                                            playAd()
+                                        }
+                                    }
                                 }
-                            } else {
-                                Log.d(mTag, "adSettingList[0].plan_images.isEmpty")
+                            }
+                        } else {
+                            Log.d(mTag, "No AdSetting")
+                        }
+                    } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_BANNER_FAILED, ignoreCase = true)) {
+                        Log.d(mTag, "ACTION_GET_BANNER_FAILED")
+
+                        if (downloadBannerComplete < bannerList.size) {
+                            downloadBanner()
+                        }
+
+                    } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_BANNER_SUCCESS, ignoreCase = true)) {
+                        Log.d(mTag, "ACTION_GET_BANNER_SUCCESS")
+
+                        if (downloadBannerComplete < bannerList.size) {
+                            downloadBanner()
+                        }
+
+                    } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_BANNER_EMPTY, ignoreCase = true)) {
+                        Log.d(mTag, "ACTION_GET_BANNER_EMPTY")
+
+                        //no banner, start download images
+                        bannerList.clear()
+                        defaultBannerPlayList!!.clear()
+                        defaultPlayBannerDataDB!!.defaultPlayBannerDataDao().clearTable()
+
+                        if (adSettingList[currentAdSettingIdx].plan_images.isNotEmpty()) {
+                            val imagesArray =
+                                adSettingList[currentAdSettingIdx].plan_images.split(",")
+                            if (imagesArray.isNotEmpty()) {
+                                imageList.clear()
+                                downloadImageReadyArray.clear()
+                                for (i in imagesArray.indices) {
+                                    imageList.add(imagesArray[i])
+                                    downloadImageReadyArray.add(false)
+                                }
+
+                                Log.d(
+                                    mTag,
+                                    "imageList = $imageList, downloadImageReadyArray = $downloadImageReadyArray"
+                                )
+                                //downloadImageComplete = 0
+                                checkImagesExists()
+                                clearImagesNotInImageList()
+                                downloadImages()
+                            } else { //no images, start download videos
+                                imageList.clear()
                                 defaultImagesPlayList!!.clear()
                                 defaultPlayImagesDataDB!!.defaultPlayImagesDataDao().clearTable()
 
-                                //then download videos
-                                Log.d(mTag, "Download Images complete, then download videos.")
-                                Log.d(mTag, "adSettingList[0].plan_videos.length = ${adSettingList[currentAdSettingIdx].plan_videos.length}")
                                 if (adSettingList[currentAdSettingIdx].plan_videos.isNotEmpty()) {
                                     val videosArray = adSettingList[currentAdSettingIdx].plan_videos.split(",")
 
@@ -793,6 +1365,7 @@ class MainActivity : AppCompatActivity() {
                                         clearVideosNotInVideoList()
                                         downloadVideos()
                                     } else { //no videos, start ads
+                                        videoList.clear()
                                         defaultVideosPlayList!!.clear()
                                         defaultPlayVideosDataDB!!.defaultPlayVideosDataDao().clearTable()
 
@@ -802,8 +1375,7 @@ class MainActivity : AppCompatActivity() {
                                             playAd()
                                         }
                                     }
-                                } else {
-                                    Log.d(mTag, "adSettingList[0].plan_videos.isEmpty()")
+                                } else { //no videos, start ads
                                     videoList.clear()
                                     defaultVideosPlayList!!.clear()
                                     defaultPlayVideosDataDB!!.defaultPlayVideosDataDao().clearTable()
@@ -815,10 +1387,184 @@ class MainActivity : AppCompatActivity() {
                                     }
                                 }
                             }
+                        } else { //images is empty, download videos
+                            imageList.clear()
+                            defaultImagesPlayList!!.clear()
+                            defaultPlayImagesDataDB!!.defaultPlayImagesDataDao().clearTable()
 
-                        } else {
-                            Log.d(mTag, "No AdSetting")
+                            if (adSettingList[currentAdSettingIdx].plan_videos.isNotEmpty()) {
+                                val videosArray = adSettingList[currentAdSettingIdx].plan_videos.split(",")
+
+                                if (videosArray.isNotEmpty()) {
+                                    videoList.clear()
+                                    downloadVideoReadyArray.clear()
+                                    for (i in videosArray.indices) {
+                                        videoList.add(videosArray[i])
+                                        downloadVideoReadyArray.add(false)
+                                    }
+
+                                    Log.d(mTag, "videoList = $videoList, downloadVideoReadyArray = $downloadVideoReadyArray")
+
+
+                                    //then download videos
+                                    //downloadVideoComplete = 0
+                                    checkVideosExists()
+                                    clearVideosNotInVideoList()
+                                    downloadVideos()
+                                } else { //no videos, start ads
+                                    videoList.clear()
+                                    defaultVideosPlayList!!.clear()
+                                    defaultPlayVideosDataDB!!.defaultPlayVideosDataDao().clearTable()
+
+                                    //start to play
+                                    if (infoRenew) {
+                                        Log.d(mTag, "start to play!")
+                                        playAd()
+                                    }
+                                }
+                            } else { //no videos, start ads
+                                videoList.clear()
+                                defaultVideosPlayList!!.clear()
+                                defaultPlayVideosDataDB!!.defaultPlayVideosDataDao().clearTable()
+
+                                //start to play
+                                if (infoRenew) {
+                                    Log.d(mTag, "start to play!")
+                                    playAd()
+                                }
+                            }
                         }
+
+                    } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_BANNER_COMPLETE, ignoreCase = true)) {
+                        Log.d(mTag, "ACTION_GET_BANNER_COMPLETE")
+
+                        if (bannerList.size > 0) {
+                            //clear before add
+                            defaultPlayBannerDataDB!!.defaultPlayBannerDataDao().clearTable()
+                            for (i in bannerList.indices) {
+                                val defaultPlayBannerData = DefaultPlayBannerData(bannerList[i])
+                                defaultPlayBannerDataDB!!.defaultPlayBannerDataDao().insert(defaultPlayBannerData)
+                            }
+                            defaultBannerPlayList!!.clear()
+                            defaultBannerPlayList = defaultPlayBannerDataDB!!.defaultPlayBannerDataDao().getAll() as ArrayList<DefaultPlayBannerData>
+                            Log.d(mTag, "defaultBannerPlayList.size = ${defaultBannerPlayList!!.size}")
+                        }
+
+                        // then start download images
+                        if (adSettingList[currentAdSettingIdx].plan_images.isNotEmpty()) {
+                            val imagesArray =
+                                adSettingList[currentAdSettingIdx].plan_images.split(",")
+                            if (imagesArray.isNotEmpty()) {
+                                imageList.clear()
+                                downloadImageReadyArray.clear()
+                                for (i in imagesArray.indices) {
+                                    imageList.add(imagesArray[i])
+                                    downloadImageReadyArray.add(false)
+                                }
+
+                                Log.d(
+                                    mTag,
+                                    "imageList = $imageList, downloadImageReadyArray = $downloadImageReadyArray"
+                                )
+                                //downloadImageComplete = 0
+                                checkImagesExists()
+                                clearImagesNotInImageList()
+                                downloadImages()
+                            } else { //no images, start download videos
+                                imageList.clear()
+                                defaultImagesPlayList!!.clear()
+                                defaultPlayImagesDataDB!!.defaultPlayImagesDataDao().clearTable()
+
+                                if (adSettingList[currentAdSettingIdx].plan_videos.isNotEmpty()) {
+                                    val videosArray = adSettingList[currentAdSettingIdx].plan_videos.split(",")
+
+                                    if (videosArray.isNotEmpty()) {
+                                        videoList.clear()
+                                        downloadVideoReadyArray.clear()
+                                        for (i in videosArray.indices) {
+                                            videoList.add(videosArray[i])
+                                            downloadVideoReadyArray.add(false)
+                                        }
+
+                                        Log.d(mTag, "videoList = $videoList, downloadVideoReadyArray = $downloadVideoReadyArray")
+
+
+                                        //then download videos
+                                        //downloadVideoComplete = 0
+                                        checkVideosExists()
+                                        clearVideosNotInVideoList()
+                                        downloadVideos()
+                                    } else { //no videos, start ads
+                                        videoList.clear()
+                                        defaultVideosPlayList!!.clear()
+                                        defaultPlayVideosDataDB!!.defaultPlayVideosDataDao().clearTable()
+
+                                        //start to play
+                                        if (infoRenew) {
+                                            Log.d(mTag, "start to play!")
+                                            playAd()
+                                        }
+                                    }
+                                } else { //no videos, start ads
+                                    videoList.clear()
+                                    defaultVideosPlayList!!.clear()
+                                    defaultPlayVideosDataDB!!.defaultPlayVideosDataDao().clearTable()
+
+                                    //start to play
+                                    if (infoRenew) {
+                                        Log.d(mTag, "start to play!")
+                                        playAd()
+                                    }
+                                }
+                            }
+                        } else { //images is empty, download videos
+                            imageList.clear()
+                            defaultImagesPlayList!!.clear()
+                            defaultPlayImagesDataDB!!.defaultPlayImagesDataDao().clearTable()
+
+                            if (adSettingList[currentAdSettingIdx].plan_videos.isNotEmpty()) {
+                                val videosArray = adSettingList[currentAdSettingIdx].plan_videos.split(",")
+
+                                if (videosArray.isNotEmpty()) {
+                                    videoList.clear()
+                                    downloadVideoReadyArray.clear()
+                                    for (i in videosArray.indices) {
+                                        videoList.add(videosArray[i])
+                                        downloadVideoReadyArray.add(false)
+                                    }
+
+                                    Log.d(mTag, "videoList = $videoList, downloadVideoReadyArray = $downloadVideoReadyArray")
+
+
+                                    //then download videos
+                                    //downloadVideoComplete = 0
+                                    checkVideosExists()
+                                    clearVideosNotInVideoList()
+                                    downloadVideos()
+                                } else { //no videos, start ads
+                                    videoList.clear()
+                                    defaultVideosPlayList!!.clear()
+                                    defaultPlayVideosDataDB!!.defaultPlayVideosDataDao().clearTable()
+
+                                    //start to play
+                                    if (infoRenew) {
+                                        Log.d(mTag, "start to play!")
+                                        playAd()
+                                    }
+                                }
+                            } else { //no videos, start ads
+                                videoList.clear()
+                                defaultVideosPlayList!!.clear()
+                                defaultPlayVideosDataDB!!.defaultPlayVideosDataDao().clearTable()
+
+                                //start to play
+                                if (infoRenew) {
+                                    Log.d(mTag, "start to play!")
+                                    playAd()
+                                }
+                            }
+                        }
+
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_IMAGES_FAILED, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_IMAGES_FAILED")
                         if (downloadImageComplete < imageList.size) {
@@ -860,6 +1606,7 @@ class MainActivity : AppCompatActivity() {
                                 clearVideosNotInVideoList()
                                 downloadVideos()
                             } else { //no videos, start ads
+                                videoList.clear()
                                 defaultVideosPlayList!!.clear()
                                 defaultPlayVideosDataDB!!.defaultPlayVideosDataDao().clearTable()
 
@@ -900,21 +1647,34 @@ class MainActivity : AppCompatActivity() {
                         Log.d(mTag, "Download Images complete, then download videos.")
                         if (adSettingList[currentAdSettingIdx].plan_videos.isNotEmpty()) {
                             val videosArray = adSettingList[currentAdSettingIdx].plan_videos.split(",")
-                            videoList.clear()
-                            downloadVideoReadyArray.clear()
-                            for (i in videosArray.indices) {
-                                videoList.add(videosArray[i])
-                                downloadVideoReadyArray.add(false)
+
+                            if (videosArray.isNotEmpty()) {
+                                videoList.clear()
+                                downloadVideoReadyArray.clear()
+                                for (i in videosArray.indices) {
+                                    videoList.add(videosArray[i])
+                                    downloadVideoReadyArray.add(false)
+                                }
+
+                                Log.d(mTag, "videoList = $videoList, downloadVideoReadyArray = $downloadVideoReadyArray")
+
+
+                                //then download videos
+                                //downloadVideoComplete = 0
+                                checkVideosExists()
+                                clearVideosNotInVideoList()
+                                downloadVideos()
+                            } else { //no videos, start ads
+                                videoList.clear()
+                                defaultVideosPlayList!!.clear()
+                                defaultPlayVideosDataDB!!.defaultPlayVideosDataDao().clearTable()
+
+                                //start to play
+                                if (infoRenew) {
+                                    Log.d(mTag, "start to play!")
+                                    playAd()
+                                }
                             }
-
-                            Log.d(mTag, "videoList = $videoList, downloadVideoReadyArray = $downloadVideoReadyArray")
-
-
-                            //then download videos
-                            //downloadVideoComplete = 0
-                            checkVideosExists()
-                            clearVideosNotInVideoList()
-                            downloadVideos()
                         } else {
                             Log.d(mTag, "adSettingList[0].plan_videos.isEmpty()")
                             videoList.clear()
@@ -956,54 +1716,13 @@ class MainActivity : AppCompatActivity() {
                             }
                         }
 
-                        /*if (isFirstVideoDownload) {
-                            isFirstVideoDownload = false
-                            //start to play
-                            if (infoRenew) {
-                                Log.d(mTag, "start to play!")
-                                playAd()
-                            }
-                        }*/
-
                         if (downloadVideoComplete < videoList.size) {
                             downloadVideos()
                         }
-                        /*
-
-
-                        Log.d(mTag, "fileName: $fileName download complete!")
-                        Log.d(mTag, "downloadVideoReadyArray = $downloadVideoReadyArray")
-
-                        if (downloadVideoComplete == videoList.size) {
-                            if (videoList.size > 0) {
-
-                                //clear before add
-                                defaultPlayVideosDataDB!!.defaultPlayVideosDataDao().clearTable()
-                                for (i in videoList.indices) {
-                                    val defaultPlayVideosData = DefaultPlayVideosData(videoList[i])
-                                    defaultPlayVideosDataDB!!.defaultPlayVideosDataDao().insert(defaultPlayVideosData)
-                                }
-                                defaultVideosPlayList!!.clear()
-                                defaultVideosPlayList = defaultPlayVideosDataDB!!.defaultPlayVideosDataDao().getAll() as ArrayList<DefaultPlayVideosData>
-                                Log.d(mTag, "defaultVideosPlayList.size = ${defaultVideosPlayList!!.size}")
-                            }
-
-                            //start to play
-                            if (infoRenew) {
-                                Log.d(mTag, "start to play!")
-                                playAd()
-                            }
-
-                        } else {
-                            Log.d(mTag, "Not Yet")
-                        }
-                        */
-
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_VIDEOS_EMPTY, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_VIDEOS_EMPTY")
                         videoList.clear()
                         defaultVideosPlayList!!.clear()
-
                         defaultPlayVideosDataDB!!.defaultPlayVideosDataDao().clearTable()
 
                         //start to play
@@ -1067,6 +1786,11 @@ class MainActivity : AppCompatActivity() {
             filter.addAction(Constants.ACTION.ACTION_GET_MARQUEE_SUCCESS)
             filter.addAction(Constants.ACTION.ACTION_GET_MARQUEE_FAILED)
             filter.addAction(Constants.ACTION.ACTION_GET_MARQUEE_EMPTY)
+
+            filter.addAction(Constants.ACTION.ACTION_GET_BANNER_SUCCESS)
+            filter.addAction(Constants.ACTION.ACTION_GET_BANNER_COMPLETE)
+            filter.addAction(Constants.ACTION.ACTION_GET_BANNER_FAILED)
+            filter.addAction(Constants.ACTION.ACTION_GET_BANNER_EMPTY)
 
             filter.addAction(Constants.ACTION.ACTION_GET_IMAGES_SUCCESS)
             filter.addAction(Constants.ACTION.ACTION_GET_IMAGES_COMPLETE)
@@ -1144,7 +1868,6 @@ class MainActivity : AppCompatActivity() {
 
         override fun onFailure(call: Call, e: IOException) {
             runOnUiThread(netErrRunnable)
-
         }
 
         @Throws(IOException::class)
@@ -1170,24 +1893,31 @@ class MainActivity : AppCompatActivity() {
                     Log.d(mTag, "plan4StartTime = $plan4StartTime")
 
                     if (layoutList.size > 0) {
-                        if (plan4StartTime in 1..currentTimestamp) { //plan4
+                        if (plan4StartTime in 1..currentTimestamp && layoutList[0].plan4_id != 0) { //plan4
                             currentPlanId = layoutList[0].plan4_id
+                            currentPlanUse = 4
                             Log.d(mTag, "plan4, id = ${layoutList[0].plan4_id}")
 
-                        } else if (plan3StartTime in 1..currentTimestamp) { //plan3
+                        } else if (plan3StartTime in 1..currentTimestamp && layoutList[0].plan3_id != 0) { //plan3
                             currentPlanId = layoutList[0].plan3_id
+                            currentPlanUse = 3
                             Log.d(mTag, "plan3, id = ${layoutList[0].plan3_id}")
 
-                        } else if (plan2StartTime in 1..currentTimestamp) { //plan2
+                        } else if (plan2StartTime in 1..currentTimestamp && layoutList[0].plan2_id != 0) { //plan2
                             currentPlanId = layoutList[0].plan2_id
+                            currentPlanUse = 2
                             Log.d(mTag, "plan2, id = ${layoutList[0].plan2_id}")
 
                         } //else if (planStartTime in 1..currentTimestamp) { //plan1
                         else { //plan1
-                            currentPlanId = layoutList[0].plan_id
-                            Log.d(mTag, "plan1, id = ${layoutList[0].plan_id}")
-
+                            if (layoutList[0].plan_id > 0) {
+                                currentPlanId = layoutList[0].plan_id
+                                currentPlanUse = 1
+                                Log.d(mTag, "plan1, id = ${layoutList[0].plan_id}")
+                            }
                         }
+
+                        Log.e(mTag, "---->currentPlanUse = $currentPlanUse")
 
                         //get current plan idx
                         if (currentPlanId > 0) {
@@ -1225,6 +1955,7 @@ class MainActivity : AppCompatActivity() {
                             infoRenew = true
 
                             if (server_ip_address != "" && server_webservice_port != "") {
+                                server_banner_folder = "$server_ip_address:$server_webservice_port/uploads/banners"
                                 server_images_folder = "$server_ip_address:$server_webservice_port/uploads/images"
                                 server_videos_folder = "$server_ip_address:$server_webservice_port/uploads/videos"
                             }
@@ -1261,13 +1992,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun getLayout() {
-        val jsonObject = JSONObject()
-        try {
-            jsonObject.put("deviceID", deviceID)
+            val jsonObject = JSONObject()
+            try {
+                jsonObject.put("deviceID", deviceID)
 
-        } catch (e: JSONException) {
-            e.printStackTrace()
-        }
+            } catch (e: JSONException) {
+                e.printStackTrace()
+            }
 
         ApiFunc().getLayout(jsonObject, getLayoutCallback)
     }
@@ -1310,7 +2041,15 @@ class MainActivity : AppCompatActivity() {
                             layoutList[0].layoutOrientation,
                             layoutList[0].plan_id, layoutList[0].plan2_id, layoutList[0].plan3_id, layoutList[0].plan4_id,
                             layoutList[0].plan_start_time, layoutList[0].plan2_start_time, layoutList[0].plan3_start_time, layoutList[0].plan4_start_time,
-                            layoutList[0].pingWebInterval)
+                            layoutList[0].pingWebInterval,
+                            layoutList[0].plan_layout_top_weight, layoutList[0].plan_layout_center_weight,
+                            layoutList[0].plan_layout_bottom_weight, layoutList[0].plan_layout_tri_weight,
+                            layoutList[0].plan2_layout_top_weight, layoutList[0].plan2_layout_center_weight,
+                            layoutList[0].plan2_layout_bottom_weight, layoutList[0].plan2_layout_tri_weight,
+                            layoutList[0].plan3_layout_top_weight, layoutList[0].plan3_layout_center_weight,
+                            layoutList[0].plan3_layout_bottom_weight, layoutList[0].plan3_layout_tri_weight,
+                            layoutList[0].plan4_layout_top_weight, layoutList[0].plan4_layout_center_weight,
+                            layoutList[0].plan4_layout_bottom_weight, layoutList[0].plan4_layout_tri_weight)
 
                         if (defaultLayoutPlayList!!.size == 0) {
                             defaultPlayLayoutDataDB!!.defaultPlayLayoutDataDao().insert(defaultPlayLayoutData)
@@ -1339,19 +2078,25 @@ class MainActivity : AppCompatActivity() {
 
 
 
-                        currentPlanId = if (plan4StartTime in 1..currentTimestamp) { //plan4
-                            Log.d(mTag, "plan4")
-                            layoutList[0].plan4_id
-                        } else if (plan3StartTime in 1..currentTimestamp) { //plan3
-                            Log.d(mTag, "plan3")
-                            layoutList[0].plan3_id
-                        } else if (plan2StartTime in 1..currentTimestamp) { //plan2
-                            Log.d(mTag, "plan2")
-                            layoutList[0].plan2_id
+                        if (plan4StartTime in 1..currentTimestamp && layoutList[0].plan4_id != 0) { //plan4
+                            currentPlanId = layoutList[0].plan4_id
+                            currentPlanUse = 4
+                            Log.d(mTag, "plan4, id = ${layoutList[0].plan4_id}")
+                        } else if (plan3StartTime in 1..currentTimestamp && layoutList[0].plan3_id != 0) { //plan3
+                            currentPlanId = layoutList[0].plan3_id
+                            currentPlanUse = 3
+                            Log.d(mTag, "plan3, id = ${layoutList[0].plan3_id}")
+                        } else if (plan2StartTime in 1..currentTimestamp && layoutList[0].plan2_id != 0) { //plan2
+                            currentPlanId = layoutList[0].plan2_id
+                            currentPlanUse = 2
+                            Log.d(mTag, "plan2, id = ${layoutList[0].plan2_id}")
                         } //else if (planStartTime in 1..currentTimestamp) { //plan1
                         else { //plan1
-                            Log.d(mTag, "plan1")
-                            layoutList[0].plan_id
+                            if (layoutList[0].plan_id > 0) {
+                                currentPlanId = layoutList[0].plan_id
+                                currentPlanUse = 1
+                                Log.d(mTag, "plan1, id = ${layoutList[0].plan_id}")
+                            }
                         }
 
                         if (previousPlanId != currentPlanId) {
@@ -1442,11 +2187,17 @@ class MainActivity : AppCompatActivity() {
                     if (adSettingList.size > 0) {
 
                         for (i in adSettingList.indices) {
-                            val defaultPlayAdSettingData = DefaultPlayAdSettingData(adSettingList[i].plan_id, adSettingList[i].plan_name,
+                            val defaultPlayAdSettingData = DefaultPlayAdSettingData(
+                                adSettingList[i].plan_id, adSettingList[i].plan_name,
                                 adSettingList[i].plan_marquee, adSettingList[i].plan_images,
-                                adSettingList[i].plan_videos, adSettingList[i].marquee_mode,
-                                adSettingList[i].images_mode, adSettingList[i].videos_mode,
-                                adSettingList[i].marquee_interval, adSettingList[i].image_interval)
+                                adSettingList[i].plan_videos, adSettingList[i].plan_banner,
+                                adSettingList[i].marquee_mode, adSettingList[i].marquee_background,
+                                adSettingList[i].marquee_text, adSettingList[i].marquee_size,
+                                adSettingList[i].marquee_locate, adSettingList[i].marquee_speed,
+                                adSettingList[i].images_mode,
+                                adSettingList[i].videos_mode, adSettingList[i].marquee_interval,
+                                adSettingList[i].image_interval, adSettingList[i].image_scale_type,
+                                adSettingList[i].video_scale_type, adSettingList[i].banner_scale_type)
                             defaultPlayAdSettingDataDB!!.defaultPlayAdSettingDataDao().insert(defaultPlayAdSettingData)
                             /*if (defaultAdSettingPlayList!!.size == 0) {
                                 defaultPlayAdSettingDataDB!!.defaultPlayAdSettingDataDao().insert(defaultPlayAdSettingData)
@@ -1464,6 +2215,8 @@ class MainActivity : AppCompatActivity() {
                                 }
                             }
                         }
+
+                        Log.e(mTag, "getAdSettingBack -> currentAdSettingIdx = $currentAdSettingIdx ")
 
                         val successIntent = Intent()
                         successIntent.action = Constants.ACTION.ACTION_GET_AD_SETTING_SUCCESS
@@ -1553,11 +2306,92 @@ class MainActivity : AppCompatActivity() {
         if (isFirstNetworkError) {
             isFirstNetworkError = false
             if (adSettingList.size >= 1) {
+                Log.d(mTag, "currentAdSettingIdx = $currentAdSettingIdx")
                 Log.d(mTag, "playMarqueeList.size = ${playMarqueeList.size}")
                 Log.d(mTag, "imageList.size = ${imageList.size}")
                 Log.d(mTag, "videoList.size = ${videoList.size}")
                 playAd()
             }
+        }
+    }
+
+    fun downloadBanner() {
+        Log.d(mTag, "=== downloadBanner start ===")
+
+        if (bannerList.size > 0) {
+            var downloadIdx = -1
+            for (i in bannerList.indices) {
+                val srcPath = server_banner_folder
+                val destPath = "$dest_banner_folder${bannerList[i]}"
+                Log.d(mTag, "srcPath = $srcPath")
+                Log.d(mTag, "destPath = $destPath")
+
+                val file = File(destPath)
+                if(!file.exists()) {
+                    downloadIdx = i
+                    break
+                }/* else {
+                    Log.d(mTag, "download file exist!")
+                    downloadImageComplete += 1
+                    downloadImageReadyArray[i] = true
+                }*/
+            }
+
+            Log.d(mTag, "downloadBannerComplete = $downloadBannerComplete, downloadBannerReadyArray = $downloadBannerReadyArray")
+
+            if (downloadIdx >= 0 ) {
+
+                val srcPath = server_banner_folder
+                val destPath = "$dest_banner_folder${bannerList[downloadIdx]}"
+                Log.d(mTag, "start download file : ${bannerList[downloadIdx]} to $dest_banner_folder")
+                Thread {
+                    try {
+                        val totalSize = download(srcPath, destPath, bannerList[downloadIdx]) { progress, length ->
+                            // handling the result on main thread
+                            handler.sendMessage(handler.obtainMessage(0, progress to length))
+                        }
+
+                        Log.d(mTag, "totalSize = $totalSize")
+
+                        downloadBannerComplete += 1
+                        downloadBannerReadyArray[downloadIdx] = true
+
+                        if (downloadBannerComplete == bannerList.size) {
+                            val completeIntent = Intent()
+                            completeIntent.action = Constants.ACTION.ACTION_GET_BANNER_COMPLETE
+                            mContext?.sendBroadcast(completeIntent)
+                        } else {
+                            val successIntent = Intent()
+                            successIntent.action = Constants.ACTION.ACTION_GET_BANNER_SUCCESS
+                            successIntent.putExtra("idx", downloadIdx)
+                            successIntent.putExtra("fileName", bannerList[downloadIdx])
+                            mContext?.sendBroadcast(successIntent)
+                        }
+                    } catch (ex: Exception) {
+                        Log.e(mTag, ex.toString())
+                        //we can't stuck on download failed, keep try next one
+                        downloadBannerComplete += 1
+                        downloadBannerReadyArray[downloadIdx] = false
+                        val completeIntent = Intent()
+                        completeIntent.action = Constants.ACTION.ACTION_GET_BANNER_FAILED
+                        mContext?.sendBroadcast(completeIntent)
+
+                    }
+                }.start()
+            } else { //downloadIdx == -1
+                if (downloadBannerComplete == bannerList.size) {
+                    val completeIntent = Intent()
+                    completeIntent.action = Constants.ACTION.ACTION_GET_BANNER_COMPLETE
+                    mContext?.sendBroadcast(completeIntent)
+                }
+            }
+
+
+
+        } else {
+            val emptyIntent = Intent()
+            emptyIntent.action = Constants.ACTION.ACTION_GET_BANNER_EMPTY
+            mContext?.sendBroadcast(emptyIntent)
         }
     }
 
@@ -1794,6 +2628,19 @@ class MainActivity : AppCompatActivity() {
         return ret
     }
 
+    private fun checkDownloadBannerAll(): Boolean {
+        var ret = false
+
+        for (i in downloadBannerReadyArray.indices) {
+            if (downloadBannerReadyArray[i]) {
+                ret = true
+                break
+            }
+        }
+
+        return ret
+    }
+
     private fun checkDownloadImagesAll(): Boolean {
         var ret = false
 
@@ -1818,6 +2665,26 @@ class MainActivity : AppCompatActivity() {
         }
 
         return ret
+    }
+
+    fun checkBannerExists() {
+        Log.e(mTag, "checkBannerExists, bannerList.size = ${bannerList.size}")
+        downloadBannerComplete = 0
+        if (bannerList.size > 0) {
+            for (i in bannerList.indices) {
+                val srcPath = server_banner_folder
+                val destPath = "$dest_banner_folder${bannerList[i]}"
+                Log.d(mTag, "srcPath = $srcPath")
+                Log.d(mTag, "destPath = $destPath")
+
+                val file = File(destPath)
+                if(file.exists()) {
+                    downloadBannerComplete += 1
+                    downloadBannerReadyArray[i] = true
+
+                }
+            }
+        }
     }
 
     fun checkImagesExists() {
@@ -1854,6 +2721,62 @@ class MainActivity : AppCompatActivity() {
                     downloadVideoReadyArray[i] = true
 
                 }
+            }
+        }
+    }
+
+    fun clearBannersNotInBannerList() {
+        Log.d(mTag, "clearBannersNotInBannerList")
+        val directory = File(dest_banner_folder)
+        val files = directory.listFiles()
+
+        if (directory.isDirectory && files != null) {
+            for (i in files.indices) {
+                var found = false
+
+                if (adSettingList.size > 0) {
+                    for (j in adSettingList.indices) {
+                        if (adSettingList[j].plan_banner.isNotEmpty()) {
+                            val imagesArray = adSettingList[j].plan_banner.split(",")
+                            for (k in imagesArray.indices) {
+                                if (files[i].name == imagesArray[k]) {
+                                    found = true
+                                    break
+                                }
+                            }
+                        }
+                    }
+                }
+
+                /*
+                for (j in imageList.indices) {
+                    if (files[i].name == imageList[j]) {
+                        found = true
+
+                        break
+                    }
+                }
+                */
+                if (!found) { //not found in bannerList, delete it!
+                    val deletePath = "$dest_banner_folder${files[i].name}"
+                    val deleteFile = File(deletePath)
+                    val deleteUri  = Uri.fromFile(deleteFile)
+                    Log.d(mTag, "deleteUri = $deleteUri")
+                    try {
+                        if (deleteFile.exists()) {
+                            deleteFile.delete()
+                            //val cr = contentResolver
+                            //cr.delete(deleteUri, null, null)
+                            Log.d(mTag, "Delete $deletePath")
+                        }
+
+                    } catch (e: java.lang.Exception) {
+                        e.printStackTrace()
+                    }
+
+
+                }
+
             }
         }
     }
@@ -2026,32 +2949,72 @@ class MainActivity : AppCompatActivity() {
                     var layoutTop = 0
                     var layoutCenter = 0
                     var layoutBottom = 0
+
+                    var mainLayoutWeight = 0
+                    var layoutTopWeight = 0
+                    var layoutCenterWeight = 0
+                    var layoutBottomWeight = 0
+                    var layoutTriangleWeight = 0
+
+                    var layoutTopWidth = 0
+                    var layoutCenterWidth = 0
+                    var layoutBottomWidth = 0
+
+                    var layoutTopHeight = 0
+                    var layoutCenterHeight = 0
+                    var layoutBottomHeight = 0
+
                     when(layoutList[0].border) {
                         1 -> rootView!!.setBackgroundResource(R.drawable.border_gold)
                         2 -> rootView!!.setBackgroundResource(R.drawable.border_silver)
 
                     }
 
-                    when(currentAdSettingIdx) {
-                        0 -> { //plan1
+                    Log.d(mTag, "playAd currentAdSettingIdx = $currentAdSettingIdx")
+                    Log.d(mTag, "playAd currentPlanUse = $currentPlanUse")
+                    //when(currentAdSettingIdx) {
+                    when(currentPlanUse) {
+                        1 -> { //plan1
                             layoutTop = layoutList[0].layout_top
                             layoutCenter = layoutList[0].layout_center
                             layoutBottom = layoutList[0].layout_bottom
+
+                            layoutTopWeight = layoutList[0].plan_layout_top_weight
+                            layoutCenterWeight = layoutList[0].plan_layout_center_weight
+                            layoutBottomWeight = layoutList[0].plan_layout_bottom_weight
+                            layoutTriangleWeight = layoutList[0].plan_layout_tri_weight
                         }
-                        1 -> { //plan2
+                        2 -> { //plan2
                             layoutTop = layoutList[0].layout2_top
                             layoutCenter = layoutList[0].layout2_center
                             layoutBottom = layoutList[0].layout2_bottom
+
+                            layoutTopWeight = layoutList[0].plan2_layout_top_weight
+                            layoutCenterWeight = layoutList[0].plan2_layout_center_weight
+                            layoutBottomWeight = layoutList[0].plan2_layout_bottom_weight
+                            layoutTriangleWeight = layoutList[0].plan2_layout_tri_weight
+
+
                         }
-                        2 -> { //plan3
+                        3 -> { //plan3
                             layoutTop = layoutList[0].layout3_top
                             layoutCenter = layoutList[0].layout3_center
                             layoutBottom = layoutList[0].layout3_bottom
+
+                            layoutTopWeight = layoutList[0].plan3_layout_top_weight
+                            layoutCenterWeight = layoutList[0].plan3_layout_center_weight
+                            layoutBottomWeight = layoutList[0].plan3_layout_bottom_weight
+                            layoutTriangleWeight = layoutList[0].plan3_layout_tri_weight
                         }
-                        3 -> { //plan4
+                        4 -> { //plan4
                             layoutTop = layoutList[0].layout4_top
                             layoutCenter = layoutList[0].layout4_center
                             layoutBottom = layoutList[0].layout4_bottom
+
+                            layoutTopWeight = layoutList[0].plan4_layout_top_weight
+                            layoutCenterWeight = layoutList[0].plan4_layout_center_weight
+                            layoutBottomWeight = layoutList[0].plan4_layout_bottom_weight
+                            layoutTriangleWeight = layoutList[0].plan4_layout_tri_weight
                         }
                     }
                     //val layoutTop = layoutList[0].layout_top
@@ -2065,8 +3028,18 @@ class MainActivity : AppCompatActivity() {
 
                     val imageInterval = adSettingList[currentAdSettingIdx].image_interval
                     val marqueeInterval = adSettingList[currentAdSettingIdx].marquee_interval
-                    var marqueePlayInterval = 60000 // 60 seconds
 
+                    val image_scale_type = adSettingList[currentAdSettingIdx].image_scale_type
+                    val video_scale_type = adSettingList[currentAdSettingIdx].video_scale_type
+                    val banner_scale_type = adSettingList[currentAdSettingIdx].banner_scale_type
+
+                    val marqueeBackground = adSettingList[currentAdSettingIdx].marquee_background
+                    val marqueeText = adSettingList[currentAdSettingIdx].marquee_text
+                    val marqueeSize = adSettingList[currentAdSettingIdx].marquee_size
+                    val marqueeLocate = adSettingList[currentAdSettingIdx].marquee_locate
+                    val marqueeSpeed = adSettingList[currentAdSettingIdx].marquee_speed
+
+                    var marqueePlayInterval = 60000 // 60 seconds
                     when(marqueeInterval) {
                         0 -> {
                             marqueePlayInterval = 60000
@@ -2096,6 +3069,10 @@ class MainActivity : AppCompatActivity() {
                     //mode = 0 => cycle, mode = 1 => random
                     Log.d(mTag, "marqueeMode = $marqueeMode, imagesMode = $imagesMode, videosMode = $videosMode, layoutOrientation = $layoutOrientation")
 
+                    Log.d(mTag, "image_scale_type = $image_scale_type, video_scale_type = $video_scale_type, banner_scale_type = $banner_scale_type")
+
+                    Log.d(mTag, "marqueeBackground = $marqueeBackground, marqueeText = $marqueeText, marqueeSize = $marqueeSize, marqueeLocate = $marqueeLocate, marqueeSpeed = $marqueeSpeed")
+
                     if (orientation == 2) { //screen landscape
                         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
                         currentOrientation = 2
@@ -2109,36 +3086,179 @@ class MainActivity : AppCompatActivity() {
                     if (mainLinearLayout == null) {
                         mainLinearLayout = LinearLayout(mContext)
                         mainLinearLayout!!.setPadding(12,12,12,12)
-
                     }
                     mainLinearLayout!!.removeAllViews()
                     mainLinearLayout!!.layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT)
+
+
+                    //layout select
                     when (layoutOrientation) {
                         1 -> { //horizontal
                             mainLinearLayout!!.orientation = LinearLayout.HORIZONTAL
                             Log.d(mTag, "mainLinearLayout: HORIZONTAL")
+                            if (currentOrientation == 1) { // portrait
+                                mainLayoutWeight = layoutList[0].screenWidth
+
+                                layoutTopWidth = layoutTopWeight
+                                layoutCenterWidth = layoutCenterWeight
+                                layoutBottomWidth = layoutCenterWeight
+
+                                layoutTopHeight = layoutList[0].screenHeight
+                                layoutCenterHeight = layoutList[0].screenHeight
+                                layoutBottomHeight = layoutList[0].screenHeight
+                            } else { // landscape
+                                mainLayoutWeight = layoutList[0].screenHeight
+
+                                layoutTopWidth = layoutTopWeight
+                                layoutCenterWidth = layoutCenterWeight
+                                layoutBottomWidth = layoutBottomWeight
+
+                                layoutTopHeight = layoutList[0].screenWidth
+                                layoutCenterHeight = layoutList[0].screenWidth
+                                layoutBottomHeight = layoutList[0].screenWidth
+                            }
                         }
                         2 -> { //left triangle
                             mainLinearLayout!!.orientation = LinearLayout.HORIZONTAL
                             Log.d(mTag, "mainLinearLayout: HORIZONTAL")
+                            if (currentOrientation == 1) { // portrait
+                                mainLayoutWeight = layoutList[0].screenWidth
+                                layoutTriangleWeight = layoutList[0].screenWidth - layoutTopWeight
+
+                                layoutTopWidth = layoutTopWeight
+                                layoutCenterWidth = layoutTriangleWeight
+                                layoutBottomWidth = layoutTriangleWeight
+
+                                layoutTopHeight = layoutList[0].screenHeight
+                                layoutCenterHeight = layoutCenterWeight
+                                layoutBottomHeight = layoutBottomWeight
+                            } else { // landscape
+                                mainLayoutWeight = layoutList[0].screenHeight
+                                layoutTriangleWeight = layoutList[0].screenHeight - layoutTopWeight
+
+                                layoutTopWidth = layoutTopWeight
+                                layoutCenterWidth = layoutTriangleWeight
+                                layoutBottomWidth = layoutTriangleWeight
+
+                                layoutTopHeight = layoutList[0].screenWidth
+                                layoutCenterHeight = layoutCenterWeight
+                                layoutBottomHeight = layoutBottomWeight
+                            }
                         }
                         3 -> { //right triangle
                             mainLinearLayout!!.orientation = LinearLayout.HORIZONTAL
                             Log.d(mTag, "mainLinearLayout: HORIZONTAL")
+                            if (currentOrientation == 1) { // portrait
+                                mainLayoutWeight = layoutList[0].screenWidth
+                                layoutTriangleWeight = layoutList[0].screenWidth - layoutBottomWeight
+
+                                layoutTopWidth = mainLayoutWeight - layoutBottomWeight
+                                layoutCenterWidth = layoutTopWidth
+                                layoutBottomWidth = layoutBottomWeight
+
+                                layoutTopHeight = layoutTopWeight
+                                layoutCenterHeight = layoutCenterWeight
+                                layoutBottomHeight = layoutList[0].screenHeight
+                            } else { // landscape
+                                mainLayoutWeight = layoutList[0].screenHeight
+                                layoutTriangleWeight = layoutList[0].screenHeight - layoutBottomWeight
+
+                                layoutTopWidth = mainLayoutWeight - layoutBottomWeight
+                                layoutCenterWidth = layoutTopWidth
+                                layoutBottomWidth = layoutBottomWeight
+
+                                layoutTopHeight = layoutTopWeight
+                                layoutCenterHeight = layoutCenterWeight
+                                layoutBottomHeight = layoutList[0].screenWidth
+                            }
                         }
                         4 -> { //up triangle
                             mainLinearLayout!!.orientation = LinearLayout.VERTICAL
                             Log.d(mTag, "mainLinearLayout: VERTICAL")
+                            if (currentOrientation == 1) { // portrait
+                                mainLayoutWeight = layoutList[0].screenHeight
+                                layoutTriangleWeight = layoutList[0].screenHeight - layoutTopWeight
+
+                                layoutTopWidth =  layoutList[0].screenWidth
+                                layoutCenterWidth = layoutCenterWeight
+                                layoutBottomWidth = layoutBottomWeight
+
+                                layoutTopHeight = layoutTopWeight
+                                layoutCenterHeight = layoutTriangleWeight
+                                layoutBottomHeight = layoutTriangleWeight
+                            } else { // landscape
+                                mainLayoutWeight = layoutList[0].screenWidth
+                                layoutTriangleWeight = layoutList[0].screenWidth - layoutTopWeight
+
+                                layoutTopWidth = layoutList[0].screenHeight
+                                layoutCenterWidth = layoutCenterWeight
+                                layoutBottomWidth = layoutBottomWeight
+
+                                layoutTopHeight = layoutTopWeight
+                                layoutCenterHeight = layoutTriangleWeight
+                                layoutBottomHeight = layoutTriangleWeight
+                            }
                         }
                         5 -> { //down triangle
                             mainLinearLayout!!.orientation = LinearLayout.VERTICAL
                             Log.d(mTag, "mainLinearLayout: VERTICAL")
+                            if (currentOrientation == 1) { // portrait
+                                mainLayoutWeight = layoutList[0].screenHeight
+                                layoutTriangleWeight = layoutList[0].screenHeight - layoutBottomWeight
+
+                                layoutTopWidth =  layoutTopWeight
+                                layoutCenterWidth = layoutCenterWeight
+                                layoutBottomWidth = layoutList[0].screenWidth
+
+                                layoutTopHeight = layoutTriangleWeight
+                                layoutCenterHeight = layoutTriangleWeight
+                                layoutBottomHeight = layoutBottomWeight
+                            } else {  // landscape
+                                mainLayoutWeight = layoutList[0].screenWidth
+                                layoutTriangleWeight = layoutList[0].screenWidth - layoutBottomWeight
+
+                                layoutTopWidth =  layoutTopWeight
+                                layoutCenterWidth = layoutCenterWeight
+                                layoutBottomWidth = layoutList[0].screenHeight
+
+                                layoutTopHeight = layoutTriangleWeight
+                                layoutCenterHeight = layoutTriangleWeight
+                                layoutBottomHeight = layoutBottomWeight
+                            }
                         }
                         else -> { //vertical
                             mainLinearLayout!!.orientation = LinearLayout.VERTICAL
                             Log.d(mTag, "mainLinearLayout: VERTICAL")
+                            if (currentOrientation == 1) { // Vertical
+                                //weightSum = screen Height
+                                mainLayoutWeight = layoutList[0].screenHeight
+
+                                layoutTopWidth = layoutList[0].screenWidth
+                                layoutCenterWidth = layoutList[0].screenWidth
+                                layoutBottomWidth = layoutList[0].screenWidth
+
+                                layoutTopHeight = layoutTopWeight
+                                layoutCenterHeight = layoutCenterWeight
+                                layoutBottomHeight = layoutBottomWeight
+                            } else { // Horizontal
+                                mainLayoutWeight = layoutList[0].screenWidth
+
+                                layoutTopWidth = layoutTopWeight
+                                layoutCenterWidth = layoutCenterWeight
+                                layoutBottomWidth = layoutBottomWeight
+
+                                layoutTopHeight = layoutList[0].screenHeight
+                                layoutCenterHeight = layoutList[0].screenHeight
+                                layoutBottomHeight = layoutList[0].screenHeight
+                            }
                         }
                     }
+
+                    Log.e(mTag, "mainLayoutWeight = $mainLayoutWeight")
+                    Log.e(mTag, "layoutTopWeight = $layoutTopWeight")
+                    Log.e(mTag, "layoutCenterWeight = $layoutCenterWeight")
+                    Log.e(mTag, "layoutBottomWeight = $layoutBottomWeight")
+                    Log.e(mTag, "layoutTriangleWeight = $layoutTriangleWeight")
                     rootView!!.addView(mainLinearLayout)
 
                     //linearLayoutTriangle for new layout
@@ -2163,25 +3283,31 @@ class MainActivity : AppCompatActivity() {
                         linearLayoutTop = LinearLayout(mContext)
                     }
                     linearLayoutTop!!.removeAllViews()
-                    linearLayoutTop!!.layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT, linearLayoutTopWeight)
+                    //linearLayoutTopWeight = layoutTopWeight / mainLayoutWeight * 100
+                    //Log.e(mTag, "linearLayoutTopWeight = $linearLayoutTopWeight")
+                    linearLayoutTop!!.layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT)
                     linearLayoutTop!!.orientation = LinearLayout.VERTICAL
-                    linearLayoutTop!!.setBackgroundColor(Color.BLACK)
+                    //linearLayoutTop!!.setBackgroundColor(Color.parseColor(marqueeBackground))
                     //linearLayoutTop!!.weightSum = 2.0F
 
                     when (layoutTop) {
                         1 -> {
                             //textViewTop
                             if (textViewTop == null) {
-                                textViewTop = TextView(mContext)
+                                textViewTop = SpeedMarquee(mContext as  Context)
                             }
                             textViewTop!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-                            textViewTop!!.setBackgroundColor(Color.BLACK)
-                            textViewTop!!.textSize = 40.0F
-                            textViewTop!!.setTextColor(Color.WHITE)
+                            textViewTop!!.setBackgroundColor(Color.parseColor(marqueeBackground))
+                            textViewTop!!.textSize = marqueeSize.toFloat()
+                            textViewTop!!.setTextColor(Color.parseColor(marqueeText))
                             textViewTop!!.ellipsize = TextUtils.TruncateAt.MARQUEE
                             textViewTop!!.isSingleLine = true
                             textViewTop!!.freezesText = true
-                            textViewTop!!.gravity = Gravity.CENTER_VERTICAL
+                            when(marqueeLocate) {
+                                0 -> textViewTop!!.gravity = Gravity.CENTER_VERTICAL
+                                1 -> textViewTop!!.gravity = Gravity.TOP
+                                2 -> textViewTop!!.gravity = Gravity.BOTTOM
+                            }
                             textViewTop!!.marqueeRepeatLimit = -1
                             textViewTop!!.visibility = View.GONE
                             linearLayoutTop!!.addView(textViewTop)
@@ -2193,6 +3319,7 @@ class MainActivity : AppCompatActivity() {
                             }
                             imageViewTop!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
                             imageViewTop!!.visibility = View.GONE
+                            //imageViewTop!!.scaleType = ImageView.ScaleType.CENTER_INSIDE
                             linearLayoutTop!!.addView(imageViewTop)
                             //imageViewTop2
                             if (imageViewTop2 == null) {
@@ -2200,7 +3327,15 @@ class MainActivity : AppCompatActivity() {
                             }
                             imageViewTop2!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
                             imageViewTop2!!.visibility = View.GONE
+                            //imageViewTop2!!.scaleType = ImageView.ScaleType.CENTER_INSIDE
                             linearLayoutTop!!.addView(imageViewTop2)
+                            if (image_scale_type == 1) { //fillXY
+                                imageViewTop!!.scaleType = ImageView.ScaleType.FIT_XY
+                                imageViewTop2!!.scaleType = ImageView.ScaleType.FIT_XY
+                            } else { //default
+                                imageViewTop!!.scaleType = ImageView.ScaleType.CENTER_INSIDE
+                                imageViewTop2!!.scaleType = ImageView.ScaleType.CENTER_INSIDE
+                            }
                         }
                         3 -> {
                             //videoViewLayoutTop
@@ -2216,8 +3351,44 @@ class MainActivity : AppCompatActivity() {
                             if (videoViewTop == null) {
                                 videoViewTop = VideoView(mContext)
                             }
-                            videoViewTop!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                            //videoViewTop!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                            if (video_scale_type == 1) {
+                                val layoutParams = RelativeLayout.LayoutParams(
+                                    RelativeLayout.LayoutParams.MATCH_PARENT,
+                                    RelativeLayout.LayoutParams.WRAP_CONTENT
+                                )
+                                layoutParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM)
+                                layoutParams.addRule(RelativeLayout.ALIGN_PARENT_TOP)
+                                layoutParams.addRule(RelativeLayout.ALIGN_PARENT_LEFT)
+                                layoutParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT)
+                                videoViewTop!!.layoutParams = layoutParams
+                            } else {
+                                videoViewTop!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                            }
+
                             videoViewLayoutTop!!.addView(videoViewTop)
+                        }
+                        4 -> { //banner
+                            //imageViewTop
+                            if (imageViewTop == null) {
+                                imageViewTop = ImageView(mContext)
+                            }
+                            imageViewTop!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                            imageViewTop!!.visibility = View.GONE
+                            linearLayoutTop!!.addView(imageViewTop)
+                            if (banner_scale_type == 1) { //fillXY
+                                imageViewTop!!.scaleType = ImageView.ScaleType.FIT_XY
+                            } else { //default
+                                imageViewTop!!.scaleType = ImageView.ScaleType.CENTER_INSIDE
+                            }
+                            //imageViewTop2
+                            /*if (imageViewTop2 == null) {
+                                imageViewTop2 = ImageView(mContext)
+                            }
+                            imageViewTop2!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                            imageViewTop2!!.visibility = View.GONE
+                            linearLayoutTop!!.addView(imageViewTop2)
+                            */
                         }
                     }
 
@@ -2226,26 +3397,34 @@ class MainActivity : AppCompatActivity() {
                         linearLayoutCenter = LinearLayout(mContext)
                     }
                     linearLayoutCenter!!.removeAllViews()
-                    linearLayoutCenter!!.layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT, linearLayoutCenterWeight)
+                    //linearLayoutCenterWeight = layoutCenterWeight / mainLayoutWeight * 100
+                    //Log.e(mTag, "linearLayoutCenterWeight = $linearLayoutCenterWeight")
+                    linearLayoutCenter!!.layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT)
                     linearLayoutCenter!!.orientation = LinearLayout.VERTICAL
-                    linearLayoutCenter!!.setBackgroundColor(Color.BLACK)
+                    //linearLayoutCenter!!.setBackgroundColor(Color.parseColor(marqueeBackground))
                     //linearLayoutCenter!!.weightSum = 2.0F
 
                     when (layoutCenter) {
                         1 -> {
                             //textViewCenter
                             if (textViewCenter == null) {
-                                textViewCenter = TextView(mContext)
+                                textViewCenter = SpeedMarquee(mContext as Context)
                             }
                             textViewCenter!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-                            textViewCenter!!.setBackgroundColor(Color.BLACK)
-                            textViewCenter!!.textSize = 40.0F
-                            textViewCenter!!.setTextColor(Color.WHITE)
+                            textViewCenter!!.setBackgroundColor(Color.parseColor(marqueeBackground))
+                            textViewCenter!!.textSize = marqueeSize.toFloat()
+                            textViewCenter!!.setTextColor(Color.parseColor(marqueeText))
                             textViewCenter!!.ellipsize = TextUtils.TruncateAt.MARQUEE
                             textViewCenter!!.isSingleLine = true
                             textViewCenter!!.freezesText = true
-                            textViewCenter!!.gravity = Gravity.CENTER_VERTICAL
+                            when(marqueeLocate) {
+                                0 -> textViewCenter!!.gravity = Gravity.CENTER_VERTICAL
+                                1 -> textViewCenter!!.gravity = Gravity.TOP
+                                2 -> textViewCenter!!.gravity = Gravity.BOTTOM
+                            }
                             textViewCenter!!.marqueeRepeatLimit = -1
+                            textViewCenter!!.resumeScroll()
+                            textViewCenter!!.setSpeed(marqueeSpeed.toFloat())
                             textViewCenter!!.visibility = View.GONE
                             linearLayoutCenter!!.addView(textViewCenter)
                         }
@@ -2264,6 +3443,13 @@ class MainActivity : AppCompatActivity() {
                             imageViewCenter2!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
                             imageViewCenter2!!.visibility = View.GONE
                             linearLayoutCenter!!.addView(imageViewCenter2)
+                            if (image_scale_type == 1) { //fillXY
+                                imageViewCenter!!.scaleType = ImageView.ScaleType.FIT_XY
+                                imageViewCenter2!!.scaleType = ImageView.ScaleType.FIT_XY
+                            } else { //default
+                                imageViewCenter!!.scaleType = ImageView.ScaleType.CENTER_INSIDE
+                                imageViewCenter2!!.scaleType = ImageView.ScaleType.CENTER_INSIDE
+                            }
                         }
                         3 -> {
                             //videoViewLayoutCenter
@@ -2272,6 +3458,7 @@ class MainActivity : AppCompatActivity() {
                             }
                             videoViewLayoutCenter!!.removeAllViews()
                             videoViewLayoutCenter!!.layoutParams = RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT)
+                            videoViewLayoutCenter!!.layoutParams
                             videoViewLayoutCenter!!.gravity = Gravity.CENTER
                             videoViewLayoutCenter!!.visibility = View.GONE
                             linearLayoutCenter!!.addView(videoViewLayoutCenter)
@@ -2279,8 +3466,45 @@ class MainActivity : AppCompatActivity() {
                             if (videoViewCenter == null) {
                                 videoViewCenter = VideoView(mContext)
                             }
-                            videoViewCenter!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                            //videoViewCenter!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                            if (video_scale_type == 1) {
+                                val layoutParams = RelativeLayout.LayoutParams(
+                                    RelativeLayout.LayoutParams.MATCH_PARENT,
+                                    RelativeLayout.LayoutParams.WRAP_CONTENT
+                                )
+                                layoutParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM)
+                                layoutParams.addRule(RelativeLayout.ALIGN_PARENT_TOP)
+                                layoutParams.addRule(RelativeLayout.ALIGN_PARENT_LEFT)
+                                layoutParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT)
+                                videoViewCenter!!.layoutParams = layoutParams
+                            } else {
+                                videoViewCenter!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                            }
+
                             videoViewLayoutCenter!!.addView(videoViewCenter)
+                        }
+                        4 -> { //banner
+                            //imageViewCenter
+                            if (imageViewCenter == null) {
+                                imageViewCenter = ImageView(mContext)
+                            }
+                            imageViewCenter!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                            imageViewCenter!!.visibility = View.GONE
+                            linearLayoutCenter!!.addView(imageViewCenter)
+                            if (banner_scale_type == 1) { //fillXY
+                                imageViewCenter!!.scaleType = ImageView.ScaleType.FIT_XY
+                            } else { //default
+                                imageViewCenter!!.scaleType = ImageView.ScaleType.CENTER_INSIDE
+                            }
+                            //imageViewCenter2
+                            /*
+                            if (imageViewCenter2 == null) {
+                                imageViewCenter2 = ImageView(mContext)
+                            }
+                            imageViewCenter2!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                            imageViewCenter2!!.visibility = View.GONE
+                            linearLayoutCenter!!.addView(imageViewCenter2)
+                            */
                         }
                     }
 
@@ -2289,25 +3513,33 @@ class MainActivity : AppCompatActivity() {
                         linearLayoutBottom = LinearLayout(mContext)
                     }
                     linearLayoutBottom!!.removeAllViews()
-                    linearLayoutBottom!!.layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT, linearLayoutBottomWeight)
+                    //linearLayoutBottomWeight = layoutBottomWeight / mainLayoutWeight * 100
+                    //Log.e(mTag, "linearLayoutBottomWeight = $linearLayoutBottomWeight")
+                    linearLayoutBottom!!.layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT)
                     linearLayoutBottom!!.orientation = LinearLayout.VERTICAL
-                    linearLayoutBottom!!.setBackgroundColor(Color.BLACK)
+                    //linearLayoutBottom!!.setBackgroundColor(Color.parseColor(marqueeBackground))
                     //linearLayoutBottom!!.weightSum = 2.0F
                     when (layoutBottom) {
                         1 -> {
                             //textViewBottom
                             if (textViewBottom == null) {
-                                textViewBottom = TextView(mContext)
+                                textViewBottom = SpeedMarquee(mContext as Context)
                             }
                             textViewBottom!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-                            textViewBottom!!.setBackgroundColor(Color.BLACK)
-                            textViewBottom!!.textSize = 40.0F
-                            textViewBottom!!.setTextColor(Color.WHITE)
+                            textViewBottom!!.setBackgroundColor(Color.parseColor(marqueeBackground))
+                            textViewBottom!!.textSize = marqueeSize.toFloat()
+                            textViewBottom!!.setTextColor(Color.parseColor(marqueeText))
                             textViewBottom!!.ellipsize = TextUtils.TruncateAt.MARQUEE
                             textViewBottom!!.isSingleLine = true
                             textViewBottom!!.freezesText = true
-                            textViewBottom!!.gravity = Gravity.CENTER_VERTICAL
+                            when(marqueeLocate) {
+                                0 -> textViewBottom!!.gravity = Gravity.CENTER_VERTICAL
+                                1 -> textViewBottom!!.gravity = Gravity.TOP
+                                2 -> textViewBottom!!.gravity = Gravity.BOTTOM
+                            }
                             textViewBottom!!.marqueeRepeatLimit = -1
+                            textViewBottom!!.resumeScroll()
+                            textViewBottom!!.setSpeed(marqueeSpeed.toFloat())
                             textViewBottom!!.visibility = View.GONE
                             linearLayoutBottom!!.addView(textViewBottom)
                         }
@@ -2326,6 +3558,13 @@ class MainActivity : AppCompatActivity() {
                             imageViewBottom2!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
                             imageViewBottom2!!.visibility = View.GONE
                             linearLayoutBottom!!.addView(imageViewBottom2)
+                            if (image_scale_type == 1) { //fillXY
+                                imageViewBottom!!.scaleType = ImageView.ScaleType.FIT_XY
+                                imageViewBottom2!!.scaleType = ImageView.ScaleType.FIT_XY
+                            } else { //default
+                                imageViewBottom!!.scaleType = ImageView.ScaleType.CENTER_INSIDE
+                                imageViewBottom2!!.scaleType = ImageView.ScaleType.CENTER_INSIDE
+                            }
                         }
                         3 -> {
                             //videoViewLayoutBottom
@@ -2341,51 +3580,123 @@ class MainActivity : AppCompatActivity() {
                             if (videoViewBottom == null) {
                                 videoViewBottom = VideoView(mContext)
                             }
-                            videoViewBottom!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                            //videoViewBottom!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                            if (video_scale_type == 1) {
+                                val layoutParams = RelativeLayout.LayoutParams(
+                                    RelativeLayout.LayoutParams.MATCH_PARENT,
+                                    RelativeLayout.LayoutParams.WRAP_CONTENT
+                                )
+                                layoutParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM)
+                                layoutParams.addRule(RelativeLayout.ALIGN_PARENT_TOP)
+                                layoutParams.addRule(RelativeLayout.ALIGN_PARENT_LEFT)
+                                layoutParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT)
+                                videoViewBottom!!.layoutParams = layoutParams
+                            } else {
+                                videoViewBottom!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                            }
                             videoViewLayoutBottom!!.addView(videoViewBottom)
+                        }
+                        4 -> {
+                            //imageViewBottom
+                            if (imageViewBottom == null) {
+                                imageViewBottom = ImageView(mContext)
+                            }
+                            imageViewBottom!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                            imageViewBottom!!.visibility = View.GONE
+                            linearLayoutBottom!!.addView(imageViewBottom)
+                            if (banner_scale_type == 1) { //fillXY
+                                imageViewBottom!!.scaleType = ImageView.ScaleType.FIT_XY
+                            } else { //default
+                                imageViewBottom!!.scaleType = ImageView.ScaleType.CENTER_INSIDE
+                            }
+                            /*
+                            //imageViewBottom2
+                            if (imageViewBottom2 == null) {
+                                imageViewBottom2 = ImageView(mContext)
+                            }
+                            imageViewBottom2!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                            imageViewBottom2!!.visibility = View.GONE
+                            linearLayoutBottom!!.addView(imageViewBottom2)
+                            */
                         }
                     }
 
                     when(layoutOrientation) {
                         1 -> { //horizontal
-                            mainLinearLayout!!.addView(linearLayoutTop)
-                            mainLinearLayout!!.addView(linearLayoutCenter)
-                            mainLinearLayout!!.addView(linearLayoutBottom)
+                            if (layoutTop > 0) {
+                                mainLinearLayout!!.addView(linearLayoutTop)
+                            }
+                            if (layoutCenter > 0) {
+                                mainLinearLayout!!.addView(linearLayoutCenter)
+                            }
+                            if (layoutBottom > 0) {
+                                mainLinearLayout!!.addView(linearLayoutBottom)
+                            }
                         }
                         2 -> { //left triangle
                             Log.d(mTag, "left triangle")
                             Log.d(mTag, "linearLayoutTop add to mainLinearLayout")
-                            mainLinearLayout!!.addView(linearLayoutTop)
-                            linearLayoutTriangle!!.addView(linearLayoutCenter)
-                            linearLayoutTriangle!!.addView(linearLayoutBottom)
+                            if (layoutTop > 0) {
+                                mainLinearLayout!!.addView(linearLayoutTop)
+                            }
+                            if (layoutCenter > 0) {
+                                linearLayoutTriangle!!.addView(linearLayoutCenter)
+                            }
+                            if (layoutBottom > 0) {
+                                linearLayoutTriangle!!.addView(linearLayoutBottom)
+                            }
                             mainLinearLayout!!.addView(linearLayoutTriangle)
                             Log.d(mTag, "linearLayoutTriangle add to mainLinearLayout")
                         }
                         3 -> { //right triangle
                             Log.d(mTag, "right triangle")
-                            linearLayoutTriangle!!.addView(linearLayoutTop)
-                            linearLayoutTriangle!!.addView(linearLayoutCenter)
-                            mainLinearLayout!!.addView(linearLayoutTriangle)
+                            if (layoutTop > 0) {
+                                linearLayoutTriangle!!.addView(linearLayoutTop)
+                            }
+                            if (layoutCenter > 0) {
+                                linearLayoutTriangle!!.addView(linearLayoutCenter)
+                            }
+                            if (layoutBottom > 0) {
+                                mainLinearLayout!!.addView(linearLayoutTriangle)
+                            }
                             mainLinearLayout!!.addView(linearLayoutBottom)
                         }
                         4 -> { //top triangle
                             Log.d(mTag, "top triangle")
-                            mainLinearLayout!!.addView(linearLayoutTop)
-                            linearLayoutTriangle!!.addView(linearLayoutCenter)
-                            linearLayoutTriangle!!.addView(linearLayoutBottom)
+                            if (layoutTop > 0) {
+                                mainLinearLayout!!.addView(linearLayoutTop)
+                            }
+                            if (layoutCenter > 0) {
+                                linearLayoutTriangle!!.addView(linearLayoutCenter)
+                            }
+                            if (layoutBottom > 0) {
+                                linearLayoutTriangle!!.addView(linearLayoutBottom)
+                            }
                             mainLinearLayout!!.addView(linearLayoutTriangle)
                         }
                         5 -> { //down triangle
                             Log.d(mTag, "down triangle")
-                            linearLayoutTriangle!!.addView(linearLayoutTop)
-                            linearLayoutTriangle!!.addView(linearLayoutCenter)
-                            mainLinearLayout!!.addView(linearLayoutTriangle)
+                            if (layoutTop > 0) {
+                                linearLayoutTriangle!!.addView(linearLayoutTop)
+                            }
+                            if (layoutCenter > 0) {
+                                linearLayoutTriangle!!.addView(linearLayoutCenter)
+                            }
+                            if (layoutBottom > 0) {
+                                mainLinearLayout!!.addView(linearLayoutTriangle)
+                            }
                             mainLinearLayout!!.addView(linearLayoutBottom)
                         }
                         else -> { //0 vertical
-                            mainLinearLayout!!.addView(linearLayoutTop)
-                            mainLinearLayout!!.addView(linearLayoutCenter)
-                            mainLinearLayout!!.addView(linearLayoutBottom)
+                            if (layoutTop > 0) {
+                                mainLinearLayout!!.addView(linearLayoutTop)
+                            }
+                            if (layoutCenter > 0) {
+                                mainLinearLayout!!.addView(linearLayoutCenter)
+                            }
+                            if (layoutBottom > 0) {
+                                mainLinearLayout!!.addView(linearLayoutBottom)
+                            }
                         }
                     }
 
@@ -2477,8 +3788,9 @@ class MainActivity : AppCompatActivity() {
                             val param = LinearLayout.LayoutParams(
                                 LinearLayout.LayoutParams.MATCH_PARENT,
                                 LinearLayout.LayoutParams.MATCH_PARENT,
-                                3.0f
                             )
+                            param.width = layoutTopWidth
+                            param.height = layoutTopHeight
                             linearLayoutTop!!.layoutParams = param
                             linearLayoutTop!!.visibility = View.VISIBLE
                             textViewTop!!.visibility = View.VISIBLE
@@ -2487,8 +3799,9 @@ class MainActivity : AppCompatActivity() {
                             val param = LinearLayout.LayoutParams(
                                 LinearLayout.LayoutParams.MATCH_PARENT,
                                 LinearLayout.LayoutParams.MATCH_PARENT,
-                                2.0f
                             )
+                            param.width = layoutTopWidth
+                            param.height = layoutTopHeight
                             linearLayoutTop!!.layoutParams = param
                             linearLayoutTop!!.visibility = View.VISIBLE
                             imageViewTop!!.visibility = View.VISIBLE
@@ -2497,12 +3810,24 @@ class MainActivity : AppCompatActivity() {
                             val param = LinearLayout.LayoutParams(
                                 LinearLayout.LayoutParams.MATCH_PARENT,
                                 LinearLayout.LayoutParams.MATCH_PARENT,
-                                2.0f
                             )
+                            param.width = layoutTopWidth
+                            param.height = layoutTopHeight
                             linearLayoutTop!!.layoutParams = param
                             linearLayoutTop!!.visibility = View.VISIBLE
                             videoViewLayoutTop!!.visibility = View.VISIBLE
                             videoViewTop!!.visibility = View.VISIBLE
+                        }
+                        4 -> { //banner
+                            val param = LinearLayout.LayoutParams(
+                                LinearLayout.LayoutParams.MATCH_PARENT,
+                                LinearLayout.LayoutParams.MATCH_PARENT,
+                            )
+                            param.width = layoutTopWidth
+                            param.height = layoutTopHeight
+                            linearLayoutTop!!.layoutParams = param
+                            linearLayoutTop!!.visibility = View.VISIBLE
+                            imageViewTop!!.visibility = View.VISIBLE
                         }
                     }
 
@@ -2515,8 +3840,9 @@ class MainActivity : AppCompatActivity() {
                             val param = LinearLayout.LayoutParams(
                                 LinearLayout.LayoutParams.MATCH_PARENT,
                                 LinearLayout.LayoutParams.MATCH_PARENT,
-                                3.0f
                             )
+                            param.width = layoutCenterWidth
+                            param.height = layoutCenterHeight
                             linearLayoutCenter!!.layoutParams = param
                             linearLayoutCenter!!.visibility = View.VISIBLE
                             textViewCenter!!.visibility = View.VISIBLE
@@ -2525,8 +3851,9 @@ class MainActivity : AppCompatActivity() {
                             val param = LinearLayout.LayoutParams(
                                 LinearLayout.LayoutParams.MATCH_PARENT,
                                 LinearLayout.LayoutParams.MATCH_PARENT,
-                                2.0f
                             )
+                            param.width = layoutCenterWidth
+                            param.height = layoutCenterHeight
                             linearLayoutCenter!!.layoutParams = param
                             linearLayoutCenter!!.visibility = View.VISIBLE
                             imageViewCenter!!.visibility = View.VISIBLE
@@ -2535,13 +3862,25 @@ class MainActivity : AppCompatActivity() {
                             val param = LinearLayout.LayoutParams(
                                 LinearLayout.LayoutParams.MATCH_PARENT,
                                 LinearLayout.LayoutParams.MATCH_PARENT,
-                                2.0f
                             )
+                            param.width = layoutCenterWidth
+                            param.height = layoutCenterHeight
                             linearLayoutCenter!!.layoutParams = param
                             linearLayoutCenter!!.visibility = View.VISIBLE
                             videoViewLayoutCenter!!.visibility = View.VISIBLE
                             videoViewCenter!!.visibility = View.VISIBLE
                             //exoPlayerViewCenter!!.visibility = View.VISIBLE
+                        }
+                        4 -> { //banner
+                            val param = LinearLayout.LayoutParams(
+                                LinearLayout.LayoutParams.MATCH_PARENT,
+                                LinearLayout.LayoutParams.MATCH_PARENT,
+                            )
+                            param.width = layoutCenterWidth
+                            param.height = layoutCenterHeight
+                            linearLayoutCenter!!.layoutParams = param
+                            linearLayoutCenter!!.visibility = View.VISIBLE
+                            imageViewCenter!!.visibility = View.VISIBLE
                         }
                     }
 
@@ -2554,10 +3893,10 @@ class MainActivity : AppCompatActivity() {
                             val param = LinearLayout.LayoutParams(
                                 LinearLayout.LayoutParams.MATCH_PARENT,
                                 LinearLayout.LayoutParams.MATCH_PARENT,
-                                3.0f
                             )
+                            param.width = layoutBottomWidth
+                            param.height = layoutBottomHeight
                             linearLayoutBottom!!.layoutParams = param
-
                             linearLayoutBottom!!.visibility = View.VISIBLE
                             textViewBottom!!.visibility = View.VISIBLE
                         }
@@ -2565,8 +3904,9 @@ class MainActivity : AppCompatActivity() {
                             val param = LinearLayout.LayoutParams(
                                 LinearLayout.LayoutParams.MATCH_PARENT,
                                 LinearLayout.LayoutParams.MATCH_PARENT,
-                                2.0f
                             )
+                            param.width = layoutBottomWidth
+                            param.height = layoutBottomHeight
                             linearLayoutBottom!!.layoutParams = param
                             linearLayoutBottom!!.visibility = View.VISIBLE
                             imageViewBottom!!.visibility = View.VISIBLE
@@ -2575,12 +3915,24 @@ class MainActivity : AppCompatActivity() {
                             val param = LinearLayout.LayoutParams(
                                 LinearLayout.LayoutParams.MATCH_PARENT,
                                 LinearLayout.LayoutParams.MATCH_PARENT,
-                                2.0f
                             )
+                            param.width = layoutBottomWidth
+                            param.height = layoutBottomHeight
                             linearLayoutBottom!!.layoutParams = param
                             linearLayoutBottom!!.visibility = View.VISIBLE
                             videoViewLayoutBottom!!.visibility = View.VISIBLE
                             videoViewBottom!!.visibility = View.VISIBLE
+                        }
+                        4 -> { //banner
+                            val param = LinearLayout.LayoutParams(
+                                LinearLayout.LayoutParams.MATCH_PARENT,
+                                LinearLayout.LayoutParams.MATCH_PARENT,
+                            )
+                            param.width = layoutBottomWidth
+                            param.height = layoutBottomHeight
+                            linearLayoutBottom!!.layoutParams = param
+                            linearLayoutBottom!!.visibility = View.VISIBLE
+                            imageViewBottom!!.visibility = View.VISIBLE
                         }
                     }
 
@@ -2845,7 +4197,7 @@ class MainActivity : AppCompatActivity() {
                                                     if (currentImageIndexTop >= imageList.size) {
                                                         currentImageIndexTop = 0
                                                     }
-                                                } while (!downloadVideoReadyArray[currentImageIndexTop])
+                                                } while (!downloadImageReadyArray[currentImageIndexTop])
                                             }
 
                                             //top
@@ -3262,6 +4614,61 @@ class MainActivity : AppCompatActivity() {
                             videoRunningBottom = false
                         }*/
                     }
+
+                    // banner
+                    if (layoutTop == 4 || layoutCenter == 4 || layoutBottom == 4) {
+                        if (layoutTop == 4) {
+                            if (bannerList.size > 0 && checkDownloadBannerAll()) { //at least one image cant play
+                                //top
+                                imageViewTop!!.visibility = View.VISIBLE
+                                //Picasso.with(mContext).load(imageUrlTop).into(imageViewTop)
+                                val srcPath = "$dest_banner_folder/${bannerList[0]}"
+                                val file = File(srcPath)
+                                if (file.exists()) {
+                                    imageViewTop!!.setImageURI(Uri.fromFile(file))
+
+                                }
+                            }
+
+                        } else {
+                            Log.d(mTag, "layoutTop not banner")
+                        }
+
+                        if (layoutCenter == 4) {
+                            if (bannerList.size > 0 && checkDownloadBannerAll()) {
+                                //center
+                                imageViewCenter!!.visibility = View.VISIBLE
+                                //Picasso.with(mContext).load(imageUrlCenter).into(imageViewCenter)
+                                val srcPath = "$dest_banner_folder/${bannerList[0]}"
+                                val file = File(srcPath)
+                                if (file.exists()) {
+                                    imageViewCenter!!.setImageURI(Uri.fromFile(file))
+                                }
+                            }
+                        } else {
+                            Log.d(mTag, "layoutCenter not banner")
+                        }
+                        //init bottom start
+                        if (layoutBottom == 4) {
+                            if (bannerList.size > 0 && checkDownloadBannerAll()) {
+                                //bottom
+                                imageViewBottom!!.visibility = View.VISIBLE
+                                //Picasso.with(mContext).load(imageUrlBottom).into(imageViewBottom)
+                                val srcPath = "$dest_banner_folder/${bannerList[0]}"
+                                val file = File(srcPath)
+                                if (file.exists()) {
+                                    imageViewBottom!!.setImageURI(Uri.fromFile(file))
+                                }
+                            }
+                        } else {
+                            Log.d(mTag, "layoutBottom not banner")
+                            //imageViewBottom!!.visibility = View.GONE
+                            //imageViewBottom2!!.visibility = View.GONE
+                        }
+
+                    } else { //all is not banner
+                        Log.e(mTag, "all is not banner")
+                    }
                 } else {
                     Log.d(mTag, "No AdSetting!")
                 }
@@ -3334,8 +4741,11 @@ class MainActivity : AppCompatActivity() {
         } else {
             Log.d(mTag, "All permission are granted")
             //create local folder
+            dest_banner_folder = Environment.getExternalStorageDirectory().toString() + "/Download/banner/"
             dest_images_folder = Environment.getExternalStorageDirectory().toString() + "/Download/images/"
             dest_videos_folder = Environment.getExternalStorageDirectory().toString() + "/Download/videos/"
+            val bannerDir = File(dest_banner_folder)
+            bannerDir.mkdirs()
             val imagesDir = File(dest_images_folder)
             imagesDir.mkdirs()
             val videoDir = File(dest_videos_folder)
@@ -3389,8 +4799,11 @@ class MainActivity : AppCompatActivity() {
                     ) {
                         Log.d(mTag, "permission granted")
                         //create local folder
+                        dest_banner_folder = Environment.getExternalStorageDirectory().toString() + "/Download/banner/"
                         dest_images_folder = Environment.getExternalStorageDirectory().toString() + "/Download/images/"
                         dest_videos_folder = Environment.getExternalStorageDirectory().toString() + "/Download/videos/"
+                        val bannerDir = File(dest_banner_folder)
+                        bannerDir.mkdirs()
                         val imagesDir = File(dest_images_folder)
                         imagesDir.mkdirs()
                         val videoDir = File(dest_videos_folder)

@@ -5,9 +5,14 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 @Entity(tableName = DefaultPlayAdSettingData.TABLE_NAME)
-class DefaultPlayAdSettingData(plan_id: Int, plan_name: String, plan_marquee: String, plan_images: String,
-                               plan_videos: String, marquee_mode: Int, images_mode: Int, videos_mode: Int,
-                               marquee_interval: Int, image_interval: Int) {
+class DefaultPlayAdSettingData(plan_id: Int, plan_name: String, plan_marquee: String,
+                               plan_images: String, plan_videos: String, plan_banner: String,
+                               marquee_mode: Int, marquee_background: String,
+                               marquee_text: String, marquee_size: Int,
+                               marquee_locate: Int, marquee_speed: Int,
+                               images_mode: Int, videos_mode: Int,
+                               marquee_interval: Int, image_interval: Int, image_scale_type: Int,
+                               video_scale_type: Int, banner_scale_type: Int) {
     companion object {
         const val TABLE_NAME = "DefaultPlayAdSettingData"
     }
@@ -27,8 +32,26 @@ class DefaultPlayAdSettingData(plan_id: Int, plan_name: String, plan_marquee: St
     @ColumnInfo(name = "plan_videos")
     private var plan_videos: String = ""
 
+    @ColumnInfo(name = "plan_banner")
+    private var plan_banner: String = ""
+
     @ColumnInfo(name = "marquee_mode")
     private var marquee_mode: Int = 0
+
+    @ColumnInfo(name = "marquee_background")
+    private var marquee_background: String = ""
+
+    @ColumnInfo(name = "marquee_text")
+    private var marquee_text: String = ""
+
+    @ColumnInfo(name = "marquee_size")
+    private var marquee_size: Int = 0
+
+    @ColumnInfo(name = "marquee_locate")
+    private var marquee_locate: Int = 0
+
+    @ColumnInfo(name = "marquee_speed")
+    private var marquee_speed: Int = 0
 
     @ColumnInfo(name = "images_mode")
     private var images_mode: Int = 0
@@ -42,17 +65,33 @@ class DefaultPlayAdSettingData(plan_id: Int, plan_name: String, plan_marquee: St
     @ColumnInfo(name = "image_interval")
     private var image_interval: Int = 0
 
+    @ColumnInfo(name = "image_scale_type")
+    private var image_scale_type: Int = 0
+
+    @ColumnInfo(name = "video_scale_type")
+    private var video_scale_type: Int = 0
+
+    @ColumnInfo(name = "banner_scale_type")
+    private var banner_scale_type: Int = 0
+
     init {
         this.plan_id = plan_id
         this.plan_name = plan_name
         this.plan_marquee = plan_marquee
         this.plan_images = plan_images
         this.plan_videos = plan_videos
+        this.plan_banner = plan_banner
         this.marquee_mode = marquee_mode
+        this.marquee_background = marquee_background
+        this.marquee_text = marquee_text
+        this.marquee_speed = marquee_speed
         this.images_mode = images_mode
         this.videos_mode = videos_mode
         this.marquee_interval = marquee_interval
         this.image_interval = image_interval
+        this.image_scale_type = image_scale_type
+        this.video_scale_type = video_scale_type
+        this.banner_scale_type = banner_scale_type
     }
 
     fun getPlan_id (): Int {
@@ -95,12 +134,60 @@ class DefaultPlayAdSettingData(plan_id: Int, plan_name: String, plan_marquee: St
         this.plan_videos = plan_videos
     }
 
+    fun getPlan_banner(): String {
+        return plan_banner
+    }
+
+    fun setPlan_banner(plan_banner : String) {
+        this.plan_banner = plan_banner
+    }
+
     fun getMarquee_mode (): Int {
         return marquee_mode
     }
 
     fun setMarquee_mode (marquee_mode  : Int) {
         this.marquee_mode  = marquee_mode
+    }
+
+    fun getMarquee_background (): String {
+        return marquee_background
+    }
+
+    fun setMarquee_background (marquee_background  : String) {
+        this.marquee_background  = marquee_background
+    }
+
+    fun getMarquee_text (): String {
+        return marquee_text
+    }
+
+    fun setMarquee_text (marquee_text  : String) {
+        this.marquee_text  = marquee_text
+    }
+
+    fun getMarquee_size (): Int {
+        return marquee_size
+    }
+
+    fun setMarquee_size (marquee_size  : Int) {
+        this.marquee_size  = marquee_size
+    }
+
+    fun getMarquee_locate (): Int {
+        return marquee_locate
+    }
+
+    fun setMarquee_locate (marquee_locate  : Int) {
+        this.marquee_locate  = marquee_locate
+    }
+
+    fun getMarquee_speed (): Int {
+        return marquee_speed
+    }
+
+    fun setMarquee_speed (marquee_speed  : Int) {
+        this.marquee_speed  = marquee_speed
     }
 
     fun getImages_mode (): Int {
@@ -133,5 +220,29 @@ class DefaultPlayAdSettingData(plan_id: Int, plan_name: String, plan_marquee: St
 
     fun setImage_interval (image_interval : Int) {
         this.image_interval  = image_interval
+    }
+
+    fun getImage_scale_type (): Int {
+        return image_scale_type
+    }
+
+    fun setImage_scale_type (image_scale_type : Int) {
+        this.image_scale_type  = image_scale_type
+    }
+
+    fun getVideo_scale_type (): Int {
+        return video_scale_type
+    }
+
+    fun setVideo_scale_type (video_scale_type : Int) {
+        this.video_scale_type  = video_scale_type
+    }
+
+    fun getBanner_scale_type (): Int {
+        return banner_scale_type
+    }
+
+    fun setBanner_scale_type (banner_scale_type : Int) {
+        this.banner_scale_type  = banner_scale_type
     }
 }

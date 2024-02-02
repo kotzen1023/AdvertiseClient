@@ -14,7 +14,16 @@ class DefaultPlayLayoutData(layout_id: Int, screenWidth: Int, screenHeight: Int,
                             layoutOrientation: Int,
                             plan_id: Int, plan2_id: Int, plan3_id: Int, plan4_id: Int,
                             plan_start_time: String, plan2_start_time: String, plan3_start_time: String, plan4_start_time: String,
-                            pingWebInterval: Int) {
+                            pingWebInterval: Int,
+                            plan_layout_top_weight: Int, plan_layout_center_weight: Int,
+                            plan_layout_bottom_weight: Int, plan_layout_tri_weight: Int,
+                            plan2_layout_top_weight: Int, plan2_layout_center_weight: Int,
+                            plan2_layout_bottom_weight: Int, plan2_layout_tri_weight: Int,
+                            plan3_layout_top_weight: Int, plan3_layout_center_weight: Int,
+                            plan3_layout_bottom_weight: Int, plan3_layout_tri_weight: Int,
+                            plan4_layout_top_weight: Int, plan4_layout_center_weight: Int,
+                            plan4_layout_bottom_weight: Int, plan4_layout_tri_weight: Int,
+                            ) {
     companion object {
         const val TABLE_NAME = "DefaultPlayLayoutData"
     }
@@ -100,6 +109,54 @@ class DefaultPlayLayoutData(layout_id: Int, screenWidth: Int, screenHeight: Int,
     @ColumnInfo(name = "pingWebInterval")
     private var pingWebInterval: Int = 0
 
+    @ColumnInfo(name = "plan_layout_top_weight")
+    private var plan_layout_top_weight: Int = 0
+
+    @ColumnInfo(name = "plan_layout_center_weight")
+    private var plan_layout_center_weight: Int = 0
+
+    @ColumnInfo(name = "plan_layout_bottom_weight")
+    private var plan_layout_bottom_weight: Int = 0
+
+    @ColumnInfo(name = "plan_layout_tri_weight")
+    private var plan_layout_tri_weight: Int = 0
+
+    @ColumnInfo(name = "plan2_layout_top_weight")
+    private var plan2_layout_top_weight: Int = 0
+
+    @ColumnInfo(name = "plan2_layout_center_weight")
+    private var plan2_layout_center_weight: Int = 0
+
+    @ColumnInfo(name = "plan2_layout_bottom_weight")
+    private var plan2_layout_bottom_weight: Int = 0
+
+    @ColumnInfo(name = "plan2_layout_tri_weight")
+    private var plan2_layout_tri_weight: Int = 0
+
+    @ColumnInfo(name = "plan3_layout_top_weight")
+    private var plan3_layout_top_weight: Int = 0
+
+    @ColumnInfo(name = "plan3_layout_center_weight")
+    private var plan3_layout_center_weight: Int = 0
+
+    @ColumnInfo(name = "plan3_layout_bottom_weight")
+    private var plan3_layout_bottom_weight: Int = 0
+
+    @ColumnInfo(name = "plan3_layout_tri_weight")
+    private var plan3_layout_tri_weight: Int = 0
+
+    @ColumnInfo(name = "plan4_layout_top_weight")
+    private var plan4_layout_top_weight: Int = 0
+
+    @ColumnInfo(name = "plan4_layout_center_weight")
+    private var plan4_layout_center_weight: Int = 0
+
+    @ColumnInfo(name = "plan4_layout_bottom_weight")
+    private var plan4_layout_bottom_weight: Int = 0
+
+    @ColumnInfo(name = "plan4_layout_tri_weight")
+    private var plan4_layout_tri_weight: Int = 0
+
     init {
         this.layout_id = layout_id
         this.screenWidth = screenWidth
@@ -127,6 +184,22 @@ class DefaultPlayLayoutData(layout_id: Int, screenWidth: Int, screenHeight: Int,
         this.plan3_start_time = plan3_start_time
         this.plan4_start_time = plan4_start_time
         this.pingWebInterval = pingWebInterval
+        this.plan_layout_top_weight = plan_layout_top_weight
+        this.plan_layout_center_weight = plan_layout_center_weight
+        this.plan_layout_bottom_weight = plan_layout_bottom_weight
+        this.plan_layout_tri_weight = plan_layout_tri_weight
+        this.plan2_layout_top_weight = plan2_layout_top_weight
+        this.plan2_layout_center_weight = plan2_layout_center_weight
+        this.plan2_layout_bottom_weight = plan2_layout_bottom_weight
+        this.plan2_layout_tri_weight = plan2_layout_tri_weight
+        this.plan3_layout_top_weight = plan3_layout_top_weight
+        this.plan3_layout_center_weight = plan3_layout_center_weight
+        this.plan3_layout_bottom_weight = plan3_layout_bottom_weight
+        this.plan3_layout_tri_weight = plan3_layout_tri_weight
+        this.plan4_layout_top_weight = plan4_layout_top_weight
+        this.plan4_layout_center_weight = plan4_layout_center_weight
+        this.plan4_layout_bottom_weight = plan4_layout_bottom_weight
+        this.plan4_layout_tri_weight = plan4_layout_tri_weight
     }
 
     fun getLayout_id (): Int {
@@ -344,5 +417,133 @@ class DefaultPlayLayoutData(layout_id: Int, screenWidth: Int, screenHeight: Int,
 
     fun setPingWebInterval(pingWebInterval : Int) {
         this.pingWebInterval = pingWebInterval
+    }
+
+    fun getPlan_layout_top_weight(): Int {
+        return plan_layout_top_weight
+    }
+
+    fun setPlan_layout_top_weight(plan_layout_top_weight : Int) {
+        this.plan_layout_top_weight = plan_layout_top_weight
+    }
+
+    fun getPlan_layout_center_weight(): Int {
+        return plan_layout_center_weight
+    }
+
+    fun setPlan_layout_center_weight(plan_layout_center_weight : Int) {
+        this.plan_layout_center_weight = plan_layout_center_weight
+    }
+
+    fun getPlan_layout_bottom_weight(): Int {
+        return plan_layout_bottom_weight
+    }
+
+    fun setPlan_layout_bottom_weight(plan_layout_bottom_weight : Int) {
+        this.plan_layout_bottom_weight = plan_layout_bottom_weight
+    }
+
+    fun getPlan_layout_tri_weight(): Int {
+        return plan_layout_tri_weight
+    }
+
+    fun setPlan_layout_tri_weight(plan_layout_tri_weight : Int) {
+        this.plan_layout_tri_weight = plan_layout_tri_weight
+    }
+
+    fun getPlan2_layout_top_weight(): Int {
+        return plan2_layout_top_weight
+    }
+
+    fun setPlan2_layout_top_weight(plan2_layout_top_weight : Int) {
+        this.plan2_layout_top_weight = plan2_layout_top_weight
+    }
+
+    fun getPlan2_layout_center_weight(): Int {
+        return plan2_layout_center_weight
+    }
+
+    fun setPlan2_layout_center_weight(plan2_layout_center_weight : Int) {
+        this.plan2_layout_center_weight = plan2_layout_center_weight
+    }
+
+    fun getPlan2_layout_bottom_weight(): Int {
+        return plan2_layout_bottom_weight
+    }
+
+    fun setPlan2_layout_bottom_weight(plan2_layout_bottom_weight : Int) {
+        this.plan2_layout_bottom_weight = plan2_layout_bottom_weight
+    }
+
+    fun getPlan2_layout_tri_weight(): Int {
+        return plan2_layout_tri_weight
+    }
+
+    fun setPlan2_layout_tri_weight(plan2_layout_tri_weight : Int) {
+        this.plan2_layout_tri_weight = plan2_layout_tri_weight
+    }
+
+    fun getPlan3_layout_top_weight(): Int {
+        return plan3_layout_top_weight
+    }
+
+    fun setPlan3_layout_top_weight(plan3_layout_top_weight : Int) {
+        this.plan3_layout_top_weight = plan3_layout_top_weight
+    }
+
+    fun getPlan3_layout_center_weight(): Int {
+        return plan3_layout_center_weight
+    }
+
+    fun setPlan3_layout_center_weight(plan3_layout_center_weight : Int) {
+        this.plan3_layout_center_weight = plan3_layout_center_weight
+    }
+
+    fun getPlan3_layout_bottom_weight(): Int {
+        return plan3_layout_bottom_weight
+    }
+
+    fun setPlan3_layout_bottom_weight(plan3_layout_bottom_weight : Int) {
+        this.plan3_layout_bottom_weight = plan3_layout_bottom_weight
+    }
+
+    fun getPlan3_layout_tri_weight(): Int {
+        return plan3_layout_tri_weight
+    }
+
+    fun setPlan3_layout_tri_weight(plan3_layout_tri_weight : Int) {
+        this.plan3_layout_tri_weight = plan3_layout_tri_weight
+    }
+
+    fun getPlan4_layout_top_weight(): Int {
+        return plan4_layout_top_weight
+    }
+
+    fun setPlan4_layout_top_weight(plan4_layout_top_weight : Int) {
+        this.plan4_layout_top_weight = plan4_layout_top_weight
+    }
+
+    fun getPlan4_layout_center_weight(): Int {
+        return plan4_layout_center_weight
+    }
+
+    fun setPlan4_layout_center_weight(plan4_layout_center_weight : Int) {
+        this.plan4_layout_center_weight = plan4_layout_center_weight
+    }
+
+    fun getPlan4_layout_bottom_weight(): Int {
+        return plan4_layout_bottom_weight
+    }
+
+    fun setPlan4_layout_bottom_weight(plan4_layout_bottom_weight : Int) {
+        this.plan4_layout_bottom_weight = plan4_layout_bottom_weight
+    }
+
+    fun getPlan4_layout_tri_weight(): Int {
+        return plan4_layout_tri_weight
+    }
+
+    fun setPlan4_layout_tri_weight(plan4_layout_tri_weight : Int) {
+        this.plan4_layout_tri_weight = plan4_layout_tri_weight
     }
 }

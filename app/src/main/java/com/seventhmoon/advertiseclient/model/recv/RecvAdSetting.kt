@@ -6,9 +6,18 @@ class RecvAdSetting {
     var plan_marquee = ""
     var plan_images = ""
     var plan_videos = ""
+    var plan_banner = ""
     var marquee_mode = 0
+    var marquee_background = ""
+    var marquee_text = ""
+    var marquee_size = 0
+    var marquee_locate = 0
+    var marquee_speed = 0
     var images_mode = 0
     var videos_mode = 0
     var marquee_interval = 0
     var image_interval = 0
+    var image_scale_type = 0
+    var video_scale_type = 0
+    var banner_scale_type = 0
 }
