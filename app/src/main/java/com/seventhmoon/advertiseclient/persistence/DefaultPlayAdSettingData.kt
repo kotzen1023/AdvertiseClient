@@ -7,12 +7,15 @@ import androidx.room.PrimaryKey
 @Entity(tableName = DefaultPlayAdSettingData.TABLE_NAME)
 class DefaultPlayAdSettingData(plan_id: Int, plan_name: String, plan_marquee: String,
                                plan_images: String, plan_videos: String, plan_banner: String,
+                               plan_mix: String,
                                marquee_mode: Int, marquee_background: String,
                                marquee_text: String, marquee_size: Int,
                                marquee_locate: Int, marquee_speed: Int,
                                images_mode: Int, videos_mode: Int,
                                marquee_interval: Int, image_interval: Int, image_scale_type: Int,
-                               video_scale_type: Int, banner_scale_type: Int) {
+                               video_scale_type: Int, banner_scale_type: Int,
+                               mix_mode: Int,
+                               mix_image_scale_type: Int, mix_video_scale_type: Int ) {
     companion object {
         const val TABLE_NAME = "DefaultPlayAdSettingData"
     }
@@ -34,6 +37,9 @@ class DefaultPlayAdSettingData(plan_id: Int, plan_name: String, plan_marquee: St
 
     @ColumnInfo(name = "plan_banner")
     private var plan_banner: String = ""
+
+    @ColumnInfo(name = "plan_mix")
+    private var plan_mix: String = ""
 
     @ColumnInfo(name = "marquee_mode")
     private var marquee_mode: Int = 0
@@ -74,6 +80,15 @@ class DefaultPlayAdSettingData(plan_id: Int, plan_name: String, plan_marquee: St
     @ColumnInfo(name = "banner_scale_type")
     private var banner_scale_type: Int = 0
 
+    @ColumnInfo(name = "mix_mode")
+    private var mix_mode: Int = 0
+
+    @ColumnInfo(name = "mix_image_scale_type")
+    private var mix_image_scale_type: Int = 0
+
+    @ColumnInfo(name = "mix_video_scale_type")
+    private var mix_video_scale_type: Int = 0
+
     init {
         this.plan_id = plan_id
         this.plan_name = plan_name
@@ -81,9 +96,12 @@ class DefaultPlayAdSettingData(plan_id: Int, plan_name: String, plan_marquee: St
         this.plan_images = plan_images
         this.plan_videos = plan_videos
         this.plan_banner = plan_banner
+        this.plan_mix = plan_mix
         this.marquee_mode = marquee_mode
         this.marquee_background = marquee_background
         this.marquee_text = marquee_text
+        this.marquee_size = marquee_size
+        this.marquee_locate = marquee_locate
         this.marquee_speed = marquee_speed
         this.images_mode = images_mode
         this.videos_mode = videos_mode
@@ -92,6 +110,9 @@ class DefaultPlayAdSettingData(plan_id: Int, plan_name: String, plan_marquee: St
         this.image_scale_type = image_scale_type
         this.video_scale_type = video_scale_type
         this.banner_scale_type = banner_scale_type
+        this.mix_mode = mix_mode
+        this.mix_image_scale_type = mix_image_scale_type
+        this.mix_video_scale_type = mix_video_scale_type
     }
 
     fun getPlan_id (): Int {
@@ -140,6 +161,14 @@ class DefaultPlayAdSettingData(plan_id: Int, plan_name: String, plan_marquee: St
 
     fun setPlan_banner(plan_banner : String) {
         this.plan_banner = plan_banner
+    }
+
+    fun getPlan_mix(): String {
+        return plan_mix
+    }
+
+    fun setPlan_mix(plan_mix : String) {
+        this.plan_mix = plan_mix
     }
 
     fun getMarquee_mode (): Int {
@@ -244,5 +273,29 @@ class DefaultPlayAdSettingData(plan_id: Int, plan_name: String, plan_marquee: St
 
     fun setBanner_scale_type (banner_scale_type : Int) {
         this.banner_scale_type  = banner_scale_type
+    }
+
+    fun getMix_mode (): Int {
+        return mix_mode
+    }
+
+    fun setMix_mode (mix_mode : Int) {
+        this.mix_mode  = banner_scale_type
+    }
+
+    fun getMix_image_scale_type (): Int {
+        return mix_image_scale_type
+    }
+
+    fun setMix_image_scale_type (mix_image_scale_type : Int) {
+        this.mix_image_scale_type  = mix_image_scale_type
+    }
+
+    fun getMix_video_scale_type (): Int {
+        return mix_video_scale_type
+    }
+
+    fun setMix_video_scale_type (mix_video_scale_type : Int) {
+        this.mix_video_scale_type  = mix_video_scale_type
     }
 }
