@@ -46,6 +46,24 @@ class Constants {
 
             const val ACTION_START_PLAY_AD: String = "com.seventhmoon.advertiseclient.StartPlayAd"
 
+            const val ACTION_MIX_TOP_PLAY_START: String = "com.seventhmoon.advertiseclient.MixTopPlayStart"
+            const val ACTION_MIX_TOP_PLAY_STOP: String = "com.seventhmoon.advertiseclient.MixTopPlayStop"
+            const val ACTION_MIX_TOP_PLAY_FINISH: String = "com.seventhmoon.advertiseclient.MixTopPlayFinish"
+            const val ACTION_MIX_TOP_PLAY_IMAGE_START: String = "com.seventhmoon.advertiseclient.MixTopPlayImageStart"
+            const val ACTION_MIX_TOP_PLAY_VIDEO_START: String = "com.seventhmoon.advertiseclient.MixTopPlayVideoStart"
+
+            const val ACTION_MIX_CENTER_PLAY_START: String = "com.seventhmoon.advertiseclient.MixCenterPlayStart"
+            const val ACTION_MIX_CENTER_PLAY_STOP: String = "com.seventhmoon.advertiseclient.MixCenterPlayStop"
+            const val ACTION_MIX_CENTER_PLAY_FINISH: String = "com.seventhmoon.advertiseclient.MixCenterPlayFinish"
+            const val ACTION_MIX_CENTER_PLAY_IMAGE_START: String = "com.seventhmoon.advertiseclient.MixCenterPlayImageStart"
+            const val ACTION_MIX_CENTER_PLAY_VIDEO_START: String = "com.seventhmoon.advertiseclient.MixCenterPlayVideoStart"
+
+            const val ACTION_MIX_BOTTOM_PLAY_START: String = "com.seventhmoon.advertiseclient.MixBottomPlayStart"
+            const val ACTION_MIX_BOTTOM_PLAY_STOP: String = "com.seventhmoon.advertiseclient.MixBottomPlayStop"
+            const val ACTION_MIX_BOTTOM_PLAY_FINISH: String = "com.seventhmoon.advertiseclient.MixBottomPlayFinish"
+            const val ACTION_MIX_BOTTOM_PLAY_IMAGE_START: String = "com.seventhmoon.advertiseclient.MixBottomPlayImageStart"
+            const val ACTION_MIX_BOTTOM_PLAY_VIDEO_START: String = "com.seventhmoon.advertiseclient.MixBottomPlayVideoStart"
+
             const val ACTION_SHOW_DIALOG_AGAIN: String = "com.seventhmoon.advertiseclient.ShowDialogAgain"
             const val ACTION_TEST_IP_AND_PORT: String = "com.seventhmoon.advertiseclient.TestIPAndPort"
         }

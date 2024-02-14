@@ -32,6 +32,7 @@ import android.view.ViewGroup
 import android.view.WindowInsets
 import android.view.WindowInsetsController
 import android.view.WindowManager
+import android.view.animation.Animation
 import android.view.animation.AnimationUtils
 import android.widget.Button
 import android.widget.EditText
@@ -186,13 +187,23 @@ class MainActivity : AppCompatActivity() {
     var countDownTimerMarqueeRunning : Boolean = false
     private lateinit var countDownTimerImage : CountDownTimer
     var countDownTimerImageRunning : Boolean = false
-    private lateinit var countDownTimerMixImage : CountDownTimer
-    var countDownTimerMixImageRunning : Boolean = false
+
+    private lateinit var countDownTimerMixImageTop : CountDownTimer
+    var countDownTimerMixImageTopRunning : Boolean = false
+
+    private lateinit var countDownTimerMixImageCenter : CountDownTimer
+    var countDownTimerMixImageCenterRunning : Boolean = false
+
+    private lateinit var countDownTimerMixImageBottom : CountDownTimer
+    var countDownTimerMixImageBottomRunning : Boolean = false
 
     private var videoRunningTop : Boolean = false
     private var videoRunningCenter : Boolean = false
     private var videoRunningBottom : Boolean = false
+
     private var mixVideoRunningTop : Boolean = false
+    private var mixVideoRunningCenter : Boolean = false
+    private var mixVideoRunningTBottom : Boolean = false
 
     private var currentOrientation = 0
     companion object {
@@ -243,8 +254,6 @@ class MainActivity : AppCompatActivity() {
     private var downloadVideoReadyArray: ArrayList<Boolean> = ArrayList()
     private var downloadMixReadyArray: ArrayList<Boolean> = ArrayList()
 
-    private var downloadMixArray: ArrayList<Boolean> = ArrayList()
-
     private var infoRenew = false
     private var isFirstNetworkError = true
 
@@ -269,6 +278,27 @@ class MainActivity : AppCompatActivity() {
     private var currentAdSettingIdx: Int = -1
 
     private var myPid = -1
+
+    //animation
+    var animMoveFromLeft : Animation ?= null
+    var animMoveToRight : Animation ?= null
+    var animMoveFromRight : Animation ?= null
+    var animMoveToLeft : Animation ?= null
+
+    //layout global
+    var layoutTop = 0
+    var layoutCenter = 0
+    var layoutBottom = 0
+
+    var mixMode = 0
+    var mixImageInterval = 0
+    var mix_image_scale_type = 0
+    var mix_video_scale_type = 0
+
+    var mixTopRunning = false
+    var mixCenterRunning = false
+    var mixBottomRunning = false
+
     @SuppressLint("HardwareIds")
     @RequiresApi(Build.VERSION_CODES.R)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -474,6 +504,7 @@ class MainActivity : AppCompatActivity() {
                 adSetting.video_scale_type = defaultAdSettingPlayList!![i].getVideo_scale_type()
                 adSetting.banner_scale_type = defaultAdSettingPlayList!![i].getBanner_scale_type()
                 adSetting.mix_mode = defaultAdSettingPlayList!![i].getMix_mode()
+                adSetting.mix_image_interval = defaultAdSettingPlayList!![i].getMix_image_interval()
                 adSetting.mix_image_scale_type = defaultAdSettingPlayList!![i].getMix_image_scale_type()
                 adSetting.mix_video_scale_type = defaultAdSettingPlayList!![i].getMix_video_scale_type()
 
@@ -698,6 +729,12 @@ class MainActivity : AppCompatActivity() {
 
             pingWeb()
         }
+
+        //animation for image
+        animMoveFromLeft = AnimationUtils.loadAnimation(mContext, R.anim.move_from_left)
+        animMoveToRight = AnimationUtils.loadAnimation(mContext, R.anim.move_to_right)
+        animMoveFromRight = AnimationUtils.loadAnimation(mContext, R.anim.move_from_right)
+        animMoveToLeft = AnimationUtils.loadAnimation(mContext, R.anim.move_to_left)
 
         val filter: IntentFilter
         @SuppressLint("CommitPrefEdits")
@@ -1461,6 +1498,200 @@ class MainActivity : AppCompatActivity() {
                             Log.d(mTag, "start to play!")
                             playAd()
                         }
+                    } else if (intent.action!!.equals(Constants.ACTION.ACTION_MIX_TOP_PLAY_START, ignoreCase = true)) {
+                        Log.d(mTag, "ACTION_MIX_TOP_PLAY_START")
+
+                        Log.e(mTag, "mixList.size = ${mixList.size}")
+
+                        if (layoutTop == 5) { //mix only
+                            if (mixList.size > 0 && checkDownloadMixAll()) { //at least one image or video can play
+
+                                if (mixMode == 1) { //random
+                                    var nextTop: Int
+                                    do {
+                                        nextTop = Random.nextInt(mixList.size)
+                                    } while ((nextTop == currentMixIndexTop && mixList.size > 1) || !downloadMixReadyArray[nextTop])
+                                    currentMixIndexTop = nextTop
+                                } else { //circle
+                                    do { //if next downloadImageReadyArray is false, next one
+                                        currentMixIndexTop += 1
+                                        if (currentMixIndexTop >= mixList.size) {
+                                            currentMixIndexTop = 0
+                                        }
+                                    } while (!downloadMixReadyArray[currentMixIndexTop])
+
+                                }
+
+                                Log.e(mTag, "currentMixIndexTop = $currentMixIndexTop")
+                                //detect image or video
+                                val playFile = File(mixList[currentMixIndexTop])
+                                val downloadFileExt = playFile.extension
+                                val mixPlayIntent = Intent()
+                                mixPlayIntent.putExtra("MIX_MODE", mixMode)
+                                if (downloadFileExt == "mp4") { //video
+                                    mixPlayIntent.action = Constants.ACTION.ACTION_MIX_TOP_PLAY_VIDEO_START
+                                    mContext?.sendBroadcast(mixPlayIntent)
+                                } else { //image
+                                    mixPlayIntent.action = Constants.ACTION.ACTION_MIX_TOP_PLAY_IMAGE_START
+                                    mContext?.sendBroadcast(mixPlayIntent)
+                                }
+                            }
+                        }
+
+
+                    } else if (intent.action!!.equals(Constants.ACTION.ACTION_MIX_TOP_PLAY_STOP, ignoreCase = true)) {
+                        Log.d(mTag, "ACTION_MIX_TOP_PLAY_STOP")
+
+
+                    } else if (intent.action!!.equals(Constants.ACTION.ACTION_MIX_TOP_PLAY_FINISH, ignoreCase = true)) {
+                        Log.d(mTag, "ACTION_MIX_TOP_PLAY_FINISH")
+
+                        if (layoutTop == 5) { //mix only
+                            if (mixList.size > 0 && checkDownloadMixAll()) { //at least one image or video can play
+                                Log.e(mTag, "mixList.size > 0")
+                                if (mixMode == 1) { //random
+                                    var nextTop: Int
+                                    do {
+                                        nextTop = Random.nextInt(mixList.size)
+                                    } while ((nextTop == currentMixIndexTop && mixList.size > 1) || !downloadMixReadyArray[nextTop])
+                                    currentMixIndexTop = nextTop
+                                } else { //circle
+                                    do { //if next downloadImageReadyArray is false, next one
+                                        currentMixIndexTop += 1
+                                        if (currentMixIndexTop >= mixList.size) {
+                                            currentMixIndexTop = 0
+                                        }
+                                    } while (!downloadMixReadyArray[currentMixIndexTop])
+
+                                }
+
+                                Log.e(mTag, "currentMixIndexTop = $currentMixIndexTop")
+                                //detect image or video
+                                val playFile = File(mixList[currentMixIndexTop])
+                                val downloadFileExt = playFile.extension
+                                val mixPlayIntent = Intent()
+                                if (downloadFileExt == "mp4") { //video
+                                    mixPlayIntent.action = Constants.ACTION.ACTION_MIX_TOP_PLAY_VIDEO_START
+                                } else { //image
+                                    mixPlayIntent.action = Constants.ACTION.ACTION_MIX_TOP_PLAY_IMAGE_START
+                                }
+                                mContext?.sendBroadcast(mixPlayIntent)
+                            }
+                        } else {
+                            mixTopRunning = false
+                        }
+                    } else if (intent.action!!.equals(Constants.ACTION.ACTION_MIX_TOP_PLAY_IMAGE_START, ignoreCase = true)) {
+                        Log.d(mTag, "ACTION_MIX_TOP_PLAY_IMAGE_START")
+
+                        var mixImagesPlayInterval = 7000
+                        when(mixImageInterval) {
+                            0 -> {
+                                mixImagesPlayInterval = 7000
+                            }
+                            1 -> {
+                                mixImagesPlayInterval = 10000
+                            }
+                            2 -> {
+                                mixImagesPlayInterval = 15000
+                            }
+                        }
+
+                        if (layoutTop == 5) { //mix only
+                            //if videoView is playing, stop it
+                            videoViewTop!!.visibility = View.GONE
+                            videoViewLayoutTop!!.visibility = View.GONE
+                            //imageViewTop!!.visibility = View.VISIBLE
+                            //imageViewTop2!!.visibility = View.GONE
+
+                            val srcPath = "$dest_images_folder/${mixList[currentMixIndexTop]}"
+                            val file = File(srcPath)
+                            if (file.exists()) {
+
+                                if (imageViewTop!!.visibility == View.VISIBLE) {
+                                    imageViewTop!!.startAnimation(animMoveToRight)
+                                    imageViewTop!!.visibility = View.GONE
+                                    imageViewTop2!!.visibility = View.VISIBLE
+                                    imageViewTop2!!.setImageURI(Uri.fromFile(file))
+                                    imageViewTop2!!.startAnimation(animMoveFromLeft)
+
+                                } else { //imageViewTop2 is visible
+                                    imageViewTop2!!.startAnimation(animMoveToRight)
+                                    imageViewTop2!!.visibility = View.GONE
+                                    imageViewTop!!.visibility = View.VISIBLE
+                                    imageViewTop!!.setImageURI(Uri.fromFile(file))
+                                    imageViewTop!!.startAnimation(animMoveFromLeft)
+
+                                }
+                            }
+
+                            countDownTimerMixImageTopRunning = true
+                            countDownTimerMixImageTop = object : CountDownTimer(mixImagesPlayInterval.toLong(), mixImagesPlayInterval.toLong()) {
+                                override fun onTick(millisUntilFinished: Long) {
+                                    Log.d(mTag, "countDownTimerImage millisUntilFinished = $millisUntilFinished")
+                                }
+                                override fun onFinish() { //结束的操作
+                                    Log.d(mTag, "countDownTimerImage finish")
+                                    if (mixList.size > 0 && checkDownloadMixAll()) {
+                                        countDownTimerMixImageTopRunning = false
+
+                                        val mixPlayFinishIntent = Intent()
+                                        mixPlayFinishIntent.action = Constants.ACTION.ACTION_MIX_TOP_PLAY_FINISH
+                                        mContext?.sendBroadcast(mixPlayFinishIntent)
+                                    }
+                                } //onFinish
+                            }.start()
+                        }
+                    } else if (intent.action!!.equals(Constants.ACTION.ACTION_MIX_TOP_PLAY_VIDEO_START, ignoreCase = true)) {
+                        Log.d(mTag, "ACTION_MIX_TOP_PLAY_VIDEO_START")
+
+                        if (layoutTop == 5) { //mix only
+                            imageViewTop!!.visibility = View.GONE
+                            imageViewTop2!!.visibility = View.GONE
+                            imageViewTop!!.setImageResource(0)
+                            imageViewTop2!!.setImageResource(0)
+                            videoViewTop!!.visibility = View.VISIBLE
+                            videoViewLayoutTop!!.visibility = View.VISIBLE
+
+                            if (mixList.size > 0 && checkDownloadMixAll()) { //at least one video can play
+                                //top
+                                val filePath = "$dest_videos_folder${mixList[currentMixIndexTop]}"
+                                Log.d(mTag, "start play -> $filePath")
+                                val file = File(filePath)
+                                if (file.exists()) {
+                                    val uriTop = Uri.fromFile(file)
+
+                                    videoViewTop!!.setVideoURI(uriTop)
+                                    //videoViewTop!!.start()
+                                    //videoRunningTop = true
+
+                                    videoViewTop!!.setOnPreparedListener { mp ->
+                                        Log.d(mTag, "videoViewTop prepared")
+                                        //mp.setWakeMode(mContext, PowerManager.PARTIAL_WAKE_LOCK)
+                                        mp.seekTo(0)
+                                        mp.start()
+                                        mixVideoRunningTop = true
+                                    }
+
+                                    videoViewTop!!.setOnErrorListener { _, _, _ ->
+                                        Log.d("video", "setOnErrorListener ")
+                                        true
+                                    }
+                                    videoViewTop!!.setOnCompletionListener { mp ->
+                                        //mp.stop()
+                                        mp.reset()
+                                        mixVideoRunningTop = false
+
+                                        val mixPlayFinishIntent = Intent()
+                                        mixPlayFinishIntent.action =
+                                            Constants.ACTION.ACTION_MIX_TOP_PLAY_FINISH
+                                        mContext?.sendBroadcast(mixPlayFinishIntent)
+                                    }
+                                } else {
+                                    Log.d(mTag, "video top: play file not exist")
+                                }
+                            }
+                        }
+
                     }
                 }
             }
@@ -1515,7 +1746,24 @@ class MainActivity : AppCompatActivity() {
             filter.addAction(Constants.ACTION.ACTION_GET_MIX_EMPTY)
 
             filter.addAction(Constants.ACTION.ACTION_START_PLAY_AD)
-
+            //top
+            filter.addAction(Constants.ACTION.ACTION_MIX_TOP_PLAY_START)
+            filter.addAction(Constants.ACTION.ACTION_MIX_TOP_PLAY_STOP)
+            filter.addAction(Constants.ACTION.ACTION_MIX_TOP_PLAY_FINISH)
+            filter.addAction(Constants.ACTION.ACTION_MIX_TOP_PLAY_IMAGE_START)
+            filter.addAction(Constants.ACTION.ACTION_MIX_TOP_PLAY_VIDEO_START)
+            //center
+            filter.addAction(Constants.ACTION.ACTION_MIX_CENTER_PLAY_START)
+            filter.addAction(Constants.ACTION.ACTION_MIX_CENTER_PLAY_STOP)
+            filter.addAction(Constants.ACTION.ACTION_MIX_CENTER_PLAY_FINISH)
+            filter.addAction(Constants.ACTION.ACTION_MIX_CENTER_PLAY_IMAGE_START)
+            filter.addAction(Constants.ACTION.ACTION_MIX_CENTER_PLAY_VIDEO_START)
+            //bottom
+            filter.addAction(Constants.ACTION.ACTION_MIX_BOTTOM_PLAY_START)
+            filter.addAction(Constants.ACTION.ACTION_MIX_BOTTOM_PLAY_STOP)
+            filter.addAction(Constants.ACTION.ACTION_MIX_BOTTOM_PLAY_FINISH)
+            filter.addAction(Constants.ACTION.ACTION_MIX_BOTTOM_PLAY_IMAGE_START)
+            filter.addAction(Constants.ACTION.ACTION_MIX_BOTTOM_PLAY_VIDEO_START)
             mContext!!.registerReceiver(mReceiver, filter)
             isRegister = true
             Log.d(mTag, "registerReceiver mReceiver")
@@ -1914,7 +2162,7 @@ class MainActivity : AppCompatActivity() {
                                 adSettingList[i].videos_mode, adSettingList[i].marquee_interval,
                                 adSettingList[i].image_interval, adSettingList[i].image_scale_type,
                                 adSettingList[i].video_scale_type, adSettingList[i].banner_scale_type,
-                                adSettingList[i].mix_mode,
+                                adSettingList[i].mix_mode, adSettingList[i].mix_image_interval,
                                 adSettingList[i].mix_image_scale_type, adSettingList[i].mix_video_scale_type)
                             defaultPlayAdSettingDataDB!!.defaultPlayAdSettingDataDao().insert(defaultPlayAdSettingData)
                             /*if (defaultAdSettingPlayList!!.size == 0) {
@@ -2288,10 +2536,10 @@ class MainActivity : AppCompatActivity() {
 
                 if (downloadFileExt == "mp4") { //video
                     srcPath = server_videos_folder
-                    destPath = "$dest_videos_folder${mixList[i]}"
+                    destPath = "${dest_videos_folder}/${mixList[i]}"
                 } else { //jpg,png
                     srcPath = server_images_folder
-                    destPath = "$server_images_folder${mixList[i]}"
+                    destPath = "${dest_images_folder}/${mixList[i]}"
                 }
 
                 Log.d(mTag, "srcPath = $srcPath")
@@ -2348,7 +2596,7 @@ class MainActivity : AppCompatActivity() {
 
                 }.start()
             } else { //downloadIdx == -1
-                if (downloadMixComplete == videoList.size) {
+                if (downloadMixComplete == mixList.size) {
                     val completeIntent = Intent()
                     completeIntent.action = Constants.ACTION.ACTION_GET_MIX_COMPLETE
                     mContext?.sendBroadcast(completeIntent)
@@ -2563,7 +2811,7 @@ class MainActivity : AppCompatActivity() {
                     destPath = "$dest_videos_folder${mixList[i]}"
                 } else { //jpg,png
                     //srcPath = server_images_folder
-                    destPath = "$server_images_folder${mixList[i]}"
+                    destPath = "$dest_images_folder${mixList[i]}"
                 }
                 //Log.d(mTag, "srcPath = $srcPath")
                 Log.d(mTag, "destPath = $destPath")
@@ -2924,9 +3172,9 @@ class MainActivity : AppCompatActivity() {
             if (layoutList.size == 1) { //only one layout
                 if (adSettingList.size > 0) { // must have adSetting
                     val orientation = layoutList[0].orientation
-                    var layoutTop = 0
-                    var layoutCenter = 0
-                    var layoutBottom = 0
+                    layoutTop = 0
+                    layoutCenter = 0
+                    layoutBottom = 0
 
                     var mainLayoutWeight = 0
                     var layoutTopWeight = 0
@@ -2948,11 +3196,7 @@ class MainActivity : AppCompatActivity() {
 
                     }
 
-                    //animation
-                    val animMoveFromLeft = AnimationUtils.loadAnimation(mContext, R.anim.move_from_left)
-                    val animMoveToRight = AnimationUtils.loadAnimation(mContext, R.anim.move_to_right)
-                    val animMoveFromRight = AnimationUtils.loadAnimation(mContext, R.anim.move_from_right)
-                    val animMoveToLeft = AnimationUtils.loadAnimation(mContext, R.anim.move_to_left)
+
 
                     Log.d(mTag, "playAd currentAdSettingIdx = $currentAdSettingIdx")
                     Log.d(mTag, "playAd currentPlanUse = $currentPlanUse")
@@ -3009,22 +3253,27 @@ class MainActivity : AppCompatActivity() {
                     val marqueeMode = adSettingList[currentAdSettingIdx].marquee_mode
                     val imagesMode = adSettingList[currentAdSettingIdx].images_mode
                     val videosMode = adSettingList[currentAdSettingIdx].videos_mode
-                    val mixMode = adSettingList[currentAdSettingIdx].mix_mode
+
 
                     val imageInterval = adSettingList[currentAdSettingIdx].image_interval
                     val marqueeInterval = adSettingList[currentAdSettingIdx].marquee_interval
 
+
                     val image_scale_type = adSettingList[currentAdSettingIdx].image_scale_type
                     val video_scale_type = adSettingList[currentAdSettingIdx].video_scale_type
                     val banner_scale_type = adSettingList[currentAdSettingIdx].banner_scale_type
-                    val mix_image_scale_type = adSettingList[currentAdSettingIdx].mix_image_scale_type
-                    val mix_video_scale_type = adSettingList[currentAdSettingIdx].mix_video_scale_type
+
 
                     val marqueeBackground = adSettingList[currentAdSettingIdx].marquee_background
                     val marqueeText = adSettingList[currentAdSettingIdx].marquee_text
                     val marqueeSize = adSettingList[currentAdSettingIdx].marquee_size
                     val marqueeLocate = adSettingList[currentAdSettingIdx].marquee_locate
                     val marqueeSpeed = adSettingList[currentAdSettingIdx].marquee_speed
+                    //for mix
+                    mixMode = adSettingList[currentAdSettingIdx].mix_mode
+                    mixImageInterval = adSettingList[currentAdSettingIdx].mix_image_interval
+                    mix_image_scale_type = adSettingList[currentAdSettingIdx].mix_image_scale_type
+                    mix_video_scale_type = adSettingList[currentAdSettingIdx].mix_video_scale_type
 
                     var marqueePlayInterval = 60000 // 60 seconds
                     when(marqueeInterval) {
@@ -3052,11 +3301,9 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
 
-                    var mixImagesPlayInterval = 7000
-
                     Log.d(mTag, "orientation = $orientation, layoutTop = $layoutTop, layoutCenter = $layoutCenter, layoutBottom = $layoutBottom")
                     //mode = 0 => cycle, mode = 1 => random
-                    Log.d(mTag, "marqueeMode = $marqueeMode, imagesMode = $imagesMode, videosMode = $videosMode, layoutOrientation = $layoutOrientation")
+                    Log.d(mTag, "marqueeMode = $marqueeMode, imagesMode = $imagesMode, videosMode = $videosMode, mixMode = $mixMode, layoutOrientation = $layoutOrientation")
 
                     Log.d(mTag, "image_scale_type = $image_scale_type, video_scale_type = $video_scale_type, banner_scale_type = $banner_scale_type")
 
@@ -3286,9 +3533,13 @@ class MainActivity : AppCompatActivity() {
                                 textViewTop = SpeedMarquee(mContext as  Context)
                             }
                             textViewTop!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-                            textViewTop!!.setBackgroundColor(Color.parseColor(marqueeBackground))
+                            if (marqueeBackground.isNotEmpty()) {
+                                textViewTop!!.setBackgroundColor(Color.parseColor(marqueeBackground))
+                            }
                             textViewTop!!.textSize = marqueeSize.toFloat()
-                            textViewTop!!.setTextColor(Color.parseColor(marqueeText))
+                            if (marqueeText.isNotEmpty()) {
+                                textViewTop!!.setTextColor(Color.parseColor(marqueeText))
+                            }
                             textViewTop!!.ellipsize = TextUtils.TruncateAt.MARQUEE
                             textViewTop!!.isSingleLine = true
                             textViewTop!!.freezesText = true
@@ -3396,7 +3647,7 @@ class MainActivity : AppCompatActivity() {
                             imageViewTop2!!.visibility = View.GONE
                             //imageViewTop2!!.scaleType = ImageView.ScaleType.CENTER_INSIDE
                             linearLayoutTop!!.addView(imageViewTop2)
-                            if (image_scale_type == 1) { //fillXY
+                            if (mix_image_scale_type == 1) { //fillXY
                                 imageViewTop!!.scaleType = ImageView.ScaleType.FIT_XY
                                 imageViewTop2!!.scaleType = ImageView.ScaleType.FIT_XY
                             } else { //default
@@ -3417,7 +3668,7 @@ class MainActivity : AppCompatActivity() {
                                 videoViewTop = VideoView(mContext)
                             }
                             //videoViewTop!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-                            if (video_scale_type == 1) {
+                            if (mix_video_scale_type == 1) {
                                 val layoutParams = RelativeLayout.LayoutParams(
                                     RelativeLayout.LayoutParams.MATCH_PARENT,
                                     RelativeLayout.LayoutParams.WRAP_CONTENT
@@ -3454,9 +3705,13 @@ class MainActivity : AppCompatActivity() {
                                 textViewCenter = SpeedMarquee(mContext as Context)
                             }
                             textViewCenter!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-                            textViewCenter!!.setBackgroundColor(Color.parseColor(marqueeBackground))
+                            if (marqueeBackground.isNotEmpty()) {
+                                textViewCenter!!.setBackgroundColor(Color.parseColor(marqueeBackground))
+                            }
                             textViewCenter!!.textSize = marqueeSize.toFloat()
-                            textViewCenter!!.setTextColor(Color.parseColor(marqueeText))
+                            if (marqueeText.isNotEmpty()) {
+                                textViewCenter!!.setTextColor(Color.parseColor(marqueeText))
+                            }
                             textViewCenter!!.ellipsize = TextUtils.TruncateAt.MARQUEE
                             textViewCenter!!.isSingleLine = true
                             textViewCenter!!.freezesText = true
@@ -3569,9 +3824,13 @@ class MainActivity : AppCompatActivity() {
                                 textViewBottom = SpeedMarquee(mContext as Context)
                             }
                             textViewBottom!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-                            textViewBottom!!.setBackgroundColor(Color.parseColor(marqueeBackground))
+                            if (marqueeBackground.isNotEmpty()) {
+                                textViewBottom!!.setBackgroundColor(Color.parseColor(marqueeBackground))
+                            }
                             textViewBottom!!.textSize = marqueeSize.toFloat()
-                            textViewBottom!!.setTextColor(Color.parseColor(marqueeText))
+                            if (marqueeText.isNotEmpty()) {
+                                textViewBottom!!.setTextColor(Color.parseColor(marqueeText))
+                            }
                             textViewBottom!!.ellipsize = TextUtils.TruncateAt.MARQUEE
                             textViewBottom!!.isSingleLine = true
                             textViewBottom!!.freezesText = true
@@ -3790,38 +4049,6 @@ class MainActivity : AppCompatActivity() {
                         videoViewBottom!!.setMediaController(mediaControllerBottom)
                     }
 
-
-
-
-                    //disable controller
-                    /*
-                    mediaControllerTop!!.visibility = View.GONE
-                    mediaControllerCenter!!.visibility = View.GONE
-                    mediaControllerBottom!!.visibility = View.GONE
-
-                    linearLayoutTop!!.visibility = View.GONE
-                    linearLayoutCenter!!.visibility = View.GONE
-                    linearLayoutBottom!!.visibility = View.GONE
-                    textViewTop!!.visibility = View.GONE
-                    textViewCenter!!.visibility = View.GONE
-                    textViewBottom!!.visibility = View.GONE
-                    imageViewTop!!.visibility = View.GONE
-                    imageViewTop2!!.visibility = View.GONE
-                    imageViewTop!!.clearAnimation()
-                    imageViewTop2!!.clearAnimation()
-                    imageViewCenter!!.visibility = View.GONE
-                    imageViewCenter2!!.visibility = View.GONE
-                    imageViewCenter!!.clearAnimation()
-                    imageViewCenter2!!.clearAnimation()
-                    imageViewBottom!!.visibility = View.GONE
-                    imageViewBottom2!!.visibility = View.GONE
-                    imageViewBottom!!.clearAnimation()
-                    imageViewBottom2!!.clearAnimation()
-
-                    videoViewLayoutTop!!.visibility = View.GONE
-                    videoViewLayoutCenter!!.visibility = View.GONE
-                    videoViewLayoutBottom!!.visibility = View.GONE
-                    */
                     //top
                     when (layoutTop) {
                         0-> { //no
@@ -3871,6 +4098,16 @@ class MainActivity : AppCompatActivity() {
                             linearLayoutTop!!.layoutParams = param
                             linearLayoutTop!!.visibility = View.VISIBLE
                             imageViewTop!!.visibility = View.VISIBLE
+                        }
+                        5 -> { //mix
+                            val param = LinearLayout.LayoutParams(
+                                LinearLayout.LayoutParams.MATCH_PARENT,
+                                LinearLayout.LayoutParams.MATCH_PARENT,
+                            )
+                            param.width = layoutTopWidth
+                            param.height = layoutTopHeight
+                            linearLayoutTop!!.layoutParams = param
+                            linearLayoutTop!!.visibility = View.VISIBLE
                         }
                     }
 
@@ -3925,6 +4162,15 @@ class MainActivity : AppCompatActivity() {
                             linearLayoutCenter!!.visibility = View.VISIBLE
                             imageViewCenter!!.visibility = View.VISIBLE
                         }
+                        5 -> { //mix
+                            val param = LinearLayout.LayoutParams(
+                                LinearLayout.LayoutParams.MATCH_PARENT,
+                                LinearLayout.LayoutParams.MATCH_PARENT,
+                            )
+                            param.width = layoutCenterWidth
+                            param.height = layoutCenterHeight
+                            linearLayoutCenter!!.layoutParams = param
+                        }
                     }
 
                     //bottom
@@ -3976,6 +4222,15 @@ class MainActivity : AppCompatActivity() {
                             linearLayoutBottom!!.layoutParams = param
                             linearLayoutBottom!!.visibility = View.VISIBLE
                             imageViewBottom!!.visibility = View.VISIBLE
+                        }
+                        5 -> { //mix
+                            val param = LinearLayout.LayoutParams(
+                                LinearLayout.LayoutParams.MATCH_PARENT,
+                                LinearLayout.LayoutParams.MATCH_PARENT,
+                            )
+                            param.width = layoutBottomWidth
+                            param.height = layoutBottomHeight
+                            linearLayoutBottom!!.layoutParams = param
                         }
                     }
 
@@ -4713,169 +4968,12 @@ class MainActivity : AppCompatActivity() {
                         Log.d(mTag, "mix play time")
                         //top
                         if (layoutTop == 5) {
-                            if (mixList.size > 0 && checkDownloadMixAll()) { //at least one image or video can play
-                                if (mixMode == 1) { //random
-                                    var nextTop: Int
-                                    do {
-                                        nextTop = Random.nextInt(mixList.size)
-                                    } while ((nextTop == currentMixIndexTop && mixList.size > 1) || !downloadMixReadyArray[nextTop])
-                                    currentMixIndexTop = nextTop
-                                } else { //circle
-                                    do { //if next downloadImageReadyArray is false, next one
-                                        currentMixIndexTop += 1
-                                        if (currentMixIndexTop >= mixList.size) {
-                                            currentMixIndexTop = 0
-                                        }
-                                    } while (!downloadMixReadyArray[currentMixIndexTop])
-
-                                }
-
-                                //detect image or video
-                                val playFile = File(mixList[currentMixIndexTop])
-                                val downloadFileExt = playFile.extension
-                                if (downloadFileExt == "mp4") { //video
-                                    videoViewTop!!.visibility = View.VISIBLE
-                                    imageViewTop!!.visibility = View.GONE
-                                    imageViewTop2!!.visibility = View.GONE
-                                } else { //image
-                                    videoViewTop!!.visibility = View.GONE
-                                    imageViewTop!!.visibility = View.VISIBLE
-                                    imageViewTop2!!.visibility = View.GONE
-
-
-                                    countDownTimerMixImageRunning = true
-                                    countDownTimerMixImage = object : CountDownTimer(imagesPlayInterval.toLong(), imagesPlayInterval.toLong()) {
-                                        override fun onTick(millisUntilFinished: Long) {
-                                            Log.d(mTag, "countDownTimerImage millisUntilFinished = $millisUntilFinished")
-                                        }
-                                        override fun onFinish() { //结束后的操作
-                                            Log.d(mTag, "countDownTimerImage finish")
-                                            if (imageList.size > 0 && checkDownloadImagesAll()) {
-                                                countDownTimerImageRunning = false
-                                                if (layoutTop == 2) {
-                                                    if (imagesMode == 1) { //random
-                                                        var nextTop: Int
-                                                        do {
-                                                            nextTop = Random.nextInt(imageList.size)
-                                                        } while ((nextTop == currentImageIndexTop && imageList.size > 1) || !downloadImageReadyArray[nextTop])
-                                                        currentImageIndexTop = nextTop
-                                                    } else { //circle
-                                                        do {
-                                                            currentImageIndexTop += 1
-                                                            if (currentImageIndexTop >= imageList.size) {
-                                                                currentImageIndexTop = 0
-                                                            }
-                                                        } while (!downloadImageReadyArray[currentImageIndexTop])
-                                                    }
-
-                                                    //top
-                                                    val srcPath = "$dest_images_folder/${imageList[currentImageIndexTop]}"
-                                                    val file = File(srcPath)
-                                                    if (file.exists()) {
-                                                        if (imageViewTop!!.visibility == View.VISIBLE) {
-                                                            imageViewTop!!.startAnimation(animMoveToRight)
-                                                            imageViewTop!!.visibility = View.GONE
-                                                            imageViewTop2!!.setImageURI(Uri.fromFile(file))
-                                                            imageViewTop2!!.visibility = View.VISIBLE
-                                                            //Picasso.with(mContext).load(imageUrlTop).into(imageViewTop2)
-                                                            imageViewTop2!!.startAnimation(animMoveFromLeft)
-                                                        } else {
-                                                            imageViewTop2!!.startAnimation(animMoveToRight)
-                                                            imageViewTop2!!.visibility = View.GONE
-                                                            imageViewTop!!.setImageURI(Uri.fromFile(file))
-                                                            imageViewTop!!.visibility = View.VISIBLE
-                                                            //Picasso.with(mContext).load(imageUrlTop).into(imageViewTop)
-                                                            imageViewTop!!.startAnimation(animMoveFromLeft)
-                                                        }
-                                                    }
-                                                }
-
-                                                if (layoutCenter == 2) {
-                                                    if (imagesMode == 1) { //random
-                                                        var nextCenter: Int
-                                                        do {
-                                                            nextCenter = Random.nextInt(imageList.size)
-                                                        } while ((nextCenter == currentImageIndexCenter && imageList.size > 1) || !downloadImageReadyArray[nextCenter])
-                                                        currentImageIndexCenter = nextCenter
-                                                    } else { //circle
-                                                        do {
-                                                            currentImageIndexCenter += 1
-                                                            if (currentImageIndexCenter >= imageList.size) {
-                                                                currentImageIndexCenter = 0
-                                                            }
-                                                        } while (!downloadImageReadyArray[currentImageIndexCenter])
-                                                    }
-
-                                                    //center
-                                                    val srcPath = "$dest_images_folder/${imageList[currentImageIndexCenter]}"
-                                                    val file = File(srcPath)
-                                                    if (file.exists()) {
-                                                        if (imageViewCenter!!.visibility == View.VISIBLE) {
-                                                            imageViewCenter!!.startAnimation(animMoveToLeft)
-                                                            imageViewCenter!!.visibility = View.GONE
-                                                            imageViewCenter2!!.setImageURI(Uri.fromFile(file))
-                                                            imageViewCenter2!!.visibility = View.VISIBLE
-                                                            //Picasso.with(mContext).load(imageUrlCenter).into(imageViewCenter2)
-                                                            imageViewCenter2!!.startAnimation(animMoveFromRight)
-                                                        } else { //imageViewCenter!!.visibility == View.GONE
-                                                            imageViewCenter2!!.startAnimation(animMoveToLeft)
-                                                            imageViewCenter2!!.visibility = View.GONE
-                                                            imageViewCenter!!.setImageURI(Uri.fromFile(file))
-                                                            imageViewCenter!!.visibility = View.VISIBLE
-                                                            //Picasso.with(mContext).load(imageUrlCenter).into(imageViewCenter)
-                                                            imageViewCenter!!.startAnimation(animMoveFromRight)
-                                                        }
-                                                    }
-                                                }
-
-                                                if (layoutBottom == 2) {
-                                                    if (imagesMode == 1) { //random
-                                                        var nextBottom: Int
-                                                        do {
-                                                            nextBottom = Random.nextInt(imageList.size)
-                                                        } while ((nextBottom == currentImageIndexBottom && imageList.size > 1) || !downloadImageReadyArray[nextBottom])
-                                                        currentImageIndexBottom = nextBottom
-                                                    } else { //circle
-                                                        do {
-                                                            currentImageIndexBottom += 1
-                                                            if (currentImageIndexBottom >= imageList.size) {
-                                                                currentImageIndexBottom = 0
-                                                            }
-                                                        } while (!downloadImageReadyArray[currentImageIndexBottom])
-                                                    }
-
-                                                    //bottom
-                                                    val srcPath = "$dest_images_folder/${imageList[currentImageIndexBottom]}"
-                                                    val file = File(srcPath)
-                                                    if (file.exists()) {
-                                                        if (imageViewBottom!!.visibility == View.VISIBLE) {
-                                                            imageViewBottom!!.startAnimation(animMoveToRight)
-                                                            imageViewBottom!!.visibility = View.GONE
-                                                            imageViewBottom2!!.setImageURI(Uri.fromFile(file))
-                                                            imageViewBottom2!!.visibility = View.VISIBLE
-                                                            //Picasso.with(mContext).load(imageUrlBottom).into(imageViewBottom2)
-                                                            imageViewBottom2!!.startAnimation(animMoveFromLeft)
-                                                        } else {
-                                                            imageViewBottom2!!.startAnimation(animMoveToRight)
-                                                            imageViewBottom2!!.visibility = View.GONE
-                                                            imageViewBottom!!.setImageURI(Uri.fromFile(file))
-                                                            imageViewBottom!!.visibility = View.VISIBLE
-                                                            //Picasso.with(mContext).load(imageUrlBottom).into(imageViewBottom)
-                                                            imageViewBottom!!.startAnimation(animMoveFromLeft)
-                                                        }
-                                                    }
-                                                }
-
-                                                this.start()
-                                                countDownTimerImageRunning = true
-                                            }
-                                        }
-                                    }.start()
-                                }
-
-
+                            if (!mixTopRunning) {
+                                mixTopRunning = true
+                                val mixPlayIntent = Intent()
+                                mixPlayIntent.action = Constants.ACTION.ACTION_MIX_TOP_PLAY_START
+                                mContext?.sendBroadcast(mixPlayIntent)
                             }
-
                         } else {
                             Log.d(mTag, "layoutTop not mix")
                         }

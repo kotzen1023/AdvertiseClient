@@ -14,7 +14,7 @@ class DefaultPlayAdSettingData(plan_id: Int, plan_name: String, plan_marquee: St
                                images_mode: Int, videos_mode: Int,
                                marquee_interval: Int, image_interval: Int, image_scale_type: Int,
                                video_scale_type: Int, banner_scale_type: Int,
-                               mix_mode: Int,
+                               mix_mode: Int, mix_image_interval: Int,
                                mix_image_scale_type: Int, mix_video_scale_type: Int ) {
     companion object {
         const val TABLE_NAME = "DefaultPlayAdSettingData"
@@ -83,6 +83,9 @@ class DefaultPlayAdSettingData(plan_id: Int, plan_name: String, plan_marquee: St
     @ColumnInfo(name = "mix_mode")
     private var mix_mode: Int = 0
 
+    @ColumnInfo(name = "mix_image_interval")
+    private var mix_image_interval: Int = 0
+
     @ColumnInfo(name = "mix_image_scale_type")
     private var mix_image_scale_type: Int = 0
 
@@ -111,6 +114,7 @@ class DefaultPlayAdSettingData(plan_id: Int, plan_name: String, plan_marquee: St
         this.video_scale_type = video_scale_type
         this.banner_scale_type = banner_scale_type
         this.mix_mode = mix_mode
+        this.mix_image_interval = mix_image_interval
         this.mix_image_scale_type = mix_image_scale_type
         this.mix_video_scale_type = mix_video_scale_type
     }
@@ -280,7 +284,15 @@ class DefaultPlayAdSettingData(plan_id: Int, plan_name: String, plan_marquee: St
     }
 
     fun setMix_mode (mix_mode : Int) {
-        this.mix_mode  = banner_scale_type
+        this.mix_mode  = mix_mode
+    }
+
+    fun getMix_image_interval (): Int {
+        return mix_image_interval
+    }
+
+    fun setMix_image_interval (mix_image_interval : Int) {
+        this.mix_image_interval  = mix_image_interval
     }
 
     fun getMix_image_scale_type (): Int {
