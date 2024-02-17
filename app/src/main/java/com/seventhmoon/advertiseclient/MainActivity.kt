@@ -137,7 +137,7 @@ class MainActivity : AppCompatActivity() {
     private var imageViewTop2 : ImageView ?= null
     private var videoViewLayoutTop: RelativeLayout ?= null
     private var videoViewTop: VideoView ?= null
-    private var imageViewBannerTop: ImageView?= null
+    //private var imageViewBannerTop: ImageView?= null
     //center
     private var linearLayoutCenter : LinearLayout ?= null
     var textViewCenter : SpeedMarquee ?=     null
@@ -145,7 +145,7 @@ class MainActivity : AppCompatActivity() {
     var imageViewCenter2 : ImageView ?= null
     private var videoViewLayoutCenter: RelativeLayout ?= null
     private var videoViewCenter: VideoView ?= null
-    private var imageViewBannerCenter: ImageView?= null
+    //private var imageViewBannerCenter: ImageView?= null
     //bottom
     private var linearLayoutBottom : LinearLayout ?= null
     //var textViewBottom : TextView ?= null
@@ -154,7 +154,7 @@ class MainActivity : AppCompatActivity() {
     var imageViewBottom2 : ImageView ?= null
     private var videoViewLayoutBottom: RelativeLayout ?= null
     private var videoViewBottom: VideoView ?= null
-    private var imageViewBannerBottom: ImageView?= null
+    //private var imageViewBannerBottom: ImageView?= null
 
     private var linearLayoutTriangle : LinearLayout ?= null
 
@@ -203,7 +203,7 @@ class MainActivity : AppCompatActivity() {
 
     private var mixVideoRunningTop : Boolean = false
     private var mixVideoRunningCenter : Boolean = false
-    private var mixVideoRunningTBottom : Boolean = false
+    private var mixVideoRunningBottom : Boolean = false
 
     private var currentOrientation = 0
     companion object {
@@ -1692,6 +1692,396 @@ class MainActivity : AppCompatActivity() {
                             }
                         }
 
+                    } //center
+                    else if (intent.action!!.equals(Constants.ACTION.ACTION_MIX_CENTER_PLAY_START, ignoreCase = true)) {
+                        Log.d(mTag, "ACTION_MIX_CENTER_PLAY_START")
+
+                        Log.e(mTag, "mixList.size = ${mixList.size}")
+
+                        if (layoutCenter == 5) { //mix only
+                            if (mixList.size > 0 && checkDownloadMixAll()) { //at least one image or video can play
+
+                                if (mixMode == 1) { //random
+                                    var nextCenter: Int
+                                    do {
+                                        nextCenter = Random.nextInt(mixList.size)
+                                    } while ((nextCenter == currentMixIndexCenter && mixList.size > 1) || !downloadMixReadyArray[nextCenter])
+                                    currentMixIndexCenter = nextCenter
+                                } else { //circle
+                                    do { //if next downloadImageReadyArray is false, next one
+                                        currentMixIndexCenter += 1
+                                        if (currentMixIndexCenter >= mixList.size) {
+                                            currentMixIndexCenter = 0
+                                        }
+                                    } while (!downloadMixReadyArray[currentMixIndexCenter])
+
+                                }
+
+                                Log.e(mTag, "currentMixIndexCenter = $currentMixIndexCenter")
+                                //detect image or video
+                                val playFile = File(mixList[currentMixIndexCenter])
+                                val downloadFileExt = playFile.extension
+                                val mixPlayIntent = Intent()
+                                mixPlayIntent.putExtra("MIX_MODE", mixMode)
+                                if (downloadFileExt == "mp4") { //video
+                                    mixPlayIntent.action = Constants.ACTION.ACTION_MIX_CENTER_PLAY_VIDEO_START
+                                    mContext?.sendBroadcast(mixPlayIntent)
+                                } else { //image
+                                    mixPlayIntent.action = Constants.ACTION.ACTION_MIX_CENTER_PLAY_IMAGE_START
+                                    mContext?.sendBroadcast(mixPlayIntent)
+                                }
+                            }
+                        }
+
+
+                    } else if (intent.action!!.equals(Constants.ACTION.ACTION_MIX_CENTER_PLAY_STOP, ignoreCase = true)) {
+                        Log.d(mTag, "ACTION_MIX_CENTER_PLAY_STOP")
+
+
+                    } else if (intent.action!!.equals(Constants.ACTION.ACTION_MIX_CENTER_PLAY_FINISH, ignoreCase = true)) {
+                        Log.d(mTag, "ACTION_MIX_CENTER_PLAY_FINISH")
+
+                        if (layoutCenter == 5) { //mix only
+                            if (mixList.size > 0 && checkDownloadMixAll()) { //at least one image or video can play
+                                Log.e(mTag, "mixList.size > 0")
+                                if (mixMode == 1) { //random
+                                    var nextCenter: Int
+                                    do {
+                                        nextCenter = Random.nextInt(mixList.size)
+                                    } while ((nextCenter == currentMixIndexCenter && mixList.size > 1) || !downloadMixReadyArray[nextCenter])
+                                    currentMixIndexCenter = nextCenter
+                                } else { //circle
+                                    do { //if next downloadImageReadyArray is false, next one
+                                        currentMixIndexCenter += 1
+                                        if (currentMixIndexCenter >= mixList.size) {
+                                            currentMixIndexCenter = 0
+                                        }
+                                    } while (!downloadMixReadyArray[currentMixIndexCenter])
+
+                                }
+
+                                Log.e(mTag, "currentMixIndexCenter = $currentMixIndexCenter")
+                                //detect image or video
+                                val playFile = File(mixList[currentMixIndexCenter])
+                                val downloadFileExt = playFile.extension
+                                val mixPlayIntent = Intent()
+                                if (downloadFileExt == "mp4") { //video
+                                    mixPlayIntent.action = Constants.ACTION.ACTION_MIX_CENTER_PLAY_VIDEO_START
+                                } else { //image
+                                    mixPlayIntent.action = Constants.ACTION.ACTION_MIX_CENTER_PLAY_IMAGE_START
+                                }
+                                mContext?.sendBroadcast(mixPlayIntent)
+                            }
+                        } else {
+                            mixTopRunning = false
+                        }
+                    } else if (intent.action!!.equals(Constants.ACTION.ACTION_MIX_CENTER_PLAY_IMAGE_START, ignoreCase = true)) {
+                        Log.d(mTag, "ACTION_MIX_CENTER_PLAY_IMAGE_START")
+
+                        var mixImagesPlayInterval = 7000
+                        when(mixImageInterval) {
+                            0 -> {
+                                mixImagesPlayInterval = 7000
+                            }
+                            1 -> {
+                                mixImagesPlayInterval = 10000
+                            }
+                            2 -> {
+                                mixImagesPlayInterval = 15000
+                            }
+                        }
+
+                        if (layoutCenter == 5) { //mix only
+                            //if videoView is playing, stop it
+                            videoViewCenter!!.visibility = View.GONE
+                            videoViewLayoutCenter!!.visibility = View.GONE
+                            //imageViewTop!!.visibility = View.VISIBLE
+                            //imageViewTop2!!.visibility = View.GONE
+
+                            val srcPath = "$dest_images_folder/${mixList[currentMixIndexCenter]}"
+                            val file = File(srcPath)
+                            if (file.exists()) {
+
+                                if (imageViewCenter!!.visibility == View.VISIBLE) {
+                                    imageViewCenter!!.startAnimation(animMoveToRight)
+                                    imageViewCenter!!.visibility = View.GONE
+                                    imageViewCenter2!!.visibility = View.VISIBLE
+                                    imageViewCenter2!!.setImageURI(Uri.fromFile(file))
+                                    imageViewCenter2!!.startAnimation(animMoveFromLeft)
+
+                                } else { //imageViewTop2 is visible
+                                    imageViewCenter2!!.startAnimation(animMoveToRight)
+                                    imageViewCenter2!!.visibility = View.GONE
+                                    imageViewCenter!!.visibility = View.VISIBLE
+                                    imageViewCenter!!.setImageURI(Uri.fromFile(file))
+                                    imageViewCenter!!.startAnimation(animMoveFromLeft)
+
+                                }
+                            }
+
+                            countDownTimerMixImageCenterRunning = true
+                            countDownTimerMixImageCenter = object : CountDownTimer(mixImagesPlayInterval.toLong(), mixImagesPlayInterval.toLong()) {
+                                override fun onTick(millisUntilFinished: Long) {
+                                    Log.d(mTag, "countDownTimerImageCenter millisUntilFinished = $millisUntilFinished")
+                                }
+                                override fun onFinish() { //结束的操作
+                                    Log.d(mTag, "countDownTimerImageCenter finish")
+                                    if (mixList.size > 0 && checkDownloadMixAll()) {
+                                        countDownTimerMixImageCenterRunning = false
+
+                                        val mixPlayFinishIntent = Intent()
+                                        mixPlayFinishIntent.action = Constants.ACTION.ACTION_MIX_CENTER_PLAY_FINISH
+                                        mContext?.sendBroadcast(mixPlayFinishIntent)
+                                    }
+                                } //onFinish
+                            }.start()
+                        }
+                    } else if (intent.action!!.equals(Constants.ACTION.ACTION_MIX_CENTER_PLAY_VIDEO_START, ignoreCase = true)) {
+                        Log.d(mTag, "ACTION_MIX_CENTER_PLAY_VIDEO_START")
+
+                        if (layoutCenter == 5) { //mix only
+                            imageViewCenter!!.visibility = View.GONE
+                            imageViewCenter2!!.visibility = View.GONE
+                            imageViewCenter!!.setImageResource(0)
+                            imageViewCenter2!!.setImageResource(0)
+                            videoViewCenter!!.visibility = View.VISIBLE
+                            videoViewLayoutCenter!!.visibility = View.VISIBLE
+
+                            if (mixList.size > 0 && checkDownloadMixAll()) { //at least one video can play
+                                //top
+                                val filePath = "$dest_videos_folder${mixList[currentMixIndexCenter]}"
+                                Log.d(mTag, "start play -> $filePath")
+                                val file = File(filePath)
+                                if (file.exists()) {
+                                    val uriCenter = Uri.fromFile(file)
+
+                                    videoViewCenter!!.setVideoURI(uriCenter)
+                                    //videoViewTop!!.start()
+                                    //videoRunningTop = true
+
+                                    videoViewCenter!!.setOnPreparedListener { mp ->
+                                        Log.d(mTag, "videoViewCenter prepared")
+                                        //mp.setWakeMode(mContext, PowerManager.PARTIAL_WAKE_LOCK)
+                                        mp.seekTo(0)
+                                        mp.start()
+                                        mixVideoRunningCenter = true
+                                    }
+
+                                    videoViewCenter!!.setOnErrorListener { _, _, _ ->
+                                        Log.d("video", "setOnErrorListener ")
+                                        true
+                                    }
+                                    videoViewCenter!!.setOnCompletionListener { mp ->
+                                        //mp.stop()
+                                        mp.reset()
+                                        mixVideoRunningCenter = false
+
+                                        val mixPlayFinishIntent = Intent()
+                                        mixPlayFinishIntent.action =
+                                            Constants.ACTION.ACTION_MIX_CENTER_PLAY_FINISH
+                                        mContext?.sendBroadcast(mixPlayFinishIntent)
+                                    }
+                                } else {
+                                    Log.d(mTag, "video center: play file not exist")
+                                }
+                            }
+                        }
+
+                    } //bottom
+                    else if (intent.action!!.equals(Constants.ACTION.ACTION_MIX_BOTTOM_PLAY_START, ignoreCase = true)) {
+                        Log.d(mTag, "ACTION_MIX_BOTTOM_PLAY_START")
+
+                        Log.e(mTag, "mixList.size = ${mixList.size}")
+
+                        if (layoutBottom == 5) { //mix only
+                            if (mixList.size > 0 && checkDownloadMixAll()) { //at least one image or video can play
+
+                                if (mixMode == 1) { //random
+                                    var nextBottom: Int
+                                    do {
+                                        nextBottom = Random.nextInt(mixList.size)
+                                    } while ((nextBottom == currentMixIndexBottom && mixList.size > 1) || !downloadMixReadyArray[nextBottom])
+                                    currentMixIndexBottom = nextBottom
+                                } else { //circle
+                                    do { //if next downloadImageReadyArray is false, next one
+                                        currentMixIndexBottom += 1
+                                        if (currentMixIndexBottom >= mixList.size) {
+                                            currentMixIndexBottom = 0
+                                        }
+                                    } while (!downloadMixReadyArray[currentMixIndexBottom])
+
+                                }
+
+                                Log.e(mTag, "currentMixIndexBottom = $currentMixIndexBottom")
+                                //detect image or video
+                                val playFile = File(mixList[currentMixIndexBottom])
+                                val downloadFileExt = playFile.extension
+                                val mixPlayIntent = Intent()
+                                mixPlayIntent.putExtra("MIX_MODE", mixMode)
+                                if (downloadFileExt == "mp4") { //video
+                                    mixPlayIntent.action = Constants.ACTION.ACTION_MIX_BOTTOM_PLAY_VIDEO_START
+                                    mContext?.sendBroadcast(mixPlayIntent)
+                                } else { //image
+                                    mixPlayIntent.action = Constants.ACTION.ACTION_MIX_BOTTOM_PLAY_IMAGE_START
+                                    mContext?.sendBroadcast(mixPlayIntent)
+                                }
+                            }
+                        }
+
+
+                    } else if (intent.action!!.equals(Constants.ACTION.ACTION_MIX_BOTTOM_PLAY_STOP, ignoreCase = true)) {
+                        Log.d(mTag, "ACTION_MIX_BOTTOM_PLAY_STOP")
+
+
+                    } else if (intent.action!!.equals(Constants.ACTION.ACTION_MIX_BOTTOM_PLAY_FINISH, ignoreCase = true)) {
+                        Log.d(mTag, "ACTION_MIX_BOTTOM_PLAY_FINISH")
+
+                        if (layoutBottom == 5) { //mix only
+                            if (mixList.size > 0 && checkDownloadMixAll()) { //at least one image or video can play
+                                Log.e(mTag, "mixList.size > 0")
+                                if (mixMode == 1) { //random
+                                    var nextBottom: Int
+                                    do {
+                                        nextBottom = Random.nextInt(mixList.size)
+                                    } while ((nextBottom == currentMixIndexBottom && mixList.size > 1) || !downloadMixReadyArray[nextBottom])
+                                    currentMixIndexBottom = nextBottom
+                                } else { //circle
+                                    do { //if next downloadImageReadyArray is false, next one
+                                        currentMixIndexBottom += 1
+                                        if (currentMixIndexBottom >= mixList.size) {
+                                            currentMixIndexBottom = 0
+                                        }
+                                    } while (!downloadMixReadyArray[currentMixIndexBottom])
+
+                                }
+
+                                Log.e(mTag, "currentMixIndexBottom = $currentMixIndexBottom")
+                                //detect image or video
+                                val playFile = File(mixList[currentMixIndexBottom])
+                                val downloadFileExt = playFile.extension
+                                val mixPlayIntent = Intent()
+                                if (downloadFileExt == "mp4") { //video
+                                    mixPlayIntent.action = Constants.ACTION.ACTION_MIX_BOTTOM_PLAY_VIDEO_START
+                                } else { //image
+                                    mixPlayIntent.action = Constants.ACTION.ACTION_MIX_BOTTOM_PLAY_IMAGE_START
+                                }
+                                mContext?.sendBroadcast(mixPlayIntent)
+                            }
+                        } else {
+                            mixTopRunning = false
+                        }
+                    } else if (intent.action!!.equals(Constants.ACTION.ACTION_MIX_BOTTOM_PLAY_IMAGE_START, ignoreCase = true)) {
+                        Log.d(mTag, "ACTION_MIX_BOTTOM_PLAY_IMAGE_START")
+
+                        var mixImagesPlayInterval = 7000
+                        when(mixImageInterval) {
+                            0 -> {
+                                mixImagesPlayInterval = 7000
+                            }
+                            1 -> {
+                                mixImagesPlayInterval = 10000
+                            }
+                            2 -> {
+                                mixImagesPlayInterval = 15000
+                            }
+                        }
+
+                        if (layoutBottom == 5) { //mix only
+                            //if videoView is playing, stop it
+                            videoViewBottom!!.visibility = View.GONE
+                            videoViewLayoutBottom!!.visibility = View.GONE
+                            //imageViewTop!!.visibility = View.VISIBLE
+                            //imageViewTop2!!.visibility = View.GONE
+
+                            val srcPath = "$dest_images_folder/${mixList[currentMixIndexBottom]}"
+                            val file = File(srcPath)
+                            if (file.exists()) {
+
+                                if (imageViewBottom!!.visibility == View.VISIBLE) {
+                                    imageViewBottom!!.startAnimation(animMoveToRight)
+                                    imageViewBottom!!.visibility = View.GONE
+                                    imageViewBottom2!!.visibility = View.VISIBLE
+                                    imageViewBottom2!!.setImageURI(Uri.fromFile(file))
+                                    imageViewBottom2!!.startAnimation(animMoveFromLeft)
+
+                                } else { //imageViewTop2 is visible
+                                    imageViewBottom2!!.startAnimation(animMoveToRight)
+                                    imageViewBottom2!!.visibility = View.GONE
+                                    imageViewBottom!!.visibility = View.VISIBLE
+                                    imageViewBottom!!.setImageURI(Uri.fromFile(file))
+                                    imageViewBottom!!.startAnimation(animMoveFromLeft)
+
+                                }
+                            }
+
+                            countDownTimerMixImageBottomRunning = true
+                            countDownTimerMixImageBottom = object : CountDownTimer(mixImagesPlayInterval.toLong(), mixImagesPlayInterval.toLong()) {
+                                override fun onTick(millisUntilFinished: Long) {
+                                    Log.d(mTag, "countDownTimerImageBottom millisUntilFinished = $millisUntilFinished")
+                                }
+                                override fun onFinish() { //结束的操作
+                                    Log.d(mTag, "countDownTimerImageBottom finish")
+                                    if (mixList.size > 0 && checkDownloadMixAll()) {
+                                        countDownTimerMixImageBottomRunning = false
+
+                                        val mixPlayFinishIntent = Intent()
+                                        mixPlayFinishIntent.action = Constants.ACTION.ACTION_MIX_BOTTOM_PLAY_FINISH
+                                        mContext?.sendBroadcast(mixPlayFinishIntent)
+                                    }
+                                } //onFinish
+                            }.start()
+                        }
+                    } else if (intent.action!!.equals(Constants.ACTION.ACTION_MIX_BOTTOM_PLAY_VIDEO_START, ignoreCase = true)) {
+                        Log.d(mTag, "ACTION_MIX_BOTTOM_PLAY_VIDEO_START")
+
+                        if (layoutBottom == 5) { //mix only
+                            imageViewBottom!!.visibility = View.GONE
+                            imageViewBottom2!!.visibility = View.GONE
+                            imageViewBottom!!.setImageResource(0)
+                            imageViewBottom2!!.setImageResource(0)
+                            videoViewBottom!!.visibility = View.VISIBLE
+                            videoViewLayoutBottom!!.visibility = View.VISIBLE
+
+                            if (mixList.size > 0 && checkDownloadMixAll()) { //at least one video can play
+                                //top
+                                val filePath = "$dest_videos_folder${mixList[currentMixIndexBottom]}"
+                                Log.d(mTag, "start play -> $filePath")
+                                val file = File(filePath)
+                                if (file.exists()) {
+                                    val uriBottom = Uri.fromFile(file)
+
+                                    videoViewBottom!!.setVideoURI(uriBottom)
+                                    //videoViewTop!!.start()
+                                    //videoRunningTop = true
+
+                                    videoViewBottom!!.setOnPreparedListener { mp ->
+                                        Log.d(mTag, "videoViewBottom prepared")
+                                        //mp.setWakeMode(mContext, PowerManager.PARTIAL_WAKE_LOCK)
+                                        mp.seekTo(0)
+                                        mp.start()
+                                        mixVideoRunningBottom = true
+                                    }
+
+                                    videoViewBottom!!.setOnErrorListener { _, _, _ ->
+                                        Log.d("video", "setOnErrorListener ")
+                                        true
+                                    }
+                                    videoViewBottom!!.setOnCompletionListener { mp ->
+                                        //mp.stop()
+                                        mp.reset()
+                                        mixVideoRunningBottom = false
+
+                                        val mixPlayFinishIntent = Intent()
+                                        mixPlayFinishIntent.action =
+                                                Constants.ACTION.ACTION_MIX_BOTTOM_PLAY_FINISH
+                                        mContext?.sendBroadcast(mixPlayFinishIntent)
+                                    }
+                                } else {
+                                    Log.d(mTag, "video bottom: play file not exist")
+                                }
+                            }
+                        }
+
                     }
                 }
             }
@@ -1905,12 +2295,6 @@ class MainActivity : AppCompatActivity() {
                         previousPlanId = currentPlanId
                         getFirstPingResponse = false
                     }
-
-                    /*if (pingCount >= 1440) { // 1 day
-                        Log.d(mTag, "pingCount >= 1440")
-                        pingCount = 0
-                        getFirstPingResponse = false
-                    }*/
 
                     if (json["result"] == 0 ) {
                         if (!getFirstPingResponse) {
@@ -3804,6 +4188,58 @@ class MainActivity : AppCompatActivity() {
                             linearLayoutCenter!!.addView(imageViewCenter2)
                             */
                         }
+                        5 -> { //mix
+                            //image
+                            if (imageViewCenter == null) {
+                                imageViewCenter = ImageView(mContext)
+                            }
+                            imageViewCenter!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                            imageViewCenter!!.visibility = View.GONE
+                            linearLayoutCenter!!.addView(imageViewCenter)
+                            //imageViewTop2
+                            if (imageViewCenter2 == null) {
+                                imageViewCenter2 = ImageView(mContext)
+                            }
+                            imageViewCenter2!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                            imageViewCenter2!!.visibility = View.GONE
+                            //imageViewTop2!!.scaleType = ImageView.ScaleType.CENTER_INSIDE
+                            linearLayoutCenter!!.addView(imageViewCenter2)
+                            if (mix_image_scale_type == 1) { //fillXY
+                                imageViewCenter!!.scaleType = ImageView.ScaleType.FIT_XY
+                                imageViewCenter2!!.scaleType = ImageView.ScaleType.FIT_XY
+                            } else { //default
+                                imageViewCenter!!.scaleType = ImageView.ScaleType.CENTER_INSIDE
+                                imageViewCenter2!!.scaleType = ImageView.ScaleType.CENTER_INSIDE
+                            }
+                            //video
+                            if (videoViewLayoutCenter == null) {
+                                videoViewLayoutCenter = RelativeLayout(mContext)
+                            }
+                            videoViewLayoutCenter!!.removeAllViews()
+                            videoViewLayoutCenter!!.layoutParams = RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT)
+                            videoViewLayoutCenter!!.gravity = Gravity.CENTER
+                            videoViewLayoutCenter!!.visibility = View.GONE
+                            linearLayoutCenter!!.addView(videoViewLayoutCenter)
+                            //videoViewCenter
+                            if (videoViewCenter == null) {
+                                videoViewCenter = VideoView(mContext)
+                            }
+                            if (mix_video_scale_type == 1) {
+                                val layoutParams = RelativeLayout.LayoutParams(
+                                        RelativeLayout.LayoutParams.MATCH_PARENT,
+                                        RelativeLayout.LayoutParams.WRAP_CONTENT
+                                )
+                                layoutParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM)
+                                layoutParams.addRule(RelativeLayout.ALIGN_PARENT_TOP)
+                                layoutParams.addRule(RelativeLayout.ALIGN_PARENT_LEFT)
+                                layoutParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT)
+                                videoViewCenter!!.layoutParams = layoutParams
+                            } else {
+                                videoViewCenter!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                            }
+
+                            videoViewLayoutCenter!!.addView(videoViewCenter)
+                        }
                     }
 
                     //LinearLayoutBottom
@@ -3920,6 +4356,58 @@ class MainActivity : AppCompatActivity() {
                             imageViewBottom2!!.visibility = View.GONE
                             linearLayoutBottom!!.addView(imageViewBottom2)
                             */
+                        }
+                        5 -> { //mix
+                            //image
+                            if (imageViewBottom == null) {
+                                imageViewBottom = ImageView(mContext)
+                            }
+                            imageViewBottom!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                            imageViewBottom!!.visibility = View.GONE
+                            linearLayoutBottom!!.addView(imageViewBottom)
+                            //imageViewTop2
+                            if (imageViewBottom2 == null) {
+                                imageViewBottom2 = ImageView(mContext)
+                            }
+                            imageViewBottom2!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                            imageViewBottom2!!.visibility = View.GONE
+                            //imageViewTop2!!.scaleType = ImageView.ScaleType.CENTER_INSIDE
+                            linearLayoutBottom!!.addView(imageViewBottom2)
+                            if (mix_image_scale_type == 1) { //fillXY
+                                imageViewBottom!!.scaleType = ImageView.ScaleType.FIT_XY
+                                imageViewBottom2!!.scaleType = ImageView.ScaleType.FIT_XY
+                            } else { //default
+                                imageViewBottom!!.scaleType = ImageView.ScaleType.CENTER_INSIDE
+                                imageViewBottom2!!.scaleType = ImageView.ScaleType.CENTER_INSIDE
+                            }
+                            //video
+                            if (videoViewLayoutBottom == null) {
+                                videoViewLayoutBottom = RelativeLayout(mContext)
+                            }
+                            videoViewLayoutBottom!!.removeAllViews()
+                            videoViewLayoutBottom!!.layoutParams = RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT)
+                            videoViewLayoutBottom!!.gravity = Gravity.CENTER
+                            videoViewLayoutBottom!!.visibility = View.GONE
+                            linearLayoutBottom!!.addView(videoViewLayoutBottom)
+                            //videoViewBottom
+                            if (videoViewBottom == null) {
+                                videoViewBottom = VideoView(mContext)
+                            }
+                            if (mix_video_scale_type == 1) {
+                                val layoutParams = RelativeLayout.LayoutParams(
+                                        RelativeLayout.LayoutParams.MATCH_PARENT,
+                                        RelativeLayout.LayoutParams.WRAP_CONTENT
+                                )
+                                layoutParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM)
+                                layoutParams.addRule(RelativeLayout.ALIGN_PARENT_TOP)
+                                layoutParams.addRule(RelativeLayout.ALIGN_PARENT_LEFT)
+                                layoutParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT)
+                                videoViewBottom!!.layoutParams = layoutParams
+                            } else {
+                                videoViewBottom!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                            }
+
+                            videoViewLayoutBottom!!.addView(videoViewBottom)
                         }
                     }
 
@@ -4977,7 +5465,29 @@ class MainActivity : AppCompatActivity() {
                         } else {
                             Log.d(mTag, "layoutTop not mix")
                         }
+                        //center
+                        if (layoutCenter == 5) {
+                            if (!mixCenterRunning) {
+                                mixCenterRunning = true
+                                val mixPlayIntent = Intent()
+                                mixPlayIntent.action = Constants.ACTION.ACTION_MIX_CENTER_PLAY_START
+                                mContext?.sendBroadcast(mixPlayIntent)
+                            }
+                        } else {
+                            Log.d(mTag, "layoutCenter not mix")
+                        }
 
+                        //center
+                        if (layoutBottom == 5) {
+                            if (!mixBottomRunning) {
+                                mixBottomRunning = true
+                                val mixPlayIntent = Intent()
+                                mixPlayIntent.action = Constants.ACTION.ACTION_MIX_BOTTOM_PLAY_START
+                                mContext?.sendBroadcast(mixPlayIntent)
+                            }
+                        } else {
+                            Log.d(mTag, "layoutBottom not mix")
+                        }
 
 
                     } else {
