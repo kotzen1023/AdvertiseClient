@@ -28,6 +28,7 @@ import android.util.DisplayMetrics
 import android.util.Log
 import android.view.Gravity
 import android.view.View
+import android.view.View.OnTouchListener
 import android.view.ViewGroup
 import android.view.WindowInsets
 import android.view.WindowInsetsController
@@ -40,7 +41,6 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.MediaController
 import android.widget.RelativeLayout
-import android.widget.TextView
 import android.widget.Toast
 import android.widget.VideoView
 import androidx.annotation.RequiresApi
@@ -260,7 +260,7 @@ class MainActivity : AppCompatActivity() {
     var pingCount: Int = 0
     //for Log
     private var process: Process? = null
-    private var debugLog: Boolean = true
+    private var debugLog: Boolean = false
 
     private var planStartTimeString : String = "--:--"
     private var plan2StartTimeString : String = "--:--"
@@ -1500,7 +1500,7 @@ class MainActivity : AppCompatActivity() {
                         }
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_MIX_TOP_PLAY_START, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_MIX_TOP_PLAY_START")
-
+                        currentMixIndexTop = -1
                         Log.e(mTag, "mixList.size = ${mixList.size}")
 
                         if (layoutTop == 5) { //mix only
@@ -1695,7 +1695,7 @@ class MainActivity : AppCompatActivity() {
                     } //center
                     else if (intent.action!!.equals(Constants.ACTION.ACTION_MIX_CENTER_PLAY_START, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_MIX_CENTER_PLAY_START")
-
+                        currentMixIndexCenter = -1
                         Log.e(mTag, "mixList.size = ${mixList.size}")
 
                         if (layoutCenter == 5) { //mix only
@@ -1890,7 +1890,7 @@ class MainActivity : AppCompatActivity() {
                     } //bottom
                     else if (intent.action!!.equals(Constants.ACTION.ACTION_MIX_BOTTOM_PLAY_START, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_MIX_BOTTOM_PLAY_START")
-
+                        currentMixIndexBottom = -1
                         Log.e(mTag, "mixList.size = ${mixList.size}")
 
                         if (layoutBottom == 5) { //mix only
@@ -2221,6 +2221,119 @@ class MainActivity : AppCompatActivity() {
 
         override fun onFailure(call: Call, e: IOException) {
             runOnUiThread(netErrRunnable)
+            //for auto plan change
+            runOnUiThread {
+                try {
+                    Log.e(mTag, "getPingCallback failed -> check plan change")
+                    val currentTimestamp = getCurrentTimeStamp()
+                    Log.d(mTag, "currentTimestamp = $currentTimestamp")
+                    if (layoutList.size > 0) {
+                        planStartTime = getTimeStampFromString(layoutList[0].plan_start_time)
+                        plan2StartTime = getTimeStampFromString(layoutList[0].plan2_start_time)
+                        plan3StartTime = getTimeStampFromString(layoutList[0].plan3_start_time)
+                        plan4StartTime = getTimeStampFromString(layoutList[0].plan4_start_time)
+                    }
+
+                    Log.d(mTag, "planStartTime = $planStartTime")
+                    Log.d(mTag, "plan2StartTime = $plan2StartTime")
+                    Log.d(mTag, "plan3StartTime = $plan3StartTime")
+                    Log.d(mTag, "plan4StartTime = $plan4StartTime")
+
+                    if (layoutList.size > 0) {
+                        if (plan4StartTime in 1..currentTimestamp && layoutList[0].plan4_id != 0) { //plan4
+                            currentPlanId = layoutList[0].plan4_id
+                            currentPlanUse = 4
+                            Log.d(mTag, "plan4, id = ${layoutList[0].plan4_id}")
+
+                        } else if (plan3StartTime in 1..currentTimestamp && layoutList[0].plan3_id != 0) { //plan3
+                            currentPlanId = layoutList[0].plan3_id
+                            currentPlanUse = 3
+                            Log.d(mTag, "plan3, id = ${layoutList[0].plan3_id}")
+
+                        } else if (plan2StartTime in 1..currentTimestamp && layoutList[0].plan2_id != 0) { //plan2
+                            currentPlanId = layoutList[0].plan2_id
+                            currentPlanUse = 2
+                            Log.d(mTag, "plan2, id = ${layoutList[0].plan2_id}")
+
+                        } //else if (planStartTime in 1..currentTimestamp) { //plan1
+                        else { //plan1
+                            if (layoutList[0].plan_id > 0) {
+                                currentPlanId = layoutList[0].plan_id
+                                currentPlanUse = 1
+                                Log.d(mTag, "plan1, id = ${layoutList[0].plan_id}")
+                            }
+                        }
+
+                        Log.e(mTag, "---->currentPlanUse = $currentPlanUse")
+
+                        //get current plan idx
+                        if (currentPlanId > 0) {
+                            if (adSettingList.size > 0) {
+                                //get current plan idx
+                                for (i in adSettingList.indices) {
+                                    if (currentPlanId == adSettingList[i].plan_id) {
+                                        currentAdSettingIdx = i
+                                        break
+                                    }
+                                }
+                            } else {
+                                currentAdSettingIdx = -1
+                            }
+                        }
+                    }
+
+                    Log.d(mTag, "previousPlanId = $previousPlanId, currentPlanId = $currentPlanId ")
+
+                    if (previousPlanId != currentPlanId) {
+                        Log.d(mTag, "Time Plan change!!!")
+                        previousPlanId = currentPlanId
+                        getFirstPingResponse = false
+                    }
+
+                    if (!getFirstPingResponse) {
+                        getFirstPingResponse = true
+                        infoRenew = true
+                        val playAdIntent = Intent()
+                        playAdIntent.action = Constants.ACTION.ACTION_START_PLAY_AD
+                        mContext?.sendBroadcast(playAdIntent)
+                    }
+
+                    /*if (json["result"] == 0 ) {
+                        if (!getFirstPingResponse) {
+                            getFirstPingResponse = true
+                            infoRenew = true
+
+                            if (server_ip_address != "" && server_webservice_port != "") {
+                                server_banner_folder = "$server_ip_address:$server_webservice_port/uploads/banners"
+                                server_images_folder = "$server_ip_address:$server_webservice_port/uploads/images"
+                                server_videos_folder = "$server_ip_address:$server_webservice_port/uploads/videos"
+                            }
+
+                            //get layout first
+                            val successIntent = Intent()
+                            successIntent.action = Constants.ACTION.ACTION_PING_WEB_SUCCESS
+                            mContext?.sendBroadcast(successIntent)
+                            //getLayout()
+                        }
+
+                    } else if (json["result"] == 1) {
+                        Log.d(mTag, "====>Layout changed.")
+                        //orientationChanged = false
+                        //getLayout()
+                        infoRenew = true
+                        val successIntent = Intent()
+                        successIntent.action = Constants.ACTION.ACTION_PING_WEB_SUCCESS
+                        mContext?.sendBroadcast(successIntent)
+                    } else if (json["result"] == -1) {
+                        Log.d(mTag, "->no deviceID")
+                    }*/
+
+                } catch (ex: Exception) {
+
+                    Log.e(mTag, "check plan change error")
+
+                }
+            }
         }
 
         @Throws(IOException::class)
@@ -3541,15 +3654,15 @@ class MainActivity : AppCompatActivity() {
         currentTextIndexTop = -1
         currentImageIndexTop = -1
         currentVideoIndexTop = -1
-        currentMixIndexTop = -1
+        //currentMixIndexTop = -1
         currentTextIndexCenter = -1
         currentImageIndexCenter = -1
         currentVideoIndexCenter = -1
-        currentMixIndexCenter = -1
+        //currentMixIndexCenter = -1
         currentTextIndexBottom = -1
         currentImageIndexBottom = -1
         currentVideoIndexBottom = -1
-        currentMixIndexBottom = -1
+        //currentMixIndexBottom = -1
 
         //init layout
         if (layoutList.size > 0 ) {
@@ -3974,6 +4087,9 @@ class MainActivity : AppCompatActivity() {
                             //videoViewTop
                             if (videoViewTop == null) {
                                 videoViewTop = VideoView(mContext)
+                                videoViewTop!!.setOnTouchListener(OnTouchListener { v, event -> // do nothing here......
+                                    true
+                                })
                             }
                             //videoViewTop!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
                             if (video_scale_type == 1) {
@@ -4050,6 +4166,9 @@ class MainActivity : AppCompatActivity() {
                             //videoViewTop
                             if (videoViewTop == null) {
                                 videoViewTop = VideoView(mContext)
+                                videoViewTop!!.setOnTouchListener(OnTouchListener { v, event -> // do nothing here......
+                                    true
+                                })
                             }
                             //videoViewTop!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
                             if (mix_video_scale_type == 1) {
@@ -4147,6 +4266,9 @@ class MainActivity : AppCompatActivity() {
                             //videoViewCenter
                             if (videoViewCenter == null) {
                                 videoViewCenter = VideoView(mContext)
+                                videoViewLayoutCenter!!.setOnTouchListener(OnTouchListener { v, event -> // do nothing here......
+                                    true
+                                })
                             }
                             //videoViewCenter!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
                             if (video_scale_type == 1) {
@@ -4214,6 +4336,9 @@ class MainActivity : AppCompatActivity() {
                             //video
                             if (videoViewLayoutCenter == null) {
                                 videoViewLayoutCenter = RelativeLayout(mContext)
+                                videoViewLayoutCenter!!.setOnTouchListener(OnTouchListener { v, event -> // do nothing here......
+                                    true
+                                })
                             }
                             videoViewLayoutCenter!!.removeAllViews()
                             videoViewLayoutCenter!!.layoutParams = RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT)
@@ -4317,6 +4442,9 @@ class MainActivity : AppCompatActivity() {
                             //videoViewBottom
                             if (videoViewBottom == null) {
                                 videoViewBottom = VideoView(mContext)
+                                videoViewBottom!!.setOnTouchListener(OnTouchListener { v, event -> // do nothing here......
+                                    true
+                                })
                             }
                             //videoViewBottom!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
                             if (video_scale_type == 1) {
@@ -4392,6 +4520,9 @@ class MainActivity : AppCompatActivity() {
                             //videoViewBottom
                             if (videoViewBottom == null) {
                                 videoViewBottom = VideoView(mContext)
+                                videoViewBottom!!.setOnTouchListener(OnTouchListener { v, event -> // do nothing here......
+                                    true
+                                })
                             }
                             if (mix_video_scale_type == 1) {
                                 val layoutParams = RelativeLayout.LayoutParams(
