@@ -6,4 +6,5 @@
     <string name="app_confirm">確定</string>
     <string name="server_ip_hint">IP位址</string>
     <string name="server_ip_input_empty">IP位址與Port不能為空</string>
+    <string name="server_ip_input_mismatch">無效的IP位址</string>
 </resources>

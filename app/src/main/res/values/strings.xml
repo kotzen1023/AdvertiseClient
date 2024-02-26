@@ -5,4 +5,5 @@
     <string name="app_confirm">Confirm</string>
     <string name="server_ip_hint">IP address</string>
     <string name="server_ip_input_empty">IP address or port cannot be empty.</string>
+    <string name="server_ip_input_mismatch">Not a valid IP Address</string>
 </resources>

@@ -23,6 +23,7 @@ import android.os.Handler
 import android.os.Looper
 import android.os.Message
 import android.provider.Settings
+import android.service.autofill.FieldClassification.Match
 import android.text.TextUtils
 import android.util.DisplayMetrics
 import android.util.Log
@@ -87,6 +88,8 @@ import java.net.URLEncoder
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.regex.Matcher
+import java.util.regex.Pattern
 import kotlin.random.Random
 import kotlin.system.exitProcess
 
@@ -219,6 +222,15 @@ class MainActivity : AppCompatActivity() {
         @JvmStatic var dest_images_folder: String = ""
         @JvmStatic var dest_videos_folder: String = ""
     }
+
+    val IP_ADDRESS: Pattern = Pattern.compile(
+        "((25[0-5]|2[0-4][0-9]|[0-1][0-9]{2}|[1-9][0-9]|[1-9])\\.(25[0-5]|2[0-4]"
+                + "[0-9]|[0-1][0-9]{2}|[1-9][0-9]|[1-9]|0)\\.(25[0-5]|2[0-4][0-9]|[0-1]"
+                + "[0-9]{2}|[1-9][0-9]|[1-9]|0)\\.(25[0-5]|2[0-4][0-9]|[0-1][0-9]{2}"
+                + "|[1-9][0-9]|[0-9]))"
+    )
+
+    val httpPrefix = "http://"
 
     private val handler = object : Handler(Looper.getMainLooper()) {
 
@@ -353,9 +365,9 @@ class MainActivity : AppCompatActivity() {
         Log.d(mTag, "server_webservice_port = $server_webservice_port")
 
         if (server_ip_address != "" && server_webservice_port != "") {
-            server_banner_folder = "$server_ip_address:$server_webservice_port/uploads/banners"
-            server_images_folder = "$server_ip_address:$server_webservice_port/uploads/images"
-            server_videos_folder = "$server_ip_address:$server_webservice_port/uploads/videos"
+            server_banner_folder = "$httpPrefix$server_ip_address:$server_webservice_port/uploads/banners"
+            server_images_folder = "$httpPrefix$server_ip_address:$server_webservice_port/uploads/images"
+            server_videos_folder = "$httpPrefix$server_ip_address:$server_webservice_port/uploads/videos"
         }
 
         //get screen width and height
@@ -704,18 +716,36 @@ class MainActivity : AppCompatActivity() {
 
 
         if (layoutList.size == 1 && adSettingList.size >= 1 &&
-            (playMarqueeList.size > 0 || imageList.size > 0 || videoList.size > 0 )) {
-            /*
-            Log.e(mTag, "layoutList[0].layout2_top = ${layoutList[0].layout2_top}")
-            Log.e(mTag, "layoutList[0].layout2_center = ${layoutList[0].layout2_center}")
-            Log.e(mTag, "layoutList[0].layout2_bottom = ${layoutList[0].layout2_bottom}")
-            */
+            (playMarqueeList.size > 0 ||
+                    bannerList.size > 0 ||
+                    imageList.size > 0 ||
+                    videoList.size > 0 ) ||
+                    mixList.size > 0) {
 
             //because marquee download is unnecessary, start with image
             //downloadImageComplete = 0
-            checkImagesExists()
-            clearImagesNotInImageList()
-            downloadImages()
+
+            if (bannerList.size > 0) {
+                checkBannerExists()
+                clearBannersNotInBannerList()
+            }
+
+            if (imageList.size > 0) {
+                checkImagesExists()
+                clearImagesNotInImageList()
+            }
+
+            if (videoList.size > 0) {
+                checkVideosExists()
+                clearVideosNotInVideoList()
+            }
+
+            if (mixList.size > 0) {
+                checkMixExists()
+                clearMixNotInMixList()
+            }
+
+
             infoRenew = true
 
         } else {
@@ -725,7 +755,7 @@ class MainActivity : AppCompatActivity() {
         if (server_ip_address == "" || server_webservice_port == "") {
             showInputServerAddressDialog()
         } else {
-            base_ip_address_webservice = "$server_ip_address:$server_webservice_port/"
+            base_ip_address_webservice = "$httpPrefix$server_ip_address:$server_webservice_port/"
 
             pingWeb()
         }
@@ -751,7 +781,7 @@ class MainActivity : AppCompatActivity() {
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_TEST_IP_AND_PORT, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_TEST_IP_AND_PORT")
 
-                        base_ip_address_webservice = "$server_ip_address:$server_webservice_port/"
+                        base_ip_address_webservice = "$httpPrefix$server_ip_address:$server_webservice_port/"
 
                         Log.d(mTag, "base_ip_address_webservice = $base_ip_address_webservice")
 
@@ -760,7 +790,7 @@ class MainActivity : AppCompatActivity() {
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_PING_WEB, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_PING_WEB")
 
-                        base_ip_address_webservice = "$server_ip_address:$server_webservice_port/"
+                        base_ip_address_webservice = "$httpPrefix$server_ip_address:$server_webservice_port/"
 
                         Log.d(mTag, "base_ip_address_webservice = $base_ip_address_webservice")
 
@@ -892,265 +922,6 @@ class MainActivity : AppCompatActivity() {
                             getBannerIntent.action = Constants.ACTION.ACTION_GET_BANNER_START
                             mContext?.sendBroadcast(getBannerIntent)
 
-                            //then download banners
-                            /*
-                            if (adSettingList[currentAdSettingIdx].plan_banner.isNotEmpty()) {
-                                val bannerArray = adSettingList[currentAdSettingIdx].plan_banner.split(",")
-                                if (bannerArray.isNotEmpty()) {
-                                    bannerList.clear()
-                                    downloadBannerReadyArray.clear()
-                                    for (i in bannerArray.indices) {
-                                        bannerList.add(bannerArray[i])
-                                        downloadBannerReadyArray.add(false)
-                                    }
-
-                                    Log.d(mTag, "bannerList = $bannerList, downloadBannerReadyArray = $downloadBannerReadyArray")
-
-                                    checkBannerExists()
-                                    clearBannersNotInBannerList()
-                                    downloadBanner()
-                                } else { //no banner, start download images
-                                    Log.e(mTag, "banner is empty 1")
-                                    bannerList.clear()
-                                    defaultBannerPlayList!!.clear()
-                                    defaultPlayBannerDataDB!!.defaultPlayBannerDataDao().clearTable()
-
-                                    if (adSettingList[currentAdSettingIdx].plan_images.isNotEmpty()) {
-                                        val imagesArray =
-                                            adSettingList[currentAdSettingIdx].plan_images.split(",")
-                                        if (imagesArray.isNotEmpty()) {
-                                            imageList.clear()
-                                            downloadImageReadyArray.clear()
-                                            for (i in imagesArray.indices) {
-                                                imageList.add(imagesArray[i])
-                                                downloadImageReadyArray.add(false)
-                                            }
-
-                                            Log.d(
-                                                mTag,
-                                                "imageList = $imageList, downloadImageReadyArray = $downloadImageReadyArray"
-                                            )
-                                            //downloadImageComplete = 0
-                                            checkImagesExists()
-                                            clearImagesNotInImageList()
-                                            downloadImages()
-                                        } else { //no images, start download videos
-                                            imageList.clear()
-                                            defaultImagesPlayList!!.clear()
-                                            defaultPlayImagesDataDB!!.defaultPlayImagesDataDao().clearTable()
-
-                                            if (adSettingList[currentAdSettingIdx].plan_videos.isNotEmpty()) {
-                                                val videosArray = adSettingList[currentAdSettingIdx].plan_videos.split(",")
-
-                                                if (videosArray.isNotEmpty()) {
-                                                    videoList.clear()
-                                                    downloadVideoReadyArray.clear()
-                                                    for (i in videosArray.indices) {
-                                                        videoList.add(videosArray[i])
-                                                        downloadVideoReadyArray.add(false)
-                                                    }
-
-                                                    Log.d(mTag, "videoList = $videoList, downloadVideoReadyArray = $downloadVideoReadyArray")
-
-
-                                                    //then download videos
-                                                    //downloadVideoComplete = 0
-                                                    checkVideosExists()
-                                                    clearVideosNotInVideoList()
-                                                    downloadVideos()
-                                                } else { //no videos, start ads
-                                                    videoList.clear()
-                                                    defaultVideosPlayList!!.clear()
-                                                    defaultPlayVideosDataDB!!.defaultPlayVideosDataDao().clearTable()
-
-                                                    //start to play
-                                                    if (infoRenew) {
-                                                        Log.d(mTag, "start to play!")
-                                                        playAd()
-                                                    }
-                                                }
-                                            } else { //no videos, start ads
-                                                videoList.clear()
-                                                defaultVideosPlayList!!.clear()
-                                                defaultPlayVideosDataDB!!.defaultPlayVideosDataDao().clearTable()
-
-                                                //start to play
-                                                if (infoRenew) {
-                                                    Log.d(mTag, "start to play!")
-                                                    playAd()
-                                                }
-                                            }
-                                        }
-                                    } else { //images is empty, download videos
-                                        imageList.clear()
-                                        defaultImagesPlayList!!.clear()
-                                        defaultPlayImagesDataDB!!.defaultPlayImagesDataDao().clearTable()
-
-                                        if (adSettingList[currentAdSettingIdx].plan_videos.isNotEmpty()) {
-                                            val videosArray = adSettingList[currentAdSettingIdx].plan_videos.split(",")
-
-                                            if (videosArray.isNotEmpty()) {
-                                                videoList.clear()
-                                                downloadVideoReadyArray.clear()
-                                                for (i in videosArray.indices) {
-                                                    videoList.add(videosArray[i])
-                                                    downloadVideoReadyArray.add(false)
-                                                }
-
-                                                Log.d(mTag, "videoList = $videoList, downloadVideoReadyArray = $downloadVideoReadyArray")
-
-
-                                                //then download videos
-                                                //downloadVideoComplete = 0
-                                                checkVideosExists()
-                                                clearVideosNotInVideoList()
-                                                downloadVideos()
-                                            } else { //no videos, start ads
-                                                videoList.clear()
-                                                defaultVideosPlayList!!.clear()
-                                                defaultPlayVideosDataDB!!.defaultPlayVideosDataDao().clearTable()
-
-                                                //start to play
-                                                if (infoRenew) {
-                                                    Log.d(mTag, "start to play!")
-                                                    playAd()
-                                                }
-                                            }
-                                        } else { //no videos, start ads
-                                            videoList.clear()
-                                            defaultVideosPlayList!!.clear()
-                                            defaultPlayVideosDataDB!!.defaultPlayVideosDataDao().clearTable()
-
-                                            //start to play
-                                            if (infoRenew) {
-                                                Log.d(mTag, "start to play!")
-                                                playAd()
-                                            }
-                                        }
-                                    }
-
-
-                                }
-                            } else { //banner empty, start download images
-                                Log.e(mTag, "banner is empty 2")
-                                bannerList.clear()
-                                defaultBannerPlayList!!.clear()
-                                defaultPlayBannerDataDB!!.defaultPlayBannerDataDao().clearTable()
-
-                                if (adSettingList[currentAdSettingIdx].plan_images.isNotEmpty()) {
-                                    val imagesArray =
-                                        adSettingList[currentAdSettingIdx].plan_images.split(",")
-                                    if (imagesArray.isNotEmpty()) {
-                                        imageList.clear()
-                                        downloadImageReadyArray.clear()
-                                        for (i in imagesArray.indices) {
-                                            imageList.add(imagesArray[i])
-                                            downloadImageReadyArray.add(false)
-                                        }
-
-                                        Log.d(
-                                            mTag,
-                                            "imageList = $imageList, downloadImageReadyArray = $downloadImageReadyArray"
-                                        )
-                                        //downloadImageComplete = 0
-                                        checkImagesExists()
-                                        clearImagesNotInImageList()
-                                        downloadImages()
-                                    } else { //no images, start download videos
-                                        imageList.clear()
-                                        defaultImagesPlayList!!.clear()
-                                        defaultPlayImagesDataDB!!.defaultPlayImagesDataDao().clearTable()
-
-                                        if (adSettingList[currentAdSettingIdx].plan_videos.isNotEmpty()) {
-                                            val videosArray = adSettingList[currentAdSettingIdx].plan_videos.split(",")
-
-                                            if (videosArray.isNotEmpty()) {
-                                                videoList.clear()
-                                                downloadVideoReadyArray.clear()
-                                                for (i in videosArray.indices) {
-                                                    videoList.add(videosArray[i])
-                                                    downloadVideoReadyArray.add(false)
-                                                }
-
-                                                Log.d(mTag, "videoList = $videoList, downloadVideoReadyArray = $downloadVideoReadyArray")
-
-
-                                                //then download videos
-                                                //downloadVideoComplete = 0
-                                                checkVideosExists()
-                                                clearVideosNotInVideoList()
-                                                downloadVideos()
-                                            } else { //no videos, start ads
-                                                videoList.clear()
-                                                defaultVideosPlayList!!.clear()
-                                                defaultPlayVideosDataDB!!.defaultPlayVideosDataDao().clearTable()
-
-                                                //start to play
-                                                if (infoRenew) {
-                                                    Log.d(mTag, "start to play!")
-                                                    playAd()
-                                                }
-                                            }
-                                        } else { //no videos, start ads
-                                            videoList.clear()
-                                            defaultVideosPlayList!!.clear()
-                                            defaultPlayVideosDataDB!!.defaultPlayVideosDataDao().clearTable()
-
-                                            //start to play
-                                            if (infoRenew) {
-                                                Log.d(mTag, "start to play!")
-                                                playAd()
-                                            }
-                                        }
-                                    }
-                                } else { //images is empty, download videos
-                                    imageList.clear()
-                                    defaultImagesPlayList!!.clear()
-                                    defaultPlayImagesDataDB!!.defaultPlayImagesDataDao().clearTable()
-
-                                    if (adSettingList[currentAdSettingIdx].plan_videos.isNotEmpty()) {
-                                        val videosArray = adSettingList[currentAdSettingIdx].plan_videos.split(",")
-
-                                        if (videosArray.isNotEmpty()) {
-                                            videoList.clear()
-                                            downloadVideoReadyArray.clear()
-                                            for (i in videosArray.indices) {
-                                                videoList.add(videosArray[i])
-                                                downloadVideoReadyArray.add(false)
-                                            }
-
-                                            Log.d(mTag, "videoList = $videoList, downloadVideoReadyArray = $downloadVideoReadyArray")
-
-
-                                            //then download videos
-                                            //downloadVideoComplete = 0
-                                            checkVideosExists()
-                                            clearVideosNotInVideoList()
-                                            downloadVideos()
-                                        } else { //no videos, start ads
-                                            videoList.clear()
-                                            defaultVideosPlayList!!.clear()
-                                            defaultPlayVideosDataDB!!.defaultPlayVideosDataDao().clearTable()
-
-                                            //start to play
-                                            if (infoRenew) {
-                                                Log.d(mTag, "start to play!")
-                                                playAd()
-                                            }
-                                        }
-                                    } else { //no videos, start ads
-                                        videoList.clear()
-                                        defaultVideosPlayList!!.clear()
-                                        defaultPlayVideosDataDB!!.defaultPlayVideosDataDao().clearTable()
-
-                                        //start to play
-                                        if (infoRenew) {
-                                            Log.d(mTag, "start to play!")
-                                            playAd()
-                                        }
-                                    }
-                                }
-                            }*/
                         } else {
                             Log.d(mTag, "No AdSetting")
                         }
@@ -2225,113 +1996,85 @@ class MainActivity : AppCompatActivity() {
             runOnUiThread {
                 try {
                     Log.e(mTag, "getPingCallback failed -> check plan change")
-                    val currentTimestamp = getCurrentTimeStamp()
-                    Log.d(mTag, "currentTimestamp = $currentTimestamp")
-                    if (layoutList.size > 0) {
-                        planStartTime = getTimeStampFromString(layoutList[0].plan_start_time)
-                        plan2StartTime = getTimeStampFromString(layoutList[0].plan2_start_time)
-                        plan3StartTime = getTimeStampFromString(layoutList[0].plan3_start_time)
-                        plan4StartTime = getTimeStampFromString(layoutList[0].plan4_start_time)
-                    }
 
-                    Log.d(mTag, "planStartTime = $planStartTime")
-                    Log.d(mTag, "plan2StartTime = $plan2StartTime")
-                    Log.d(mTag, "plan3StartTime = $plan3StartTime")
-                    Log.d(mTag, "plan4StartTime = $plan4StartTime")
-
-                    if (layoutList.size > 0) {
-                        if (plan4StartTime in 1..currentTimestamp && layoutList[0].plan4_id != 0) { //plan4
-                            currentPlanId = layoutList[0].plan4_id
-                            currentPlanUse = 4
-                            Log.d(mTag, "plan4, id = ${layoutList[0].plan4_id}")
-
-                        } else if (plan3StartTime in 1..currentTimestamp && layoutList[0].plan3_id != 0) { //plan3
-                            currentPlanId = layoutList[0].plan3_id
-                            currentPlanUse = 3
-                            Log.d(mTag, "plan3, id = ${layoutList[0].plan3_id}")
-
-                        } else if (plan2StartTime in 1..currentTimestamp && layoutList[0].plan2_id != 0) { //plan2
-                            currentPlanId = layoutList[0].plan2_id
-                            currentPlanUse = 2
-                            Log.d(mTag, "plan2, id = ${layoutList[0].plan2_id}")
-
-                        } //else if (planStartTime in 1..currentTimestamp) { //plan1
-                        else { //plan1
-                            if (layoutList[0].plan_id > 0) {
-                                currentPlanId = layoutList[0].plan_id
-                                currentPlanUse = 1
-                                Log.d(mTag, "plan1, id = ${layoutList[0].plan_id}")
-                            }
+                    if (adSettingList.size > 0) {
+                        val currentTimestamp = getCurrentTimeStamp()
+                        Log.d(mTag, "currentTimestamp = $currentTimestamp")
+                        if (layoutList.size > 0) {
+                            planStartTime = getTimeStampFromString(layoutList[0].plan_start_time)
+                            plan2StartTime = getTimeStampFromString(layoutList[0].plan2_start_time)
+                            plan3StartTime = getTimeStampFromString(layoutList[0].plan3_start_time)
+                            plan4StartTime = getTimeStampFromString(layoutList[0].plan4_start_time)
                         }
 
-                        Log.e(mTag, "---->currentPlanUse = $currentPlanUse")
+                        Log.d(mTag, "planStartTime = $planStartTime")
+                        Log.d(mTag, "plan2StartTime = $plan2StartTime")
+                        Log.d(mTag, "plan3StartTime = $plan3StartTime")
+                        Log.d(mTag, "plan4StartTime = $plan4StartTime")
 
-                        //get current plan idx
-                        if (currentPlanId > 0) {
-                            if (adSettingList.size > 0) {
-                                //get current plan idx
-                                for (i in adSettingList.indices) {
-                                    if (currentPlanId == adSettingList[i].plan_id) {
-                                        currentAdSettingIdx = i
-                                        break
-                                    }
+                        if (layoutList.size > 0) {
+                            if (plan4StartTime in 1..currentTimestamp && layoutList[0].plan4_id != 0) { //plan4
+                                currentPlanId = layoutList[0].plan4_id
+                                currentPlanUse = 4
+                                Log.d(mTag, "plan4, id = ${layoutList[0].plan4_id}")
+
+                            } else if (plan3StartTime in 1..currentTimestamp && layoutList[0].plan3_id != 0) { //plan3
+                                currentPlanId = layoutList[0].plan3_id
+                                currentPlanUse = 3
+                                Log.d(mTag, "plan3, id = ${layoutList[0].plan3_id}")
+
+                            } else if (plan2StartTime in 1..currentTimestamp && layoutList[0].plan2_id != 0) { //plan2
+                                currentPlanId = layoutList[0].plan2_id
+                                currentPlanUse = 2
+                                Log.d(mTag, "plan2, id = ${layoutList[0].plan2_id}")
+
+                            } //else if (planStartTime in 1..currentTimestamp) { //plan1
+                            else { //plan1
+                                if (layoutList[0].plan_id > 0) {
+                                    currentPlanId = layoutList[0].plan_id
+                                    currentPlanUse = 1
+                                    Log.d(mTag, "plan1, id = ${layoutList[0].plan_id}")
                                 }
-                            } else {
-                                currentAdSettingIdx = -1
+                            }
+
+                            Log.e(mTag, "---->currentPlanUse = $currentPlanUse")
+
+                            //get current plan idx
+                            if (currentPlanId > 0) {
+                                if (adSettingList.size > 0) {
+                                    //get current plan idx
+                                    for (i in adSettingList.indices) {
+                                        if (currentPlanId == adSettingList[i].plan_id) {
+                                            currentAdSettingIdx = i
+                                            break
+                                        }
+                                    }
+                                } else {
+                                    currentAdSettingIdx = -1
+                                }
                             }
                         }
-                    }
 
-                    Log.d(mTag, "previousPlanId = $previousPlanId, currentPlanId = $currentPlanId ")
+                        Log.d(mTag, "previousPlanId = $previousPlanId, currentPlanId = $currentPlanId ")
 
-                    if (previousPlanId != currentPlanId) {
-                        Log.d(mTag, "Time Plan change!!!")
-                        previousPlanId = currentPlanId
-                        getFirstPingResponse = false
-                    }
+                        if (previousPlanId != currentPlanId) {
+                            Log.d(mTag, "Time Plan change!!!")
+                            previousPlanId = currentPlanId
+                            getFirstPingResponse = false
+                        }
 
-                    if (!getFirstPingResponse) {
-                        getFirstPingResponse = true
-                        infoRenew = true
-                        val playAdIntent = Intent()
-                        playAdIntent.action = Constants.ACTION.ACTION_START_PLAY_AD
-                        mContext?.sendBroadcast(playAdIntent)
-                    }
-
-                    /*if (json["result"] == 0 ) {
                         if (!getFirstPingResponse) {
                             getFirstPingResponse = true
                             infoRenew = true
-
-                            if (server_ip_address != "" && server_webservice_port != "") {
-                                server_banner_folder = "$server_ip_address:$server_webservice_port/uploads/banners"
-                                server_images_folder = "$server_ip_address:$server_webservice_port/uploads/images"
-                                server_videos_folder = "$server_ip_address:$server_webservice_port/uploads/videos"
-                            }
-
-                            //get layout first
-                            val successIntent = Intent()
-                            successIntent.action = Constants.ACTION.ACTION_PING_WEB_SUCCESS
-                            mContext?.sendBroadcast(successIntent)
-                            //getLayout()
+                            val playAdIntent = Intent()
+                            playAdIntent.action = Constants.ACTION.ACTION_START_PLAY_AD
+                            mContext?.sendBroadcast(playAdIntent)
                         }
-
-                    } else if (json["result"] == 1) {
-                        Log.d(mTag, "====>Layout changed.")
-                        //orientationChanged = false
-                        //getLayout()
-                        infoRenew = true
-                        val successIntent = Intent()
-                        successIntent.action = Constants.ACTION.ACTION_PING_WEB_SUCCESS
-                        mContext?.sendBroadcast(successIntent)
-                    } else if (json["result"] == -1) {
-                        Log.d(mTag, "->no deviceID")
-                    }*/
-
+                    } else {
+                        Log.e(mTag, "adSettingList.size == 0")
+                    }
                 } catch (ex: Exception) {
-
                     Log.e(mTag, "check plan change error")
-
                 }
             }
         }
@@ -2415,9 +2158,9 @@ class MainActivity : AppCompatActivity() {
                             infoRenew = true
 
                             if (server_ip_address != "" && server_webservice_port != "") {
-                                server_banner_folder = "$server_ip_address:$server_webservice_port/uploads/banners"
-                                server_images_folder = "$server_ip_address:$server_webservice_port/uploads/images"
-                                server_videos_folder = "$server_ip_address:$server_webservice_port/uploads/videos"
+                                server_banner_folder = "$httpPrefix$server_ip_address:$server_webservice_port/uploads/banners"
+                                server_images_folder = "$httpPrefix$server_ip_address:$server_webservice_port/uploads/images"
+                                server_videos_folder = "$httpPrefix$server_ip_address:$server_webservice_port/uploads/videos"
                             }
 
                             //get layout first
@@ -3324,15 +3067,17 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun clearBannersNotInBannerList() {
-        Log.d(mTag, "clearBannersNotInBannerList")
-        val directory = File(dest_banner_folder)
-        val files = directory.listFiles()
+        Log.d(mTag, "=== clearBannersNotInBannerList start ===")
 
-        if (directory.isDirectory && files != null) {
-            for (i in files.indices) {
-                var found = false
+        if (adSettingList.size > 0) {
 
-                if (adSettingList.size > 0) {
+            val directory = File(dest_banner_folder)
+            val files = directory.listFiles()
+
+            if (directory.isDirectory && files != null) {
+                for (i in files.indices) {
+                    var found = false
+
                     for (j in adSettingList.indices) {
                         if (adSettingList[j].plan_banner.isNotEmpty()) {
                             val imagesArray = adSettingList[j].plan_banner.split(",")
@@ -3344,51 +3089,43 @@ class MainActivity : AppCompatActivity() {
                             }
                         }
                     }
-                }
 
-                /*
-                for (j in imageList.indices) {
-                    if (files[i].name == imageList[j]) {
-                        found = true
+                    if (!found) { //not found in bannerList, delete it!
+                        val deletePath = "$dest_banner_folder${files[i].name}"
+                        val deleteFile = File(deletePath)
+                        val deleteUri  = Uri.fromFile(deleteFile)
+                        Log.d(mTag, "deleteUri = $deleteUri")
+                        try {
+                            if (deleteFile.exists()) {
+                                deleteFile.delete()
+                                //val cr = contentResolver
+                                //cr.delete(deleteUri, null, null)
+                                Log.d(mTag, "Delete $deletePath")
+                            }
 
-                        break
-                    }
-                }
-                */
-                if (!found) { //not found in bannerList, delete it!
-                    val deletePath = "$dest_banner_folder${files[i].name}"
-                    val deleteFile = File(deletePath)
-                    val deleteUri  = Uri.fromFile(deleteFile)
-                    Log.d(mTag, "deleteUri = $deleteUri")
-                    try {
-                        if (deleteFile.exists()) {
-                            deleteFile.delete()
-                            //val cr = contentResolver
-                            //cr.delete(deleteUri, null, null)
-                            Log.d(mTag, "Delete $deletePath")
+                        } catch (e: java.lang.Exception) {
+                            e.printStackTrace()
                         }
-
-                    } catch (e: java.lang.Exception) {
-                        e.printStackTrace()
                     }
-
-
                 }
-
             }
+        } else {
+            Log.e(mTag , "adSettingList.size == 0")
         }
+        Log.d(mTag, "=== clearBannersNotInBannerList end ===")
     }
 
     fun clearImagesNotInImageList() {
-        Log.d(mTag, "clearImagesNotInImageList")
-        val directory = File(dest_images_folder)
-        val files = directory.listFiles()
+        Log.d(mTag, "=== clearImagesNotInImageList start ===")
+        if (adSettingList.size > 0) {
 
-        if (directory.isDirectory && files != null) {
-            for (i in files.indices) {
-                var found = false
+            val directory = File(dest_images_folder)
+            val files = directory.listFiles()
 
-                if (adSettingList.size > 0) {
+            if (directory.isDirectory && files != null) {
+                for (i in files.indices) {
+                    var found = false
+
                     for (j in adSettingList.indices) {
                         if (adSettingList[j].plan_images.isNotEmpty()) {
                             val imagesArray = adSettingList[j].plan_images.split(",")
@@ -3400,55 +3137,46 @@ class MainActivity : AppCompatActivity() {
                             }
                         }
                     }
-                }
 
-                /*
-                for (j in imageList.indices) {
-                    if (files[i].name == imageList[j]) {
-                        found = true
+                    if (!found) { //not found in imageList, delete it!
+                        val deletePath = "$dest_images_folder${files[i].name}"
+                        val deleteFile = File(deletePath)
+                        val deleteUri  = Uri.fromFile(deleteFile)
+                        Log.d(mTag, "deleteUri = $deleteUri")
+                        try {
+                            if (deleteFile.exists()) {
+                                deleteFile.delete()
+                                //val cr = contentResolver
+                                //cr.delete(deleteUri, null, null)
+                                Log.d(mTag, "Delete $deletePath")
+                            }
 
-                        break
-                    }
-                }
-                */
-                if (!found) { //not found in imageList, delete it!
-                    val deletePath = "$dest_images_folder${files[i].name}"
-                    val deleteFile = File(deletePath)
-                    val deleteUri  = Uri.fromFile(deleteFile)
-                    Log.d(mTag, "deleteUri = $deleteUri")
-                    try {
-                        if (deleteFile.exists()) {
-                            deleteFile.delete()
-                            //val cr = contentResolver
-                            //cr.delete(deleteUri, null, null)
-                            Log.d(mTag, "Delete $deletePath")
+                        } catch (e: java.lang.Exception) {
+                            e.printStackTrace()
                         }
-
-                    } catch (e: java.lang.Exception) {
-                        e.printStackTrace()
                     }
-
-
                 }
-
             }
+        } else {
+            Log.e(mTag , "adSettingList.size == 0")
         }
+        Log.d(mTag, "=== clearImagesNotInImageList end ===")
     }
 
     fun clearVideosNotInVideoList() {
-        Log.d(mTag, "clearVideosNotInVideoList")
-        val directory = File(dest_videos_folder)
-        val files = directory.listFiles()
+        Log.d(mTag, "=== clearVideosNotInVideoList start ===")
 
-        Log.d(mTag, "files -> $files")
+        if (adSettingList.size > 0) {
+            val directory = File(dest_videos_folder)
+            val files = directory.listFiles()
 
-        if (directory.isDirectory && files != null) {
+            Log.d(mTag, "files -> $files")
 
-            for (i in files.indices) {
-                var found = false
+            if (directory.isDirectory && files != null) {
 
+                for (i in files.indices) {
+                    var found = false
 
-                if (adSettingList.size > 0) {
                     for (j in adSettingList.indices) {
                         if (adSettingList[j].plan_videos.isNotEmpty()) {
                             val videosArray = adSettingList[j].plan_videos.split(",")
@@ -3460,158 +3188,157 @@ class MainActivity : AppCompatActivity() {
                             }
                         }
                     }
-                }
-                /*
-                for (j in videoList.indices) {
-                    if (files[i].name == videoList[j]) {
-                        found = true
 
-                        break
-                    }
-                }
-                */
+                    if (!found) { //not found in imageList, delete it!
+                        val deletePath = "$dest_videos_folder${files[i].name}"
+                        val deleteFile = File(deletePath)
+                        val deleteUri  = Uri.fromFile(deleteFile)
+                        Log.d(mTag, "deleteUri = $deleteUri")
+                        try {
+                            if (deleteFile.exists()) {
+                                deleteFile.delete()
+                                //val cr = contentResolver
+                                //cr.delete(deleteUri, null, null)
+                                Log.d(mTag, "Delete $deletePath")
+                            }
 
-                if (!found) { //not found in imageList, delete it!
-                    val deletePath = "$dest_videos_folder${files[i].name}"
-                    val deleteFile = File(deletePath)
-                    val deleteUri  = Uri.fromFile(deleteFile)
-                    Log.d(mTag, "deleteUri = $deleteUri")
-                    try {
-                        if (deleteFile.exists()) {
-                            deleteFile.delete()
-                            //val cr = contentResolver
-                            //cr.delete(deleteUri, null, null)
-                            Log.d(mTag, "Delete $deletePath")
+                        } catch (e: java.lang.Exception) {
+                            e.printStackTrace()
                         }
-
-                    } catch (e: java.lang.Exception) {
-                        e.printStackTrace()
                     }
                 }
             }
+        } else {
+            Log.e(mTag , "adSettingList.size == 0")
         }
+        Log.d(mTag, "=== clearVideosNotInVideoList end ===")
     }
 
     fun clearMixNotInMixList() {
-        Log.d(mTag, "clearMixNotInVideoList")
-        val imageDirectory = File(dest_images_folder)
-        val videoDirectory = File(dest_videos_folder)
-        val imageFiles = imageDirectory.listFiles()
-        val videoFiles = videoDirectory.listFiles()
+        Log.d(mTag, "=== clearMixNotInMixList start ===")
+
+        if (adSettingList.size > 0) {
+            val imageDirectory = File(dest_images_folder)
+            val videoDirectory = File(dest_videos_folder)
+            val imageFiles = imageDirectory.listFiles()
+            val videoFiles = videoDirectory.listFiles()
 
 
-        Log.d(mTag, "imageFiles -> $imageFiles")
-        Log.d(mTag, "videoFiles -> $videoFiles")
+            Log.d(mTag, "imageFiles -> $imageFiles")
+            Log.d(mTag, "videoFiles -> $videoFiles")
 
-        //images
-        if (imageDirectory.isDirectory && imageFiles != null) {
+            //images
+            if (imageDirectory.isDirectory && imageFiles != null) {
 
-            for (i in imageFiles.indices) {
-                var found = false
+                for (i in imageFiles.indices) {
+                    var found = false
 
-                if (adSettingList.size > 0) {
-                    for (j in adSettingList.indices) {
-                        //images
-                        if (adSettingList[j].plan_images.isNotEmpty()) {
-                            val imagesArray = adSettingList[j].plan_images.split(",")
-                            for (k in imagesArray.indices) {
-                                if (imageFiles[i].name == imagesArray[k]) {
-                                    found = true
-                                    break
+                    if (adSettingList.size > 0) {
+                        for (j in adSettingList.indices) {
+                            //images
+                            if (adSettingList[j].plan_images.isNotEmpty()) {
+                                val imagesArray = adSettingList[j].plan_images.split(",")
+                                for (k in imagesArray.indices) {
+                                    if (imageFiles[i].name == imagesArray[k]) {
+                                        found = true
+                                        break
+                                    }
                                 }
                             }
-                        }
-                        //mix
-                        if (adSettingList[j].plan_mix.isNotEmpty()) {
-                            val mixArray = adSettingList[j].plan_mix.split(",")
-                            for (k in mixArray.indices) {
-                                if (imageFiles[i].name == mixArray[k]) {
-                                    found = true
-                                    break
+                            //mix
+                            if (adSettingList[j].plan_mix.isNotEmpty()) {
+                                val mixArray = adSettingList[j].plan_mix.split(",")
+                                for (k in mixArray.indices) {
+                                    if (imageFiles[i].name == mixArray[k]) {
+                                        found = true
+                                        break
+                                    }
                                 }
                             }
-                        }
 
-                        if (found) {
-                            break
+                            if (found) {
+                                break
+                            }
                         }
                     }
-                }
 
-                if (!found) { //not found in imageList, delete it!
-                    val deletePath = "$dest_images_folder${imageFiles[i].name}"
-                    val deleteFile = File(deletePath)
-                    val deleteUri  = Uri.fromFile(deleteFile)
-                    Log.d(mTag, "deleteUri = $deleteUri")
-                    try {
-                        if (deleteFile.exists()) {
-                            deleteFile.delete()
-                            //val cr = contentResolver
-                            //cr.delete(deleteUri, null, null)
-                            Log.d(mTag, "Delete $deletePath")
-                        }
-
-                    } catch (e: java.lang.Exception) {
-                        e.printStackTrace()
-                    }
-                }
-            }
-        }
-        //videos
-        if (videoDirectory.isDirectory && videoFiles != null) {
-
-            for (i in videoFiles.indices) {
-                var found = false
-
-                if (adSettingList.size > 0) {
-                    for (j in adSettingList.indices) {
-                        //videos
-                        if (adSettingList[j].plan_videos.isNotEmpty()) {
-                            val videosArray = adSettingList[j].plan_videos.split(",")
-                            for (k in videosArray.indices) {
-                                if (videoFiles[i].name == videosArray[k]) {
-                                    found = true
-                                    break
-                                }
+                    if (!found) { //not found in imageList and mixList, delete it!
+                        val deletePath = "$dest_images_folder${imageFiles[i].name}"
+                        val deleteFile = File(deletePath)
+                        val deleteUri  = Uri.fromFile(deleteFile)
+                        Log.d(mTag, "deleteUri = $deleteUri")
+                        try {
+                            if (deleteFile.exists()) {
+                                deleteFile.delete()
+                                //val cr = contentResolver
+                                //cr.delete(deleteUri, null, null)
+                                Log.d(mTag, "Delete $deletePath")
                             }
-                        }
-                        //mix
-                        if (adSettingList[j].plan_mix.isNotEmpty()) {
-                            val mixArray = adSettingList[j].plan_mix.split(",")
-                            for (k in mixArray.indices) {
-                                if (videoFiles[i].name == mixArray[k]) {
-                                    found = true
-                                    break
-                                }
-                            }
-                        }
 
-                        if (found) {
-                            break
+                        } catch (e: java.lang.Exception) {
+                            e.printStackTrace()
                         }
-                    }
-                }
-
-                if (!found) { //not found in imageList, delete it!
-                    val deletePath = "$dest_videos_folder${videoFiles[i].name}"
-                    val deleteFile = File(deletePath)
-                    val deleteUri  = Uri.fromFile(deleteFile)
-                    Log.d(mTag, "deleteUri = $deleteUri")
-                    try {
-                        if (deleteFile.exists()) {
-                            deleteFile.delete()
-                            //val cr = contentResolver
-                            //cr.delete(deleteUri, null, null)
-                            Log.d(mTag, "Delete $deletePath")
-                        }
-
-                    } catch (e: java.lang.Exception) {
-                        e.printStackTrace()
                     }
                 }
             }
-        }
+            //videos
+            if (videoDirectory.isDirectory && videoFiles != null) {
 
+                for (i in videoFiles.indices) {
+                    var found = false
+
+                    if (adSettingList.size > 0) {
+                        for (j in adSettingList.indices) {
+                            //videos
+                            if (adSettingList[j].plan_videos.isNotEmpty()) {
+                                val videosArray = adSettingList[j].plan_videos.split(",")
+                                for (k in videosArray.indices) {
+                                    if (videoFiles[i].name == videosArray[k]) {
+                                        found = true
+                                        break
+                                    }
+                                }
+                            }
+                            //mix
+                            if (adSettingList[j].plan_mix.isNotEmpty()) {
+                                val mixArray = adSettingList[j].plan_mix.split(",")
+                                for (k in mixArray.indices) {
+                                    if (videoFiles[i].name == mixArray[k]) {
+                                        found = true
+                                        break
+                                    }
+                                }
+                            }
+
+                            if (found) {
+                                break
+                            }
+                        }
+                    }
+
+                    if (!found) { //not found in videoList and mixList, delete it!
+                        val deletePath = "$dest_videos_folder${videoFiles[i].name}"
+                        val deleteFile = File(deletePath)
+                        val deleteUri  = Uri.fromFile(deleteFile)
+                        Log.d(mTag, "deleteUri = $deleteUri")
+                        try {
+                            if (deleteFile.exists()) {
+                                deleteFile.delete()
+                                //val cr = contentResolver
+                                //cr.delete(deleteUri, null, null)
+                                Log.d(mTag, "Delete $deletePath")
+                            }
+
+                        } catch (e: java.lang.Exception) {
+                            e.printStackTrace()
+                        }
+                    }
+                }
+            }
+        } else {
+            Log.e(mTag , "adSettingList.size == 0")
+        }
+        Log.d(mTag, "=== clearMixNotInMixList end ===")
     }
 
     @SuppressLint("SourceLockedOrientationActivity")
@@ -4266,7 +3993,7 @@ class MainActivity : AppCompatActivity() {
                             //videoViewCenter
                             if (videoViewCenter == null) {
                                 videoViewCenter = VideoView(mContext)
-                                videoViewLayoutCenter!!.setOnTouchListener(OnTouchListener { v, event -> // do nothing here......
+                                videoViewCenter!!.setOnTouchListener(OnTouchListener { v, event -> // do nothing here......
                                     true
                                 })
                             }
@@ -4336,9 +4063,7 @@ class MainActivity : AppCompatActivity() {
                             //video
                             if (videoViewLayoutCenter == null) {
                                 videoViewLayoutCenter = RelativeLayout(mContext)
-                                videoViewLayoutCenter!!.setOnTouchListener(OnTouchListener { v, event -> // do nothing here......
-                                    true
-                                })
+
                             }
                             videoViewLayoutCenter!!.removeAllViews()
                             videoViewLayoutCenter!!.layoutParams = RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT)
@@ -4348,6 +4073,9 @@ class MainActivity : AppCompatActivity() {
                             //videoViewCenter
                             if (videoViewCenter == null) {
                                 videoViewCenter = VideoView(mContext)
+                                videoViewCenter!!.setOnTouchListener(OnTouchListener { v, event -> // do nothing here......
+                                    true
+                                })
                             }
                             if (mix_video_scale_type == 1) {
                                 val layoutParams = RelativeLayout.LayoutParams(
@@ -5634,38 +5362,61 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun checkAndRequestPermissions() {
+        var readPermission: Int = -1
+        var writePermission: Int = -1
+        var readMediaVideoPermission: Int = -1
+        var readMediaImagesPermission: Int = -1
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.R) { //API < 30, Android 11
+            readPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
 
-        val readPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
+            writePermission = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+        } else { //API > 30, Android 12+
+            readMediaVideoPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_VIDEO)
 
-        val writePermission = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+            readMediaImagesPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_IMAGES)
+        }
 
         val networkPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.INTERNET)
 
-        val accessNetworkStatePermission = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_NETWORK_STATE)
+        //val accessNetworkStatePermission = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_NETWORK_STATE)
 
-        val accessWiFiStatePermission = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_WIFI_STATE)
+        //val accessWiFiStatePermission = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_WIFI_STATE)
 
-        val changeWifiStatePermissions = ContextCompat.checkSelfPermission(this, Manifest.permission.CHANGE_WIFI_STATE)
+        //val changeWifiStatePermissions = ContextCompat.checkSelfPermission(this, Manifest.permission.CHANGE_WIFI_STATE)
 
-        val coarsePermission = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
+        //val coarsePermission = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
 
         //val installPackagesPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.REQUEST_INSTALL_PACKAGES)
 
         val listPermissionsNeeded = ArrayList<String>()
 
-        if (readPermission != PackageManager.PERMISSION_GRANTED) {
-            listPermissionsNeeded.add(Manifest.permission.READ_EXTERNAL_STORAGE)
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.R) {
+            if (readPermission != PackageManager.PERMISSION_GRANTED) {
+                listPermissionsNeeded.add(Manifest.permission.READ_EXTERNAL_STORAGE)
+            }
+
+            if (writePermission != PackageManager.PERMISSION_GRANTED) {
+                listPermissionsNeeded.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+            }
+        } else {
+            if (readMediaVideoPermission != PackageManager.PERMISSION_GRANTED) {
+                listPermissionsNeeded.add(Manifest.permission.READ_MEDIA_VIDEO)
+            }
+
+            if (readMediaImagesPermission != PackageManager.PERMISSION_GRANTED) {
+                listPermissionsNeeded.add(Manifest.permission.READ_MEDIA_IMAGES)
+            }
         }
 
-        if (writePermission != PackageManager.PERMISSION_GRANTED) {
-            listPermissionsNeeded.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-        }
+
+
+
 
         if (networkPermission != PackageManager.PERMISSION_GRANTED) {
             listPermissionsNeeded.add(Manifest.permission.INTERNET)
         }
 
-        if (accessNetworkStatePermission != PackageManager.PERMISSION_GRANTED) {
+        /*if (accessNetworkStatePermission != PackageManager.PERMISSION_GRANTED) {
             listPermissionsNeeded.add(Manifest.permission.ACCESS_NETWORK_STATE)
         }
 
@@ -5679,7 +5430,7 @@ class MainActivity : AppCompatActivity() {
 
         if (coarsePermission != PackageManager.PERMISSION_GRANTED) {
             listPermissionsNeeded.add(Manifest.permission.ACCESS_COARSE_LOCATION)
-        }
+        }*/
 
         /*if (installPackagesPermission != PackageManager.PERMISSION_GRANTED) {
             listPermissionsNeeded.add(Manifest.permission.REQUEST_INSTALL_PACKAGES)
@@ -5727,11 +5478,13 @@ class MainActivity : AppCompatActivity() {
                 // Initialize the map with both permissions
                 perms[Manifest.permission.READ_EXTERNAL_STORAGE] = PackageManager.PERMISSION_GRANTED
                 perms[Manifest.permission.WRITE_EXTERNAL_STORAGE] = PackageManager.PERMISSION_GRANTED
-                perms[Manifest.permission.INTERNET] = PackageManager.PERMISSION_GRANTED
-                perms[Manifest.permission.ACCESS_NETWORK_STATE] = PackageManager.PERMISSION_GRANTED
-                perms[Manifest.permission.ACCESS_WIFI_STATE] = PackageManager.PERMISSION_GRANTED
-                perms[Manifest.permission.CHANGE_WIFI_STATE] = PackageManager.PERMISSION_GRANTED
-                perms[Manifest.permission.ACCESS_COARSE_LOCATION] = PackageManager.PERMISSION_GRANTED
+                perms[Manifest.permission.READ_MEDIA_VIDEO] = PackageManager.PERMISSION_GRANTED
+                perms[Manifest.permission.READ_MEDIA_IMAGES] = PackageManager.PERMISSION_GRANTED
+                //perms[Manifest.permission.INTERNET] = PackageManager.PERMISSION_GRANTED
+                //perms[Manifest.permission.ACCESS_NETWORK_STATE] = PackageManager.PERMISSION_GRANTED
+                //perms[Manifest.permission.ACCESS_WIFI_STATE] = PackageManager.PERMISSION_GRANTED
+                //perms[Manifest.permission.CHANGE_WIFI_STATE] = PackageManager.PERMISSION_GRANTED
+                //perms[Manifest.permission.ACCESS_COARSE_LOCATION] = PackageManager.PERMISSION_GRANTED
                 //perms[Manifest.permission.REQUEST_INSTALL_PACKAGES] = PackageManager.PERMISSION_GRANTED
                 //perms.put(Manifest.permission.ACCESS_WIFI_STATE, PackageManager.PERMISSION_GRANTED);
                 // Fill with actual results from user
@@ -5739,17 +5492,19 @@ class MainActivity : AppCompatActivity() {
                 if (grantResults.isNotEmpty()) {
                     for (i in permissions.indices) {
                         perms[permissions[i]] = grantResults[i]
-                        Log.d(mTag, "perms[permissions[$i]] = ${permissions[i]}")
+                        Log.d(mTag, "perms[permissions[$i]] = ${perms[permissions[i]]}")
 
                     }
                     // Check for both permissions
                     if (perms[Manifest.permission.READ_EXTERNAL_STORAGE] == PackageManager.PERMISSION_GRANTED
                         && perms[Manifest.permission.WRITE_EXTERNAL_STORAGE] == PackageManager.PERMISSION_GRANTED
-                        && perms[Manifest.permission.INTERNET] == PackageManager.PERMISSION_GRANTED
-                        && perms[Manifest.permission.ACCESS_NETWORK_STATE] == PackageManager.PERMISSION_GRANTED
-                        && perms[Manifest.permission.ACCESS_WIFI_STATE] == PackageManager.PERMISSION_GRANTED
-                        && perms[Manifest.permission.CHANGE_WIFI_STATE] == PackageManager.PERMISSION_GRANTED
-                        && perms[Manifest.permission.ACCESS_COARSE_LOCATION] == PackageManager.PERMISSION_GRANTED
+                        && perms[Manifest.permission.READ_MEDIA_VIDEO] == PackageManager.PERMISSION_GRANTED
+                        && perms[Manifest.permission.READ_MEDIA_IMAGES] == PackageManager.PERMISSION_GRANTED
+                        //&& perms[Manifest.permission.INTERNET] == PackageManager.PERMISSION_GRANTED
+                        //&& perms[Manifest.permission.ACCESS_NETWORK_STATE] == PackageManager.PERMISSION_GRANTED
+                        //&& perms[Manifest.permission.ACCESS_WIFI_STATE] == PackageManager.PERMISSION_GRANTED
+                        //&& perms[Manifest.permission.CHANGE_WIFI_STATE] == PackageManager.PERMISSION_GRANTED
+                        //&& perms[Manifest.permission.ACCESS_COARSE_LOCATION] == PackageManager.PERMISSION_GRANTED
                         //&& perms[Manifest.permission.REQUEST_INSTALL_PACKAGES] == PackageManager.PERMISSION_GRANTED
                     ) {
                         Log.d(mTag, "permission granted")
@@ -5776,6 +5531,14 @@ class MainActivity : AppCompatActivity() {
                             || ActivityCompat.shouldShowRequestPermissionRationale(
                                 this,
                                 Manifest.permission.WRITE_EXTERNAL_STORAGE
+                            )
+                            || ActivityCompat.shouldShowRequestPermissionRationale(
+                                this,
+                                Manifest.permission.READ_MEDIA_VIDEO
+                            )
+                            || ActivityCompat.shouldShowRequestPermissionRationale(
+                                this,
+                                Manifest.permission.READ_MEDIA_IMAGES
                             )
                             ||ActivityCompat.shouldShowRequestPermissionRationale(
                                 this,
@@ -5874,15 +5637,15 @@ class MainActivity : AppCompatActivity() {
         val btnConfirm = promptView.findViewById<Button>(R.id.btnDialogConfirm)
 
         //editTextDialogServerIP.text = "http://"
-        val initStr = "http://"
-        editTextDialogServerIP.setText(initStr)
-        editTextDialogServerIP.setSelection(initStr.length)
+        //val initStr = "http://"
+        editTextDialogServerIP.setText("")
+        //editTextDialogServerIP.setSelection(initStr.length)
         editTextDialogServerPort.setText("")
 
         alertDialogBuilder.setCancelable(false)
         btnClear!!.setOnClickListener {
-            editTextDialogServerIP.setText(initStr)
-            editTextDialogServerIP.setSelection(initStr.length)
+            editTextDialogServerIP.setText("")
+            //editTextDialogServerIP.setSelection(initStr.length)
             //editTextDialogServerIP.text = "http://"
             editTextDialogServerPort.setText("")
         }
@@ -5891,31 +5654,35 @@ class MainActivity : AppCompatActivity() {
             if (editTextDialogServerIP.text.toString() != "" &&
                 editTextDialogServerPort.text.toString() != "") {
 
-                Log.d(mTag,"IP = ${ editTextDialogServerIP.text}")
-                Log.d(mTag,"Port = ${ editTextDialogServerPort.text}")
+                val matcher: Matcher = IP_ADDRESS.matcher(editTextDialogServerIP.text.toString())
+                if (matcher.matches()) {
+                    Log.d(mTag,"IP = ${ editTextDialogServerIP.text}")
+                    Log.d(mTag,"Port = ${ editTextDialogServerPort.text}")
 
-                server_ip_address = editTextDialogServerIP.text.toString()
-                editTextDialogServerIP.setSelection(editTextDialogServerIP.length())
-                server_webservice_port = editTextDialogServerPort.text.toString()
+                    server_ip_address = editTextDialogServerIP.text.toString()
+                    editTextDialogServerIP.setSelection(editTextDialogServerIP.length())
+                    server_webservice_port = editTextDialogServerPort.text.toString()
 
-                editor = pref!!.edit()
-                editor!!.putString("SERVER_IP_ADDRESS", editTextDialogServerIP.text.toString())
-                editor!!.putString("SERVER_WEBSERVICE_PORT", editTextDialogServerPort.text.toString())
-                editor!!.apply()
+                    editor = pref!!.edit()
+                    editor!!.putString("SERVER_IP_ADDRESS", editTextDialogServerIP.text.toString())
+                    editor!!.putString("SERVER_WEBSERVICE_PORT", editTextDialogServerPort.text.toString())
+                    editor!!.apply()
 
-                val testServerIPAndPortIntent = Intent()
-                testServerIPAndPortIntent.action = Constants.ACTION.ACTION_TEST_IP_AND_PORT
-                mContext?.sendBroadcast(testServerIPAndPortIntent)
+                    val testServerIPAndPortIntent = Intent()
+                    testServerIPAndPortIntent.action = Constants.ACTION.ACTION_TEST_IP_AND_PORT
+                    mContext?.sendBroadcast(testServerIPAndPortIntent)
+
+                    alertDialogBuilder.dismiss()
+                } else {
+                    toast(getString(R.string.server_ip_input_mismatch))
+                }
             } else {
                 toast(getString(R.string.server_ip_input_empty))
-                val showAgainIntent = Intent()
-                showAgainIntent.action = Constants.ACTION.ACTION_SHOW_DIALOG_AGAIN
-                mContext?.sendBroadcast(showAgainIntent)
             }
 
 
 
-            alertDialogBuilder.dismiss()
+
         }
         alertDialogBuilder.show()
     }
