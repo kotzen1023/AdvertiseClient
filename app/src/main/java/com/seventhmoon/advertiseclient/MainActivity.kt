@@ -24,6 +24,7 @@ import android.os.Looper
 import android.os.Message
 import android.provider.Settings
 import android.service.autofill.FieldClassification.Match
+import android.text.InputType
 import android.text.TextUtils
 import android.util.DisplayMetrics
 import android.util.Log
@@ -179,7 +180,7 @@ class MainActivity : AppCompatActivity() {
     private var screenHeight: Int = 0
 
     var getFirstPingResponse = false
-
+    private var receivePingSuccess = false
 
     private var toastHandle: Toast? = null
 
@@ -2157,9 +2158,18 @@ class MainActivity : AppCompatActivity() {
                     }
 
                     if (json["result"] == 0 ) {
+                        //connect show
+                        if (!receivePingSuccess) {
+                            textViewShowInitSuccess!!.visibility = View.VISIBLE
+                            textViewShowInitSuccess!!.text = getString(R.string.ad_client_connect_server_success_no_setting)
+                            receivePingSuccess = true
+                        }
+
                         if (!getFirstPingResponse) {
                             getFirstPingResponse = true
                             infoRenew = true
+
+
 
                             if (server_ip_address != "" && server_webservice_port != "") {
                                 server_banner_folder = "$httpPrefix$server_ip_address:$server_webservice_port/uploads/banners"
@@ -2174,8 +2184,17 @@ class MainActivity : AppCompatActivity() {
                             //getLayout()
                         }
 
+
+
                     } else if (json["result"] == 1) {
                         Log.d(mTag, "====>Layout changed.")
+
+                        //connect show
+                        if (!receivePingSuccess) {
+                            textViewShowInitSuccess!!.visibility = View.VISIBLE
+                            textViewShowInitSuccess!!.text = getString(R.string.ad_client_connect_server_success_no_setting)
+                            receivePingSuccess = true
+                        }
                         //orientationChanged = false
                         //getLayout()
                         infoRenew = true
@@ -5642,8 +5661,11 @@ class MainActivity : AppCompatActivity() {
 
         //editTextDialogServerIP.text = "http://"
         //val initStr = "http://"
+
         editTextDialogServerIP.setText("")
         //editTextDialogServerIP.setSelection(initStr.length)
+        editTextDialogServerPort.inputType = InputType.TYPE_CLASS_NUMBER
+
         editTextDialogServerPort.setText("")
 
         alertDialogBuilder.setCancelable(false)
@@ -5659,7 +5681,9 @@ class MainActivity : AppCompatActivity() {
                 editTextDialogServerPort.text.toString() != "") {
 
                 val matcher: Matcher = IP_ADDRESS.matcher(editTextDialogServerIP.text.toString())
-                if (matcher.matches()) {
+                val isValidIP = matcher.matches()
+                val isValidPort = checkValidPort(editTextDialogServerPort.text.toString())
+                if (isValidIP && isValidPort) {
                     Log.d(mTag,"IP = ${ editTextDialogServerIP.text}")
                     Log.d(mTag,"Port = ${ editTextDialogServerPort.text}")
 
@@ -5681,7 +5705,12 @@ class MainActivity : AppCompatActivity() {
 
                     alertDialogBuilder.dismiss()
                 } else {
-                    toast(getString(R.string.server_ip_input_mismatch))
+                    if (!isValidIP) {
+                        toast(getString(R.string.server_ip_input_mismatch))
+                    }
+                    if (!isValidPort) {
+                        toast(getString(R.string.server_port_input_mismatch))
+                    }
                 }
             } else {
                 toast(getString(R.string.server_ip_input_empty))
@@ -5803,5 +5832,17 @@ class MainActivity : AppCompatActivity() {
 
         }
 
+    }
+
+    fun checkValidPort(portStr: String): Boolean {
+        var ret = false
+
+        val portInt = portStr.toInt()
+        if (portInt in 0..65535) {
+            ret = true
+        }
+
+
+        return ret
     }
 }
