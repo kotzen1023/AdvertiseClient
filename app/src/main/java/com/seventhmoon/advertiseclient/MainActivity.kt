@@ -42,6 +42,7 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.MediaController
 import android.widget.RelativeLayout
+import android.widget.TextView
 import android.widget.Toast
 import android.widget.VideoView
 import androidx.annotation.RequiresApi
@@ -133,6 +134,7 @@ class MainActivity : AppCompatActivity() {
     private var rootView: ViewGroup? = null
     //main Linearlayout
     private var mainLinearLayout : LinearLayout ?= null
+    private var textViewShowInitSuccess : TextView ?= null
     //top
     private var linearLayoutTop : LinearLayout ?= null
     private var textViewTop : SpeedMarquee ?= null
@@ -321,6 +323,8 @@ class MainActivity : AppCompatActivity() {
         Log.d(mTag, "myPid = $myPid")
 
         rootView = findViewById<View>(android.R.id.content) as ViewGroup
+
+        textViewShowInitSuccess = findViewById(R.id.textViewShowInitSuccess)
 
         mContext = applicationContext
 
@@ -5671,6 +5675,9 @@ class MainActivity : AppCompatActivity() {
                     val testServerIPAndPortIntent = Intent()
                     testServerIPAndPortIntent.action = Constants.ACTION.ACTION_TEST_IP_AND_PORT
                     mContext?.sendBroadcast(testServerIPAndPortIntent)
+
+                    textViewShowInitSuccess!!.text = getString(R.string.ad_client_wait_for_server)
+                    textViewShowInitSuccess!!.visibility = View.VISIBLE
 
                     alertDialogBuilder.dismiss()
                 } else {

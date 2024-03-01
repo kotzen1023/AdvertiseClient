@@ -10,6 +10,16 @@
     tools:context=".MainActivity"
     android:duplicateParentState="true">
 
+    <TextView
+        android:id="@+id/textViewShowInitSuccess"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:text=""
+        android:textColor="@color/white"
+        android:textAlignment="center"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"
+        android:visibility="gone"/>
     <!--LinearLayout
         android:id="@+id/mainLinearLayout"
         android:layout_width="match_parent"
