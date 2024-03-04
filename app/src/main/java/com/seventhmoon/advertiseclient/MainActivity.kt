@@ -23,7 +23,6 @@ import android.os.Handler
 import android.os.Looper
 import android.os.Message
 import android.provider.Settings
-import android.service.autofill.FieldClassification.Match
 import android.text.InputType
 import android.text.TextUtils
 import android.util.DisplayMetrics
@@ -165,10 +164,7 @@ class MainActivity : AppCompatActivity() {
     private var linearLayoutTriangle : LinearLayout ?= null
 
     //layout weight
-    private var linearLayoutTriangleWeight : Float = 2.0F
-    private var linearLayoutTopWeight: Float = 2.0F
-    private var linearLayoutCenterWeight: Float = 2.0F
-    private var linearLayoutBottomWeight: Float = 2.0F
+    //private var linearLayoutTriangleWeight : Float = 2.0F
 
     private var mediaControllerTop: MediaController? = null
     private var mediaControllerCenter: MediaController? = null
@@ -226,7 +222,7 @@ class MainActivity : AppCompatActivity() {
         @JvmStatic var dest_videos_folder: String = ""
     }
 
-    val IP_ADDRESS: Pattern = Pattern.compile(
+    private val ipAddressPattern: Pattern = Pattern.compile(
         "((25[0-5]|2[0-4][0-9]|[0-1][0-9]{2}|[1-9][0-9]|[1-9])\\.(25[0-5]|2[0-4]"
                 + "[0-9]|[0-1][0-9]{2}|[1-9][0-9]|[1-9]|0)\\.(25[0-5]|2[0-4][0-9]|[0-1]"
                 + "[0-9]{2}|[1-9][0-9]|[1-9]|0)\\.(25[0-5]|2[0-4][0-9]|[0-1][0-9]{2}"
@@ -260,6 +256,10 @@ class MainActivity : AppCompatActivity() {
     private var defaultVideosPlayList: ArrayList<DefaultPlayVideosData> ?= ArrayList()
     private var defaultMixPlayList: ArrayList<DefaultPlayMixData> ?= ArrayList()
 
+    private var downloadBannerIdx: Int = -1
+    private var downloadImageIdx: Int = -1
+    private var downloadVideoIdx: Int = -1
+    private var downloadMixIdx: Int = -1
     private var downloadBannerComplete: Int = 0
     private var downloadImageComplete: Int = 0
     private var downloadVideoComplete: Int = 0
@@ -305,14 +305,14 @@ class MainActivity : AppCompatActivity() {
     var layoutCenter = 0
     var layoutBottom = 0
 
-    var mixMode = 0
-    var mixImageInterval = 0
-    var mix_image_scale_type = 0
-    var mix_video_scale_type = 0
+    private var mixMode = 0
+    private var mixImageInterval = 0
+    private var mixImageScaleType = 0
+    private var mixVideoScaleType = 0
 
-    var mixTopRunning = false
-    var mixCenterRunning = false
-    var mixBottomRunning = false
+    private var mixTopRunning = false
+    private var mixCenterRunning = false
+    private var mixBottomRunning = false
 
     @SuppressLint("HardwareIds")
     @RequiresApi(Build.VERSION_CODES.R)
@@ -647,11 +647,11 @@ class MainActivity : AppCompatActivity() {
                 val downloadFile = File(mixList[i])
                 //val nameWithoutExtension = downloadFile.nameWithoutExtension
                 val downloadFileExt = downloadFile.extension
-                var destPath = ""
-                if (downloadFileExt == "mp4") {
-                    destPath = "$dest_videos_folder${defaultMixPlayList!![i].getFileName()}"
+                //var destPath = ""
+                val destPath = if (downloadFileExt == "mp4") {
+                    "$dest_videos_folder${defaultMixPlayList!![i].getFileName()}"
                 } else {
-                    destPath = "$dest_images_folder${defaultMixPlayList!![i].getFileName()}"
+                    "$dest_images_folder${defaultMixPlayList!![i].getFileName()}"
                 }
 
                 Log.d(mTag, "destPath = $destPath")
@@ -2329,14 +2329,14 @@ class MainActivity : AppCompatActivity() {
                             previousPlanId = currentPlanId
                         }
 
-                        when(layoutList[0].pingWebInterval) {
-                            0 -> pingWebInterval = 60000
-                            1 -> pingWebInterval = 1000
-                            2 -> pingWebInterval = 5000
-                            3 -> pingWebInterval = 10000
-                            4 -> pingWebInterval = 15000
-                            5 -> pingWebInterval = 30000
-                            else -> pingWebInterval = 60000
+                        pingWebInterval = when(layoutList[0].pingWebInterval) {
+                            0 -> 60000
+                            1 -> 1000
+                            2 -> 5000
+                            3 -> 10000
+                            4 -> 15000
+                            5 -> 30000
+                            else -> 60000
                         }
 
                         Log.e(mTag, "prevPingWebInterval = $prevPingWebInterval, pingWebInterval = $pingWebInterval")
@@ -2369,13 +2369,13 @@ class MainActivity : AppCompatActivity() {
         }//onResponse
     }
 
-    private fun getAdSetting(plan_id: Int, plan2_id: Int, plan3_id: Int, plan4_id: Int) {
+    private fun getAdSetting(planId: Int, plan2Id: Int, plan3Id: Int, plan4Id: Int) {
         val jsonObject = JSONObject()
         try {
-            jsonObject.put("plan_id", plan_id)
-            jsonObject.put("plan2_id", plan2_id)
-            jsonObject.put("plan3_id", plan3_id)
-            jsonObject.put("plan4_id", plan4_id)
+            jsonObject.put("plan_id", planId)
+            jsonObject.put("plan2_id", plan2Id)
+            jsonObject.put("plan3_id", plan3Id)
+            jsonObject.put("plan4_id", plan4Id)
 
         } catch (e: JSONException) {
             e.printStackTrace()
@@ -2558,6 +2558,7 @@ class MainActivity : AppCompatActivity() {
                 val file = File(destPath)
                 if(!file.exists()) {
                     downloadIdx = i
+                    downloadBannerIdx = i
                     break
                 }/* else {
                     Log.d(mTag, "download file exist!")
@@ -3063,18 +3064,18 @@ class MainActivity : AppCompatActivity() {
         if (mixList.size > 0) {
             for (i in mixList.indices) {
                 //var srcPath = ""
-                var destPath = ""
+                //var destPath = ""
                 val downloadFile = File(mixList[i])
                 //val nameWithoutExtension = downloadFile.nameWithoutExtension
                 val downloadFileExt = downloadFile.extension
 
 
-                if (downloadFileExt == "mp4") { //video
+                val destPath = if (downloadFileExt == "mp4") { //video
                     //srcPath = server_videos_folder
-                    destPath = "$dest_videos_folder${mixList[i]}"
+                    "$dest_videos_folder${mixList[i]}"
                 } else { //jpg,png
                     //srcPath = server_images_folder
-                    destPath = "$dest_images_folder${mixList[i]}"
+                    "$dest_images_folder${mixList[i]}"
                 }
                 //Log.d(mTag, "srcPath = $srcPath")
                 Log.d(mTag, "destPath = $destPath")
@@ -3506,9 +3507,9 @@ class MainActivity : AppCompatActivity() {
                     val marqueeInterval = adSettingList[currentAdSettingIdx].marquee_interval
 
 
-                    val image_scale_type = adSettingList[currentAdSettingIdx].image_scale_type
-                    val video_scale_type = adSettingList[currentAdSettingIdx].video_scale_type
-                    val banner_scale_type = adSettingList[currentAdSettingIdx].banner_scale_type
+                    val imageScaleType = adSettingList[currentAdSettingIdx].image_scale_type
+                    val videoScaleType = adSettingList[currentAdSettingIdx].video_scale_type
+                    val bannerScaleType = adSettingList[currentAdSettingIdx].banner_scale_type
 
 
                     val marqueeBackground = adSettingList[currentAdSettingIdx].marquee_background
@@ -3519,8 +3520,8 @@ class MainActivity : AppCompatActivity() {
                     //for mix
                     mixMode = adSettingList[currentAdSettingIdx].mix_mode
                     mixImageInterval = adSettingList[currentAdSettingIdx].mix_image_interval
-                    mix_image_scale_type = adSettingList[currentAdSettingIdx].mix_image_scale_type
-                    mix_video_scale_type = adSettingList[currentAdSettingIdx].mix_video_scale_type
+                    mixImageScaleType = adSettingList[currentAdSettingIdx].mix_image_scale_type
+                    mixVideoScaleType = adSettingList[currentAdSettingIdx].mix_video_scale_type
 
                     var marqueePlayInterval = 60000 // 60 seconds
                     when(marqueeInterval) {
@@ -3552,7 +3553,7 @@ class MainActivity : AppCompatActivity() {
                     //mode = 0 => cycle, mode = 1 => random
                     Log.d(mTag, "marqueeMode = $marqueeMode, imagesMode = $imagesMode, videosMode = $videosMode, mixMode = $mixMode, layoutOrientation = $layoutOrientation")
 
-                    Log.d(mTag, "image_scale_type = $image_scale_type, video_scale_type = $video_scale_type, banner_scale_type = $banner_scale_type")
+                    Log.d(mTag, "imageScaleType = $imageScaleType, videoScaleType = $videoScaleType, bannerScaleType = $bannerScaleType")
 
                     Log.d(mTag, "marqueeBackground = $marqueeBackground, marqueeText = $marqueeText, marqueeSize = $marqueeSize, marqueeLocate = $marqueeLocate, marqueeSpeed = $marqueeSpeed")
 
@@ -3749,7 +3750,7 @@ class MainActivity : AppCompatActivity() {
                         linearLayoutTriangle = LinearLayout(mContext)
                     }
                     linearLayoutTriangle!!.removeAllViews()
-                    linearLayoutTriangle!!.layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT, linearLayoutTriangleWeight)
+                    linearLayoutTriangle!!.layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT)
                     //linearLayoutTriangle!!.weightSum = 4.0F
                     if (layoutOrientation in 2..5) {
                         if (layoutOrientation == 2 || layoutOrientation == 3) { //left and right triangle
@@ -3816,7 +3817,7 @@ class MainActivity : AppCompatActivity() {
                             imageViewTop2!!.visibility = View.GONE
                             //imageViewTop2!!.scaleType = ImageView.ScaleType.CENTER_INSIDE
                             linearLayoutTop!!.addView(imageViewTop2)
-                            if (image_scale_type == 1) { //fillXY
+                            if (imageScaleType == 1) { //fillXY
                                 imageViewTop!!.scaleType = ImageView.ScaleType.FIT_XY
                                 imageViewTop2!!.scaleType = ImageView.ScaleType.FIT_XY
                             } else { //default
@@ -3842,7 +3843,7 @@ class MainActivity : AppCompatActivity() {
                                 })
                             }
                             //videoViewTop!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-                            if (video_scale_type == 1) {
+                            if (videoScaleType == 1) {
                                 val layoutParams = RelativeLayout.LayoutParams(
                                     RelativeLayout.LayoutParams.MATCH_PARENT,
                                     RelativeLayout.LayoutParams.WRAP_CONTENT
@@ -3866,7 +3867,7 @@ class MainActivity : AppCompatActivity() {
                             imageViewTop!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
                             imageViewTop!!.visibility = View.GONE
                             linearLayoutTop!!.addView(imageViewTop)
-                            if (banner_scale_type == 1) { //fillXY
+                            if (bannerScaleType == 1) { //fillXY
                                 imageViewTop!!.scaleType = ImageView.ScaleType.FIT_XY
                             } else { //default
                                 imageViewTop!!.scaleType = ImageView.ScaleType.CENTER_INSIDE
@@ -3897,7 +3898,7 @@ class MainActivity : AppCompatActivity() {
                             imageViewTop2!!.visibility = View.GONE
                             //imageViewTop2!!.scaleType = ImageView.ScaleType.CENTER_INSIDE
                             linearLayoutTop!!.addView(imageViewTop2)
-                            if (mix_image_scale_type == 1) { //fillXY
+                            if (mixImageScaleType == 1) { //fillXY
                                 imageViewTop!!.scaleType = ImageView.ScaleType.FIT_XY
                                 imageViewTop2!!.scaleType = ImageView.ScaleType.FIT_XY
                             } else { //default
@@ -3921,7 +3922,7 @@ class MainActivity : AppCompatActivity() {
                                 })
                             }
                             //videoViewTop!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-                            if (mix_video_scale_type == 1) {
+                            if (mixVideoScaleType == 1) {
                                 val layoutParams = RelativeLayout.LayoutParams(
                                     RelativeLayout.LayoutParams.MATCH_PARENT,
                                     RelativeLayout.LayoutParams.WRAP_CONTENT
@@ -3994,7 +3995,7 @@ class MainActivity : AppCompatActivity() {
                             imageViewCenter2!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
                             imageViewCenter2!!.visibility = View.GONE
                             linearLayoutCenter!!.addView(imageViewCenter2)
-                            if (image_scale_type == 1) { //fillXY
+                            if (imageScaleType == 1) { //fillXY
                                 imageViewCenter!!.scaleType = ImageView.ScaleType.FIT_XY
                                 imageViewCenter2!!.scaleType = ImageView.ScaleType.FIT_XY
                             } else { //default
@@ -4021,7 +4022,7 @@ class MainActivity : AppCompatActivity() {
                                 })
                             }
                             //videoViewCenter!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-                            if (video_scale_type == 1) {
+                            if (videoScaleType == 1) {
                                 val layoutParams = RelativeLayout.LayoutParams(
                                     RelativeLayout.LayoutParams.MATCH_PARENT,
                                     RelativeLayout.LayoutParams.WRAP_CONTENT
@@ -4045,7 +4046,7 @@ class MainActivity : AppCompatActivity() {
                             imageViewCenter!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
                             imageViewCenter!!.visibility = View.GONE
                             linearLayoutCenter!!.addView(imageViewCenter)
-                            if (banner_scale_type == 1) { //fillXY
+                            if (bannerScaleType == 1) { //fillXY
                                 imageViewCenter!!.scaleType = ImageView.ScaleType.FIT_XY
                             } else { //default
                                 imageViewCenter!!.scaleType = ImageView.ScaleType.CENTER_INSIDE
@@ -4076,7 +4077,7 @@ class MainActivity : AppCompatActivity() {
                             imageViewCenter2!!.visibility = View.GONE
                             //imageViewTop2!!.scaleType = ImageView.ScaleType.CENTER_INSIDE
                             linearLayoutCenter!!.addView(imageViewCenter2)
-                            if (mix_image_scale_type == 1) { //fillXY
+                            if (mixImageScaleType == 1) { //fillXY
                                 imageViewCenter!!.scaleType = ImageView.ScaleType.FIT_XY
                                 imageViewCenter2!!.scaleType = ImageView.ScaleType.FIT_XY
                             } else { //default
@@ -4100,7 +4101,7 @@ class MainActivity : AppCompatActivity() {
                                     true
                                 })
                             }
-                            if (mix_video_scale_type == 1) {
+                            if (mixVideoScaleType == 1) {
                                 val layoutParams = RelativeLayout.LayoutParams(
                                         RelativeLayout.LayoutParams.MATCH_PARENT,
                                         RelativeLayout.LayoutParams.WRAP_CONTENT
@@ -4172,7 +4173,7 @@ class MainActivity : AppCompatActivity() {
                             imageViewBottom2!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
                             imageViewBottom2!!.visibility = View.GONE
                             linearLayoutBottom!!.addView(imageViewBottom2)
-                            if (image_scale_type == 1) { //fillXY
+                            if (imageScaleType == 1) { //fillXY
                                 imageViewBottom!!.scaleType = ImageView.ScaleType.FIT_XY
                                 imageViewBottom2!!.scaleType = ImageView.ScaleType.FIT_XY
                             } else { //default
@@ -4198,7 +4199,7 @@ class MainActivity : AppCompatActivity() {
                                 })
                             }
                             //videoViewBottom!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-                            if (video_scale_type == 1) {
+                            if (videoScaleType == 1) {
                                 val layoutParams = RelativeLayout.LayoutParams(
                                     RelativeLayout.LayoutParams.MATCH_PARENT,
                                     RelativeLayout.LayoutParams.WRAP_CONTENT
@@ -4221,7 +4222,7 @@ class MainActivity : AppCompatActivity() {
                             imageViewBottom!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
                             imageViewBottom!!.visibility = View.GONE
                             linearLayoutBottom!!.addView(imageViewBottom)
-                            if (banner_scale_type == 1) { //fillXY
+                            if (bannerScaleType == 1) { //fillXY
                                 imageViewBottom!!.scaleType = ImageView.ScaleType.FIT_XY
                             } else { //default
                                 imageViewBottom!!.scaleType = ImageView.ScaleType.CENTER_INSIDE
@@ -4252,7 +4253,7 @@ class MainActivity : AppCompatActivity() {
                             imageViewBottom2!!.visibility = View.GONE
                             //imageViewTop2!!.scaleType = ImageView.ScaleType.CENTER_INSIDE
                             linearLayoutBottom!!.addView(imageViewBottom2)
-                            if (mix_image_scale_type == 1) { //fillXY
+                            if (mixImageScaleType == 1) { //fillXY
                                 imageViewBottom!!.scaleType = ImageView.ScaleType.FIT_XY
                                 imageViewBottom2!!.scaleType = ImageView.ScaleType.FIT_XY
                             } else { //default
@@ -4275,7 +4276,7 @@ class MainActivity : AppCompatActivity() {
                                     true
                                 })
                             }
-                            if (mix_video_scale_type == 1) {
+                            if (mixVideoScaleType == 1) {
                                 val layoutParams = RelativeLayout.LayoutParams(
                                         RelativeLayout.LayoutParams.MATCH_PARENT,
                                         RelativeLayout.LayoutParams.WRAP_CONTENT
@@ -5680,7 +5681,7 @@ class MainActivity : AppCompatActivity() {
             if (editTextDialogServerIP.text.toString() != "" &&
                 editTextDialogServerPort.text.toString() != "") {
 
-                val matcher: Matcher = IP_ADDRESS.matcher(editTextDialogServerIP.text.toString())
+                val matcher: Matcher = ipAddressPattern.matcher(editTextDialogServerIP.text.toString())
                 val isValidIP = matcher.matches()
                 val isValidPort = checkValidPort(editTextDialogServerPort.text.toString())
                 if (isValidIP && isValidPort) {
@@ -5763,11 +5764,11 @@ class MainActivity : AppCompatActivity() {
 
         val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
         Log.d(mTag, "Today = $today")
-        var combineString = ""
-        if (startTime == "--:--") {
-            combineString = "$today 00:00"
+        //var combineString = ""
+        val combineString = if (startTime == "--:--") {
+            "$today 00:00"
         } else {
-            combineString = "$today $startTime"
+            "$today $startTime"
         }
 
 
@@ -5790,7 +5791,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun Activity.handleUncaughtException() {
-        Thread.setDefaultUncaughtExceptionHandler { _, throwable ->
+        Thread.setDefaultUncaughtExceptionHandler { _, _ ->
             // here you can report the throwable exception to Sentry or Crashlytics or whatever crash reporting service you're using, otherwise you may set the throwable variable to _ if it'll remain unused
             val intent = Intent(this, MainActivity::class.java).apply {
                 putExtra("isCrashed", true)
@@ -5834,7 +5835,8 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    fun checkValidPort(portStr: String): Boolean {
+
+    private fun checkValidPort(portStr: String): Boolean {
         var ret = false
 
         val portInt = portStr.toInt()
