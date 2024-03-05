@@ -256,10 +256,6 @@ class MainActivity : AppCompatActivity() {
     private var defaultVideosPlayList: ArrayList<DefaultPlayVideosData> ?= ArrayList()
     private var defaultMixPlayList: ArrayList<DefaultPlayMixData> ?= ArrayList()
 
-    private var downloadBannerIdx: Int = -1
-    private var downloadImageIdx: Int = -1
-    private var downloadVideoIdx: Int = -1
-    private var downloadMixIdx: Int = -1
     private var downloadBannerComplete: Int = 0
     private var downloadImageComplete: Int = 0
     private var downloadVideoComplete: Int = 0
@@ -2558,7 +2554,6 @@ class MainActivity : AppCompatActivity() {
                 val file = File(destPath)
                 if(!file.exists()) {
                     downloadIdx = i
-                    downloadBannerIdx = i
                     break
                 }/* else {
                     Log.d(mTag, "download file exist!")
@@ -3383,6 +3378,7 @@ class MainActivity : AppCompatActivity() {
         //if (videoViewTop != null && videoViewTop!!.isPlaying) {
         if (videoViewTop != null) {
             videoViewTop!!.stopPlayback()
+            videoViewTop!!.seekTo(0)
             //videoViewTop!!.visibility = View.INVISIBLE
         }
         //if (videoViewCenter != null && videoViewCenter!!.isPlaying) {
