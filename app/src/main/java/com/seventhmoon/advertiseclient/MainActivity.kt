@@ -30,6 +30,8 @@ import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.view.View.OnTouchListener
+import android.view.View.TEXT_ALIGNMENT_CENTER
+import android.view.View.TEXT_ALIGNMENT_GRAVITY
 import android.view.ViewGroup
 import android.view.WindowInsets
 import android.view.WindowInsetsController
@@ -3360,6 +3362,7 @@ class MainActivity : AppCompatActivity() {
         Log.d(mTag, "=== clearMixNotInMixList end ===")
     }
 
+
     @SuppressLint("SourceLockedOrientationActivity")
     fun playAd() {
         Log.d(mTag, "playAd Start")
@@ -3384,11 +3387,13 @@ class MainActivity : AppCompatActivity() {
         //if (videoViewCenter != null && videoViewCenter!!.isPlaying) {
         if (videoViewCenter != null) {
             videoViewCenter!!.stopPlayback()
+            videoViewCenter!!.seekTo(0)
             //videoViewCenter!!.visibility = View.INVISIBLE
         }
         //if (videoViewBottom != null && videoViewBottom!!.isPlaying) {
         if (videoViewBottom != null) {
             videoViewBottom!!.stopPlayback()
+            videoViewBottom!!.seekTo(0)
             //videoViewBottom!!.visibility = View.INVISIBLE
         }
 
@@ -3776,7 +3781,7 @@ class MainActivity : AppCompatActivity() {
                             if (textViewTop == null) {
                                 textViewTop = SpeedMarquee(mContext as  Context)
                             }
-                            textViewTop!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                            textViewTop!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
                             if (marqueeBackground.isNotEmpty()) {
                                 textViewTop!!.setBackgroundColor(Color.parseColor(marqueeBackground))
                             }
@@ -3788,13 +3793,30 @@ class MainActivity : AppCompatActivity() {
                             textViewTop!!.isSingleLine = true
                             textViewTop!!.freezesText = true
                             when(marqueeLocate) {
-                                0 -> textViewTop!!.gravity = Gravity.CENTER_VERTICAL
-                                1 -> textViewTop!!.gravity = Gravity.TOP
-                                2 -> textViewTop!!.gravity = Gravity.BOTTOM
+                                0 -> {
+                                    textViewTop!!.gravity = Gravity.CENTER_VERTICAL
+                                }
+                                1 -> {
+                                    textViewTop!!.gravity = Gravity.TOP
+                                }
+                                2 -> {
+                                    textViewTop!!.gravity = Gravity.BOTTOM
+                                }
                             }
                             textViewTop!!.marqueeRepeatLimit = -1
                             textViewTop!!.visibility = View.GONE
                             linearLayoutTop!!.addView(textViewTop)
+                            when(marqueeLocate) {
+                                0 -> {
+                                    linearLayoutTop!!.gravity = Gravity.CENTER_VERTICAL
+                                }
+                                1 -> {
+                                    linearLayoutTop!!.gravity = Gravity.TOP
+                                }
+                                2 -> {
+                                    linearLayoutTop!!.gravity = Gravity.BOTTOM
+                                }
+                            }
                         }
                         2 -> {
                             //imageViewTop
@@ -3945,6 +3967,7 @@ class MainActivity : AppCompatActivity() {
                     //Log.e(mTag, "linearLayoutCenterWeight = $linearLayoutCenterWeight")
                     linearLayoutCenter!!.layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT)
                     linearLayoutCenter!!.orientation = LinearLayout.VERTICAL
+
                     //linearLayoutCenter!!.setBackgroundColor(Color.parseColor(marqueeBackground))
                     //linearLayoutCenter!!.weightSum = 2.0F
 
@@ -3954,9 +3977,10 @@ class MainActivity : AppCompatActivity() {
                             if (textViewCenter == null) {
                                 textViewCenter = SpeedMarquee(mContext as Context)
                             }
-                            textViewCenter!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                            textViewCenter!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
                             if (marqueeBackground.isNotEmpty()) {
                                 textViewCenter!!.setBackgroundColor(Color.parseColor(marqueeBackground))
+                                linearLayoutCenter!!.setBackgroundColor(Color.parseColor(marqueeBackground))
                             }
                             textViewCenter!!.textSize = marqueeSize.toFloat()
                             if (marqueeText.isNotEmpty()) {
@@ -3965,16 +3989,35 @@ class MainActivity : AppCompatActivity() {
                             textViewCenter!!.ellipsize = TextUtils.TruncateAt.MARQUEE
                             textViewCenter!!.isSingleLine = true
                             textViewCenter!!.freezesText = true
+
                             when(marqueeLocate) {
-                                0 -> textViewCenter!!.gravity = Gravity.CENTER_VERTICAL
-                                1 -> textViewCenter!!.gravity = Gravity.TOP
-                                2 -> textViewCenter!!.gravity = Gravity.BOTTOM
+                                0 -> {
+                                    textViewCenter!!.gravity = Gravity.CENTER_VERTICAL
+                                }
+                                1 -> {
+                                    textViewCenter!!.gravity = Gravity.TOP
+                                }
+                                2 -> {
+                                    textViewCenter!!.gravity = Gravity.BOTTOM
+                                }
                             }
+
                             textViewCenter!!.marqueeRepeatLimit = -1
                             textViewCenter!!.resumeScroll()
                             textViewCenter!!.setSpeed(marqueeSpeed.toFloat())
                             textViewCenter!!.visibility = View.GONE
                             linearLayoutCenter!!.addView(textViewCenter)
+                            when(marqueeLocate) {
+                                0 -> {
+                                    linearLayoutCenter!!.gravity = Gravity.CENTER_VERTICAL
+                                }
+                                1 -> {
+                                    linearLayoutCenter!!.gravity = Gravity.TOP
+                                }
+                                2 -> {
+                                    linearLayoutCenter!!.gravity = Gravity.BOTTOM
+                                }
+                            }
                         }
                         2 -> {
                             //imageViewCenter
@@ -4144,15 +4187,33 @@ class MainActivity : AppCompatActivity() {
                             textViewBottom!!.isSingleLine = true
                             textViewBottom!!.freezesText = true
                             when(marqueeLocate) {
-                                0 -> textViewBottom!!.gravity = Gravity.CENTER_VERTICAL
-                                1 -> textViewBottom!!.gravity = Gravity.TOP
-                                2 -> textViewBottom!!.gravity = Gravity.BOTTOM
+                                0 -> {
+                                    textViewBottom!!.gravity = Gravity.CENTER_VERTICAL
+                                }
+                                1 -> {
+                                    textViewBottom!!.gravity = Gravity.TOP
+                                }
+                                2 -> {
+                                    textViewBottom!!.gravity = Gravity.BOTTOM
+                                }
                             }
                             textViewBottom!!.marqueeRepeatLimit = -1
                             textViewBottom!!.resumeScroll()
                             textViewBottom!!.setSpeed(marqueeSpeed.toFloat())
                             textViewBottom!!.visibility = View.GONE
                             linearLayoutBottom!!.addView(textViewBottom)
+
+                            when(marqueeLocate) {
+                                0 -> {
+                                    linearLayoutBottom!!.gravity = Gravity.CENTER_VERTICAL
+                                }
+                                1 -> {
+                                    linearLayoutBottom!!.gravity = Gravity.TOP
+                                }
+                                2 -> {
+                                    linearLayoutBottom!!.gravity = Gravity.BOTTOM
+                                }
+                            }
                         }
                         2 -> {
                             //imageViewBottom
