@@ -29,6 +29,22 @@
         android:textSize="@dimen/text_size_30"
         android:hint="Port"/>
 
+    <EditText
+        android:id="@+id/editTextDialogScreenWidth"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:maxLines="1"
+        android:textSize="@dimen/text_size_30"
+        android:hint="@string/client_screen_width"/>
+
+    <EditText
+        android:id="@+id/editTextDialogScreenHeight"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:maxLines="1"
+        android:textSize="@dimen/text_size_30"
+        android:hint="@string/client_screen_height"/>
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

@@ -8,6 +8,8 @@
     <string name="server_ip_input_empty">IP位址與Port不能為空</string>
     <string name="server_ip_input_mismatch">無效的IP位址</string>
     <string name="server_port_input_mismatch">無效的Port</string>
+    <string name="client_screen_width">螢幕寬度</string>
+    <string name="client_screen_height">螢幕高度</string>
     <string name="ad_client_wait_for_server">等待伺服器回應</string>
     <string name="ad_client_connect_server_success_no_setting">連線伺服器成功\n尚未設定廣告</string>
 </resources>

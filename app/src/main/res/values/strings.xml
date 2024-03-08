@@ -7,6 +7,8 @@
     <string name="server_ip_input_empty">IP address or port cannot be empty.</string>
     <string name="server_ip_input_mismatch">Not a valid IP Address</string>
     <string name="server_port_input_mismatch">Not a valid Port</string>
+    <string name="client_screen_width">Screen Width</string>
+    <string name="client_screen_height">Screen Height</string>
     <string name="ad_client_wait_for_server">Wait for response from server</string>
     <string name="ad_client_connect_server_success_no_setting">Connect server success.\nNo Ad Setting.</string>
 </resources>
