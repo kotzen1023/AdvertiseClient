@@ -19,10 +19,12 @@ class RecvAdSetting {
     var marquee_interval = 0
     var image_interval = 0
     var image_scale_type = 0
+    var image_anime = 0
     var video_scale_type = 0
     var banner_scale_type = 0
     var mix_mode = 0
     var mix_image_interval = 0
     var mix_image_scale_type = 0
+    var mix_image_anime = 0
     var mix_video_scale_type = 0
 }

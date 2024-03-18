@@ -15,7 +15,9 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.LOCAL_MAC_ADDRESS" tools:ignore="ProtectedPermissions"/>
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.ACTION_MANAGE_OVERLAY_PERMISSION" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
     <application
@@ -44,12 +46,12 @@
         <receiver
             android:enabled="true"
             android:exported="true"
-            android:name=".service.StartupService"
+            android:name=".service.BootReceiver"
             android:permission="android.permission.RECEIVE_BOOT_COMPLETED">
 
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
-                <!--action android:name="android.intent.action.QUICKBOOT_POWERON" /-->
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
             <intent-filter>
@@ -78,6 +80,11 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/provider_paths" />
         </provider>
+        <service
+            android:name=".service.AppStartService"
+            android:enabled="true"
+            android:exported="true"
+            android:stopWithTask="false" />
     </application>
 
 </manifest>

@@ -64,8 +64,24 @@ class Constants {
             const val ACTION_MIX_BOTTOM_PLAY_IMAGE_START: String = "com.seventhmoon.advertiseclient.MixBottomPlayImageStart"
             const val ACTION_MIX_BOTTOM_PLAY_VIDEO_START: String = "com.seventhmoon.advertiseclient.MixBottomPlayVideoStart"
 
+            //for video
+            const val ACTION_TOP_VIDEO_PLAY_START: String = "com.seventhmoon.advertiseclient.TopVideoPlayStart"
+            const val ACTION_TOP_VIDEO_PLAY_STOP: String = "com.seventhmoon.advertiseclient.TopVideoPlayStop"
+            const val ACTION_TOP_VIDEO_PLAY_FINISH: String = "com.seventhmoon.advertiseclient.TopVideoPlayFinish"
+
+            const val ACTION_CENTER_VIDEO_PLAY_START: String = "com.seventhmoon.advertiseclient.CenterVideoPlayStart"
+            const val ACTION_CENTER_VIDEO_PLAY_STOP: String = "com.seventhmoon.advertiseclient.CenterVideoPlayStop"
+            const val ACTION_CENTER_VIDEO_PLAY_FINISH: String = "com.seventhmoon.advertiseclient.CenterVideoPlayFinish"
+
+            const val ACTION_BOTTOM_VIDEO_PLAY_START: String = "com.seventhmoon.advertiseclient.BottomVideoPlayStart"
+            const val ACTION_BOTTOM_VIDEO_PLAY_STOP: String = "com.seventhmoon.advertiseclient.BottomVideoPlayStop"
+            const val ACTION_BOTTOM_VIDEO_PLAY_FINISH: String = "com.seventhmoon.advertiseclient.BottomVideoPlayFinish"
+
             const val ACTION_SHOW_DIALOG_AGAIN: String = "com.seventhmoon.advertiseclient.ShowDialogAgain"
             const val ACTION_TEST_IP_AND_PORT: String = "com.seventhmoon.advertiseclient.TestIPAndPort"
+
+            const val ACTION_GET_CURRENT_PLAY_CONTENT_START: String = "com.seventhmoon.advertiseclient.GetCurrentPlayContentStart"
+            const val ACTION_GET_CURRENT_PLAY_CONTENT_COMPLETE: String = "com.seventhmoon.advertiseclient.GetCurrentPlayContentComplete"
         }
     }
 }
