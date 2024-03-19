@@ -2679,8 +2679,11 @@ class MainActivity : AppCompatActivity() {
             filter.addAction(Constants.ACTION.ACTION_GET_CURRENT_PLAY_CONTENT_START)
             filter.addAction(Constants.ACTION.ACTION_GET_CURRENT_PLAY_CONTENT_COMPLETE)
 
-
-            mContext!!.registerReceiver(mReceiver, filter)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                mContext!!.registerReceiver(mReceiver, filter, RECEIVER_EXPORTED)
+            } else {
+                mContext!!.registerReceiver(mReceiver, filter)
+            }
             isRegister = true
             Log.d(mTag, "registerReceiver mReceiver")
         }
