@@ -29,6 +29,7 @@ import android.util.DisplayMetrics
 import android.util.Log
 import android.view.Gravity
 import android.view.View
+import android.view.View.OnFocusChangeListener
 import android.view.View.OnTouchListener
 import android.view.ViewGroup
 import android.view.WindowInsets
@@ -840,7 +841,7 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
             }*/
-
+            Log.e(mTag, "1->")
             getPlanUse(currentTimestamp)
 
             //get current plan idx
@@ -2881,6 +2882,7 @@ class MainActivity : AppCompatActivity() {
                                     }
                                 }
                             }*/
+                            Log.e(mTag, "2->")
                             getPlanUse(currentTimestamp)
 
                             Log.e(mTag, "ping fail: ---->currentPlanUse = $currentPlanUse")
@@ -2953,6 +2955,7 @@ class MainActivity : AppCompatActivity() {
 
                     if (layoutList.size > 0) {
 
+                        Log.e(mTag, "3->")
                         getPlanUse(currentTimestamp)
 
                         Log.e(mTag, "ping success: ---->currentPlanUse = $currentPlanUse")
@@ -3148,6 +3151,7 @@ class MainActivity : AppCompatActivity() {
                                 Log.d(mTag, "plan1, id = ${layoutList[0].plan_id}")
                             }
                         }*/
+                        Log.e(mTag, "4->")
                         getPlanUse(currentTimestamp)
 
                         if (previousPlanId != currentPlanId) {
@@ -4645,6 +4649,12 @@ class MainActivity : AppCompatActivity() {
                             //textViewTop
                             if (textViewTop == null) {
                                 textViewTop = SpeedMarquee(mContext as  Context)
+                                textViewTop!!.isFocusable = false
+                                textViewTop!!.onFocusChangeListener =
+                                    OnFocusChangeListener { v, hasFocus ->
+
+                                    }
+
                             }
                             textViewTop!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
                             if (marqueeBackground.isNotEmpty()) {
@@ -4658,8 +4668,8 @@ class MainActivity : AppCompatActivity() {
                             textViewTop!!.isSingleLine = true
                             textViewTop!!.freezesText = true
                             textViewTop!!.setHorizontallyScrolling(true)
-                            textViewTop!!.isFocusable = true
-                            textViewTop!!.isFocusableInTouchMode = true
+
+                            //textViewTop!!.isFocusableInTouchMode = true
                             textViewTop!!.isSelected = true
 
                             textViewTop!!.post {
@@ -7181,7 +7191,7 @@ class MainActivity : AppCompatActivity() {
         val longArray : ArrayList<Long> = ArrayList()
 
         //must have set the plan
-        if (layoutList[0].plan_id > 0 && planStartTimeString != "--:--") {
+        if (layoutList[0].plan_id > 0) {
             longArray.add(planStartTime)
         }
         if (layoutList[0].plan2_id > 0 && plan2StartTimeString != "--:--") {
@@ -7196,7 +7206,9 @@ class MainActivity : AppCompatActivity() {
 
         Log.e(mTag,"longArray before = $longArray")
 
-        Collections.sort(longArray)
+        if (longArray.size > 1) {
+            Collections.sort(longArray)
+        }
 
         Log.e(mTag,"longArray after = $longArray")
 
@@ -7215,27 +7227,31 @@ class MainActivity : AppCompatActivity() {
             idx = longArray.size - 1
         }
 
-        when(longArray[idx]) {
-            planStartTime -> {
-                currentPlanId = layoutList[0].plan_id
-                currentPlanUse = 1
-                Log.d(mTag, "plan1, id = ${layoutList[0].plan_id}")
-            }
-            plan2StartTime -> {
-                currentPlanId = layoutList[0].plan2_id
-                currentPlanUse = 2
-                Log.d(mTag, "plan2, id = ${layoutList[0].plan2_id}")
-            }
-            plan3StartTime -> {
-                currentPlanId = layoutList[0].plan3_id
-                currentPlanUse = 3
-                Log.d(mTag, "plan3, id = ${layoutList[0].plan3_id}")
-            }
-            plan4StartTime -> {
-                currentPlanId = layoutList[0].plan4_id
-                currentPlanUse = 4
-                Log.d(mTag, "plan4, id = ${layoutList[0].plan4_id}")
+        if (idx >= 0) {
+            when(longArray[idx]) {
+                planStartTime -> {
+                    currentPlanId = layoutList[0].plan_id
+                    currentPlanUse = 1
+                    Log.d(mTag, "plan1, id = ${layoutList[0].plan_id}")
+                }
+                plan2StartTime -> {
+                    currentPlanId = layoutList[0].plan2_id
+                    currentPlanUse = 2
+                    Log.d(mTag, "plan2, id = ${layoutList[0].plan2_id}")
+                }
+                plan3StartTime -> {
+                    currentPlanId = layoutList[0].plan3_id
+                    currentPlanUse = 3
+                    Log.d(mTag, "plan3, id = ${layoutList[0].plan3_id}")
+                }
+                plan4StartTime -> {
+                    currentPlanId = layoutList[0].plan4_id
+                    currentPlanUse = 4
+                    Log.d(mTag, "plan4, id = ${layoutList[0].plan4_id}")
+                }
             }
         }
+
+
     }
 }
