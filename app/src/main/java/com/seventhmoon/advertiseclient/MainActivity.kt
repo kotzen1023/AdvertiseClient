@@ -232,7 +232,8 @@ class MainActivity : AppCompatActivity() {
                 + "|[1-9][0-9]|[0-9]))"
     )
 
-    val httpPrefix = "http://"
+    private val httpPrefix = "http://"
+    private val defaultIpAddress = "192.168.0.253"
 
     private val handler = object : Handler(Looper.getMainLooper()) {
 
@@ -949,6 +950,7 @@ class MainActivity : AppCompatActivity() {
                         Log.d(mTag, "ACTION_GET_LAYOUT_FAILED")
 
                         textViewShowInitSuccess!!.text = "Get Layout failed"
+                        getLayout()
 
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_LAYOUT_SUCCESS, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_LAYOUT_SUCCESS")
@@ -2730,6 +2732,8 @@ class MainActivity : AppCompatActivity() {
             countDownTimerPingWebRunning = false
         }
 
+        Log.e(mTag, "base_ip_address_webservice = $base_ip_address_webservice")
+
         ApiFunc().getServerPingResponse(jsonObject, getPingCallback)
 
 
@@ -2761,6 +2765,7 @@ class MainActivity : AppCompatActivity() {
     private var getPingCallback: Callback = object : Callback {
 
         override fun onFailure(call: Call, e: IOException) {
+            Log.e(mTag, "e = ${e}")
             runOnUiThread(netErrRunnable)
             //for auto plan change
             runOnUiThread {
@@ -3672,6 +3677,7 @@ class MainActivity : AppCompatActivity() {
                 //val srcPath = server_videos_folder
                 //val destPath = "$dest_videos_folder${videoList[downloadIdx]}"
                 Log.d(mTag, "start download file : ${mixList[downloadIdx]} as $destPath")
+                textViewShowInitSuccess!!.text = "download ${mixList[downloadIdx]}"
                 Thread {
                     try {
                         val totalSize = download(srcPath, destPath, mixList[downloadIdx]) { progress, length ->
@@ -3685,10 +3691,12 @@ class MainActivity : AppCompatActivity() {
                         downloadMixReadyArray[downloadIdx] = true
 
                         if (downloadMixComplete == mixList.size) {
+                            textViewShowInitSuccess!!.text = "Get mix complete"
                             val completeIntent = Intent()
                             completeIntent.action = Constants.ACTION.ACTION_GET_MIX_COMPLETE
                             mContext?.sendBroadcast(completeIntent)
                         } else {
+                            textViewShowInitSuccess!!.text = "Get mix success"
                             val successIntent = Intent()
                             successIntent.action = Constants.ACTION.ACTION_GET_MIX_SUCCESS
                             successIntent.putExtra("idx", downloadIdx)
@@ -3700,6 +3708,7 @@ class MainActivity : AppCompatActivity() {
                         //we can't stuck on download failed, keep try next one
                         downloadMixComplete += 1
                         downloadMixReadyArray[downloadIdx] = false
+                        textViewShowInitSuccess!!.text = "Get mix failed"
                         val failedIntent = Intent()
                         failedIntent.action = Constants.ACTION.ACTION_GET_MIX_FAILED
                         failedIntent.putExtra("ERROR_STRING", ex.toString())
@@ -3709,6 +3718,7 @@ class MainActivity : AppCompatActivity() {
                 }.start()
             } else { //downloadIdx == -1
                 if (downloadMixComplete == mixList.size) {
+                    textViewShowInitSuccess!!.text = "Get mix complete"
                     val completeIntent = Intent()
                     completeIntent.action = Constants.ACTION.ACTION_GET_MIX_COMPLETE
                     mContext?.sendBroadcast(completeIntent)
@@ -3717,6 +3727,7 @@ class MainActivity : AppCompatActivity() {
 
 
         } else {
+            textViewShowInitSuccess!!.text = "Get mix empty"
             val emptyIntent = Intent()
             emptyIntent.action = Constants.ACTION.ACTION_GET_MIX_EMPTY
             mContext?.sendBroadcast(emptyIntent)
@@ -6716,7 +6727,7 @@ class MainActivity : AppCompatActivity() {
 
         val networkPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.INTERNET)
 
-        val foregroundServicePermission = ContextCompat.checkSelfPermission(this, Manifest.permission.FOREGROUND_SERVICE)
+        //val foregroundServicePermission = ContextCompat.checkSelfPermission(this, Manifest.permission.FOREGROUND_SERVICE)
 
         //val accessNetworkStatePermission = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_NETWORK_STATE)
 
@@ -6757,12 +6768,12 @@ class MainActivity : AppCompatActivity() {
             listPermissionsNeeded.add(Manifest.permission.INTERNET)
         }
 
-        if (foregroundServicePermission != PackageManager.PERMISSION_GRANTED) {
+        /*if (foregroundServicePermission != PackageManager.PERMISSION_GRANTED) {
             listPermissionsNeeded.add(Manifest.permission.FOREGROUND_SERVICE)
         }
 
 
-        /*if (accessNetworkStatePermission != PackageManager.PERMISSION_GRANTED) {
+        if (accessNetworkStatePermission != PackageManager.PERMISSION_GRANTED) {
             listPermissionsNeeded.add(Manifest.permission.ACCESS_NETWORK_STATE)
         }
 
@@ -6826,7 +6837,7 @@ class MainActivity : AppCompatActivity() {
                 perms[Manifest.permission.WRITE_EXTERNAL_STORAGE] = PackageManager.PERMISSION_GRANTED
                 perms[Manifest.permission.READ_MEDIA_VIDEO] = PackageManager.PERMISSION_GRANTED
                 perms[Manifest.permission.READ_MEDIA_IMAGES] = PackageManager.PERMISSION_GRANTED
-                perms[Manifest.permission.FOREGROUND_SERVICE] = PackageManager.PERMISSION_GRANTED
+                //perms[Manifest.permission.FOREGROUND_SERVICE] = PackageManager.PERMISSION_GRANTED
                 //perms[Manifest.permission.INTERNET] = PackageManager.PERMISSION_GRANTED
                 //perms[Manifest.permission.ACCESS_NETWORK_STATE] = PackageManager.PERMISSION_GRANTED
                 //perms[Manifest.permission.ACCESS_WIFI_STATE] = PackageManager.PERMISSION_GRANTED
@@ -6847,7 +6858,7 @@ class MainActivity : AppCompatActivity() {
                         && perms[Manifest.permission.WRITE_EXTERNAL_STORAGE] == PackageManager.PERMISSION_GRANTED
                         && perms[Manifest.permission.READ_MEDIA_VIDEO] == PackageManager.PERMISSION_GRANTED
                         && perms[Manifest.permission.READ_MEDIA_IMAGES] == PackageManager.PERMISSION_GRANTED
-                        && perms[Manifest.permission.FOREGROUND_SERVICE] == PackageManager.PERMISSION_GRANTED
+                        //&& perms[Manifest.permission.FOREGROUND_SERVICE] == PackageManager.PERMISSION_GRANTED
                         //&& perms[Manifest.permission.INTERNET] == PackageManager.PERMISSION_GRANTED
                         //&& perms[Manifest.permission.ACCESS_NETWORK_STATE] == PackageManager.PERMISSION_GRANTED
                         //&& perms[Manifest.permission.ACCESS_WIFI_STATE] == PackageManager.PERMISSION_GRANTED
@@ -6891,12 +6902,12 @@ class MainActivity : AppCompatActivity() {
                             ||ActivityCompat.shouldShowRequestPermissionRationale(
                                 this,
                                 Manifest.permission.INTERNET
-                            )
+                            )/*
                             ||ActivityCompat.shouldShowRequestPermissionRationale(
                                 this,
                                 Manifest.permission.FOREGROUND_SERVICE
                             )
-                            /*|| ActivityCompat.shouldShowRequestPermissionRationale(
+                            || ActivityCompat.shouldShowRequestPermissionRationale(
                                 this,
                                 Manifest.permission.ACCESS_NETWORK_STATE
                             )
@@ -6992,7 +7003,7 @@ class MainActivity : AppCompatActivity() {
 
         //editTextDialogServerIP.text = "http://"
         //val initStr = "http://"
-        editTextDialogServerIP.setText("34.66.27.68")
+        editTextDialogServerIP.setText(defaultIpAddress)
         //editTextDialogServerIP.setSelection(initStr.length)
         editTextDialogServerPort.inputType = InputType.TYPE_CLASS_NUMBER
         editTextDialogServerPort.setText("3000")
