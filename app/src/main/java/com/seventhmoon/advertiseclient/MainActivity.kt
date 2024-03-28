@@ -41,6 +41,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.LinearLayout.LayoutParams
 import android.widget.MediaController
 import android.widget.RelativeLayout
 import android.widget.TextView
@@ -60,6 +61,7 @@ import com.google.gson.reflect.TypeToken
 import com.rohan.speed_marquee.SpeedMarquee
 import com.seventhmoon.advertiseclient.api.ApiFunc
 import com.seventhmoon.advertiseclient.data.Constants
+import com.seventhmoon.advertiseclient.data.ScrollTextView
 import com.seventhmoon.advertiseclient.model.recv.RecvAdSetting
 import com.seventhmoon.advertiseclient.model.recv.RecvLayout
 import com.seventhmoon.advertiseclient.model.recv.RecvMarquee
@@ -148,9 +150,9 @@ class MainActivity : AppCompatActivity() {
     //private var imageViewBannerTop: ImageView?= null
     //center
     private var linearLayoutCenter : LinearLayout ?= null
-    var textViewCenter : SpeedMarquee ?=     null
-    var imageViewCenter : ImageView ?= null
-    var imageViewCenter2 : ImageView ?= null
+    private var textViewCenter : ScrollTextView ?=     null
+    private var imageViewCenter : ImageView ?= null
+    private var imageViewCenter2 : ImageView ?= null
     private var videoViewLayoutCenter: RelativeLayout ?= null
     private var videoViewCenter: VideoView ?= null
     //private var imageViewBannerCenter: ImageView?= null
@@ -162,6 +164,7 @@ class MainActivity : AppCompatActivity() {
     var imageViewBottom2 : ImageView ?= null
     private var videoViewLayoutBottom: RelativeLayout ?= null
     private var videoViewBottom: VideoView ?= null
+    private var messageViewBottom: TextView ?= null
     //private var imageViewBannerBottom: ImageView?= null
 
     private var linearLayoutTriangle : LinearLayout ?= null
@@ -1385,6 +1388,8 @@ class MainActivity : AppCompatActivity() {
 
                         if (downloadMixComplete < mixList.size) {
                             downloadMix()
+                        } else {
+                            textViewShowInitSuccess!!.text = "mixList.size = ${mixList.size}, downloadMixComplete = $downloadMixComplete"
                         }
 
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_MIX_FAILED, ignoreCase = true)) {
@@ -1858,6 +1863,7 @@ class MainActivity : AppCompatActivity() {
                     } //bottom
                     else if (intent.action!!.equals(Constants.ACTION.ACTION_MIX_BOTTOM_PLAY_START, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_MIX_BOTTOM_PLAY_START")
+                        messageViewBottom!!.text = "ACTION_MIX_BOTTOM_PLAY_START"
                         currentMixIndexBottom = -1
                         Log.e(mTag, "mixList.size = ${mixList.size}")
 
@@ -1900,11 +1906,11 @@ class MainActivity : AppCompatActivity() {
 
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_MIX_BOTTOM_PLAY_STOP, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_MIX_BOTTOM_PLAY_STOP")
-
+                        messageViewBottom!!.text = "ACTION_MIX_BOTTOM_PLAY_STOP"
 
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_MIX_BOTTOM_PLAY_FINISH, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_MIX_BOTTOM_PLAY_FINISH")
-
+                        messageViewBottom!!.text = "ACTION_MIX_BOTTOM_PLAY_FINISH"
                         if (layoutBottom == 5) { //mix only
                             if (mixList.size > 0 && checkDownloadMixAll()) { //at least one image or video can play
                                 Log.e(mTag, "mixList.size > 0")
@@ -1942,7 +1948,7 @@ class MainActivity : AppCompatActivity() {
                         }
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_MIX_BOTTOM_PLAY_IMAGE_START, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_MIX_BOTTOM_PLAY_IMAGE_START")
-
+                        messageViewBottom!!.text = "ACTION_MIX_BOTTOM_PLAY_IMAGE_START"
                         var mixImagesPlayInterval = 7000
                         when(mixImageInterval) {
                             0 -> {
@@ -2003,7 +2009,7 @@ class MainActivity : AppCompatActivity() {
                         }
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_MIX_BOTTOM_PLAY_VIDEO_START, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_MIX_BOTTOM_PLAY_VIDEO_START")
-
+                        messageViewBottom!!.text = "ACTION_MIX_BOTTOM_PLAY_VIDEO_START"
                         /*
                         if (layoutBottom == 5) { //mix only
                             imageViewBottom!!.visibility = View.GONE
@@ -2328,7 +2334,7 @@ class MainActivity : AppCompatActivity() {
                         }
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_BOTTOM_VIDEO_PLAY_START, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_BOTTOM_VIDEO_PLAY_START")
-
+                        messageViewBottom!!.text = "ACTION_BOTTOM_VIDEO_PLAY_START"
                         var sizeAndCheckDownload = false
                         var filePath = ""
 
@@ -2421,10 +2427,11 @@ class MainActivity : AppCompatActivity() {
 
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_BOTTOM_VIDEO_PLAY_STOP, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_BOTTOM_VIDEO_PLAY_STOP")
+                        messageViewBottom!!.text = "ACTION_BOTTOM_VIDEO_PLAY_STOP"
 
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_BOTTOM_VIDEO_PLAY_FINISH, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_BOTTOM_VIDEO_PLAY_FINISH")
-
+                        messageViewBottom!!.text = "ACTION_BOTTOM_VIDEO_PLAY_FINISH"
                         if (layoutBottom == 3) { //video
                             if (videoList.size > 0 && checkDownloadVideosAll()) {
                                 //videoRunningBottom = false
@@ -3696,7 +3703,10 @@ class MainActivity : AppCompatActivity() {
                             completeIntent.action = Constants.ACTION.ACTION_GET_MIX_COMPLETE
                             mContext?.sendBroadcast(completeIntent)
                         } else {
-                            textViewShowInitSuccess!!.text = "Get mix success"
+                            var mixText = "mixList = $mixList\n"
+                            val readyText = "downloadMixReadyArray = $downloadMixReadyArray"
+                            mixText += readyText
+                            textViewShowInitSuccess!!.text = mixText
                             val successIntent = Intent()
                             successIntent.action = Constants.ACTION.ACTION_GET_MIX_SUCCESS
                             successIntent.putExtra("idx", downloadIdx)
@@ -4664,35 +4674,43 @@ class MainActivity : AppCompatActivity() {
                             if (textViewTop == null) {
                                 textViewTop = SpeedMarquee(mContext as  Context)
                                 textViewTop!!.isFocusable = false
-                                textViewTop!!.onFocusChangeListener =
+                                textViewTop!!.ellipsize = TextUtils.TruncateAt.MARQUEE
+                                textViewTop!!.isSingleLine = true
+                                textViewTop!!.freezesText = true
+                                textViewTop!!.setHorizontallyScrolling(true)
+                                textViewTop!!.marqueeRepeatLimit = -1
+                                textViewTop!!.resumeScroll()
+                                textViewTop!!.isFocusableInTouchMode = true
+                                textViewTop!!.isSelected = true
+
+                                /*textViewTop!!.onFocusChangeListener =
                                     OnFocusChangeListener { v, hasFocus ->
-
+                                        Log.e(mTag, "textViewTopO nFocusChangeListener")
                                     }
+                                textViewTop!!.addOnLayoutChangeListener { v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom ->
+                                    Log.e(mTag, "textViewTop OnLayoutChangeListener")
+                                    val params: LayoutParams = v.layoutParams as LayoutParams
+                                    params.width = right - left
+                                    params.height = bottom - top
 
+                                    Log.e(mTag, "params.width = ${params.width}, params.height = ${params.height}")
+
+                                    params.weight = 0f
+                                    v.layoutParams = params
+
+                                }*/
                             }
+                            //background
                             textViewTop!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
                             if (marqueeBackground.isNotEmpty()) {
                                 textViewTop!!.setBackgroundColor(Color.parseColor(marqueeBackground))
                             }
+                            //text color
                             textViewTop!!.textSize = marqueeSize.toFloat()
                             if (marqueeText.isNotEmpty()) {
                                 textViewTop!!.setTextColor(Color.parseColor(marqueeText))
                             }
-                            textViewTop!!.ellipsize = TextUtils.TruncateAt.MARQUEE
-                            textViewTop!!.isSingleLine = true
-                            textViewTop!!.freezesText = true
-                            textViewTop!!.setHorizontallyScrolling(true)
-
-                            //textViewTop!!.isFocusableInTouchMode = true
-                            textViewTop!!.isSelected = true
-
-                            textViewTop!!.post {
-                                textViewTop!!.layoutParams = LinearLayout.LayoutParams(
-                                    textViewTop!!.width,
-                                    textViewTop!!.height
-                                )
-                            }
-
+                            //locate
                             when(marqueeLocate) {
                                 0 -> {
                                     textViewTop!!.gravity = Gravity.CENTER_VERTICAL
@@ -4704,10 +4722,18 @@ class MainActivity : AppCompatActivity() {
                                     textViewTop!!.gravity = Gravity.BOTTOM
                                 }
                             }
-                            textViewTop!!.marqueeRepeatLimit = -1
-                            textViewTop!!.resumeScroll()
+                            //speed
                             textViewTop!!.setSpeed(marqueeSpeed.toFloat())
                             textViewTop!!.visibility = View.GONE
+                            /*
+                            textViewTop!!.post(Runnable {
+                                Log.e(mTag, "textViewTop!!.width = ${textViewTop!!.width}, textViewTop!!.height = ${textViewTop!!.height}")
+                                textViewTop!!.layoutParams = LayoutParams(
+                                    textViewTop!!.width,
+                                    textViewTop!!.height
+                                )
+                            })*/
+
                             linearLayoutTop!!.addView(textViewTop)
                             linearLayoutTop!!.setBackgroundColor(Color.parseColor(marqueeBackground))
                             when(marqueeLocate) {
@@ -4883,20 +4909,28 @@ class MainActivity : AppCompatActivity() {
                         1 -> {
                             //textViewCenter
                             if (textViewCenter == null) {
-                                textViewCenter = SpeedMarquee(mContext as Context)
+                                textViewCenter = ScrollTextView(mContext as Context)
+                                textViewCenter!!.ellipsize = TextUtils.TruncateAt.MARQUEE
+                                textViewCenter!!.isSingleLine = true
+                                textViewCenter!!.freezesText = true
+                                textViewCenter!!.setHorizontallyScrolling(true)
+                                textViewCenter!!.marqueeRepeatLimit = -1
+                                //textViewCenter!!.resumeScroll()
+                                textViewCenter!!.isFocusableInTouchMode = true
+                                textViewCenter!!.isSelected = true
                             }
+
+                            //background
                             textViewCenter!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
                             if (marqueeBackground.isNotEmpty()) {
                                 textViewCenter!!.setBackgroundColor(Color.parseColor(marqueeBackground))
                             }
+                            //text color
                             textViewCenter!!.textSize = marqueeSize.toFloat()
                             if (marqueeText.isNotEmpty()) {
                                 textViewCenter!!.setTextColor(Color.parseColor(marqueeText))
                             }
-                            textViewCenter!!.ellipsize = TextUtils.TruncateAt.MARQUEE
-                            textViewCenter!!.isSingleLine = true
-                            textViewCenter!!.freezesText = true
-
+                            //locate
                             when(marqueeLocate) {
                                 0 -> {
                                     textViewCenter!!.gravity = Gravity.CENTER_VERTICAL
@@ -4908,11 +4942,13 @@ class MainActivity : AppCompatActivity() {
                                     textViewCenter!!.gravity = Gravity.BOTTOM
                                 }
                             }
+                            //speed
+                            //textViewCenter!!.setSpeed(marqueeSpeed.toFloat())
+                            textViewCenter!!.rndDuration = 10000
+                            textViewCenter!!.startScroll()
 
-                            textViewCenter!!.marqueeRepeatLimit = -1
-                            textViewCenter!!.resumeScroll()
-                            textViewCenter!!.setSpeed(marqueeSpeed.toFloat())
                             textViewCenter!!.visibility = View.GONE
+
                             linearLayoutCenter!!.addView(textViewCenter)
                             linearLayoutCenter!!.setBackgroundColor(Color.parseColor(marqueeBackground))
                             when(marqueeLocate) {
@@ -5081,23 +5117,39 @@ class MainActivity : AppCompatActivity() {
                     linearLayoutBottom!!.orientation = LinearLayout.VERTICAL
                     //linearLayoutBottom!!.setBackgroundColor(Color.parseColor(marqueeBackground))
                     //linearLayoutBottom!!.weightSum = 2.0F
+                    //messageView
+                    if (messageViewBottom == null) {
+                        messageViewBottom = TextView(mContext)
+                        messageViewBottom!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+                    }
+                    messageViewBottom!!.text = "Hello"
+                    messageViewBottom!!.setTextColor(Color.parseColor("#FFFFFF"))
+                    linearLayoutBottom!!.addView(messageViewBottom)
                     when (layoutBottom) {
                         1 -> {
                             //textViewBottom
                             if (textViewBottom == null) {
                                 textViewBottom = SpeedMarquee(mContext as Context)
+                                textViewBottom!!.isFocusable = false
+                                textViewBottom!!.ellipsize = TextUtils.TruncateAt.MARQUEE
+                                textViewBottom!!.isSingleLine = true
+                                textViewBottom!!.freezesText = true
+                                textViewBottom!!.marqueeRepeatLimit = -1
+                                textViewBottom!!.resumeScroll()
+                                textViewBottom!!.isFocusableInTouchMode = true
+                                textViewBottom!!.isSelected = true
                             }
+                            //background
                             textViewBottom!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
                             if (marqueeBackground.isNotEmpty()) {
                                 textViewBottom!!.setBackgroundColor(Color.parseColor(marqueeBackground))
                             }
+                            //text size
                             textViewBottom!!.textSize = marqueeSize.toFloat()
                             if (marqueeText.isNotEmpty()) {
                                 textViewBottom!!.setTextColor(Color.parseColor(marqueeText))
                             }
-                            textViewBottom!!.ellipsize = TextUtils.TruncateAt.MARQUEE
-                            textViewBottom!!.isSingleLine = true
-                            textViewBottom!!.freezesText = true
+                            //locate
                             when(marqueeLocate) {
                                 0 -> {
                                     textViewBottom!!.gravity = Gravity.CENTER_VERTICAL
@@ -5109,10 +5161,10 @@ class MainActivity : AppCompatActivity() {
                                     textViewBottom!!.gravity = Gravity.BOTTOM
                                 }
                             }
-                            textViewBottom!!.marqueeRepeatLimit = -1
-                            textViewBottom!!.resumeScroll()
+                            //speed
                             textViewBottom!!.setSpeed(marqueeSpeed.toFloat())
                             textViewBottom!!.visibility = View.GONE
+
                             linearLayoutBottom!!.addView(textViewBottom)
                             linearLayoutBottom!!.setBackgroundColor(Color.parseColor(marqueeBackground))
 
@@ -5267,6 +5319,8 @@ class MainActivity : AppCompatActivity() {
                             videoViewLayoutBottom!!.addView(videoViewBottom)
                         }
                     }
+
+
 
                     when(layoutOrientation) {
                         1 -> { //horizontal
