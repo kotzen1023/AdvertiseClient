@@ -57,7 +57,7 @@ dependencies {
     kapt "androidx.room:room-compiler:$room_version"
 
     //marquee
-    implementation 'com.github.RohanPatil1:SpeedMarquee:1.0.0'
+    //implementation 'com.github.RohanPatil1:SpeedMarquee:1.0.0'
 
     //exoplayer
     //implementation 'com.google.android.exoplayer:exoplayer-core:2.19.1'

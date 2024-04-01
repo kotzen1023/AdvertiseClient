@@ -58,7 +58,6 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import com.rohan.speed_marquee.SpeedMarquee
 import com.seventhmoon.advertiseclient.api.ApiFunc
 import com.seventhmoon.advertiseclient.data.Constants
 import com.seventhmoon.advertiseclient.data.ScrollTextView
@@ -102,7 +101,7 @@ import kotlin.system.exitProcess
 class MainActivity : AppCompatActivity() {
 
     private val mTag = MainActivity::class.java.name
-    var mContext: Context? = null
+    //var this@MainActivity: Context? = null
 
     private val requestIdMultiplePermission = 1
     private var pref: SharedPreferences? = null
@@ -142,7 +141,7 @@ class MainActivity : AppCompatActivity() {
     private var textViewProgress: TextView ?= null
     //top
     private var linearLayoutTop : LinearLayout ?= null
-    private var textViewTop : SpeedMarquee ?= null
+    private var textViewTop : ScrollTextView ?= null
     private var imageViewTop : ImageView ?= null
     private var imageViewTop2 : ImageView ?= null
     private var videoViewLayoutTop: RelativeLayout ?= null
@@ -159,12 +158,12 @@ class MainActivity : AppCompatActivity() {
     //bottom
     private var linearLayoutBottom : LinearLayout ?= null
     //var textViewBottom : TextView ?= null
-    var textViewBottom : SpeedMarquee ?= null
+    var textViewBottom : ScrollTextView ?= null
     var imageViewBottom : ImageView ?= null
     var imageViewBottom2 : ImageView ?= null
     private var videoViewLayoutBottom: RelativeLayout ?= null
     private var videoViewBottom: VideoView ?= null
-    private var messageViewBottom: TextView ?= null
+    //private var messageViewBottom: TextView ?= null
     //private var imageViewBannerBottom: ImageView?= null
 
     private var linearLayoutTriangle : LinearLayout ?= null
@@ -280,7 +279,7 @@ class MainActivity : AppCompatActivity() {
     var pingCount: Int = 0
     //for Log
     private var process: Process? = null
-    private var debugLog: Boolean = false
+    private var debugLog: Boolean = true
 
     private var planStartTimeString : String = "--:--"
     private var plan2StartTimeString : String = "--:--"
@@ -340,44 +339,11 @@ class MainActivity : AppCompatActivity() {
         textViewShowInitSuccess = findViewById(R.id.textViewShowInitSuccess)
         textViewProgress = findViewById(R.id.textViewProgress)
 
-        mContext = applicationContext
+        //mContext = applicationContext
 
-        /*
-        rootView!!.removeAllViews()
-        rootView!!.setBackgroundColor(Color.BLACK)
+        
 
-        textViewShowInitSuccess = TextView(mContext as Context)
-        textViewShowInitSuccess!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-
-        textViewShowInitSuccess!!.setTextColor(Color.WHITE)
-        textViewShowInitSuccess!!.textAlignment = TEXT_ALIGNMENT_CENTER
-        textViewShowInitSuccess!!.setTextAppearance(android.R.style.TextAppearance_Large)
-        textViewShowInitSuccess!!.text = ""
-        //textViewShowInitSuccess!!.visibility = View.GONE
-        //rootView!!.addView(textViewShowInitSuccess)
-
-        textViewProgress = TextView(mContext as Context)
-        textViewProgress!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-        textViewProgress!!.setTextColor(Color.WHITE)
-        textViewProgress!!.textAlignment = TEXT_ALIGNMENT_CENTER
-        textViewProgress!!.setTextAppearance(android.R.style.TextAppearance_Large)
-        textViewProgress!!.text = ""
-        //textViewProgress!!.visibility = View.GONE
-        //rootView!!.addView(textViewProgress)
-        if (mainLinearLayout == null) {
-            mainLinearLayout = LinearLayout(mContext)
-            mainLinearLayout!!.gravity = Gravity.CENTER
-            mainLinearLayout!!.setBackgroundColor(Color.BLACK)
-        }
-        mainLinearLayout!!.removeAllViews()
-        mainLinearLayout!!.layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT)
-        mainLinearLayout!!.addView(textViewShowInitSuccess)
-        mainLinearLayout!!.addView(textViewProgress)
-
-        rootView!!.addView(mainLinearLayout)
-        */
-
-        handleUncaughtException()
+        //handleUncaughtException()
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             checkAndRequestPermissions()
@@ -436,12 +402,12 @@ class MainActivity : AppCompatActivity() {
                 screenHeight = displayMetrics.heightPixels
                 screenWidth = displayMetrics.widthPixels
             } else if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M && Build.VERSION.SDK_INT <= Build.VERSION_CODES.Q) {
-                mContext!!.display!!.getRealMetrics(displayMetrics)
+                this@MainActivity.display!!.getRealMetrics(displayMetrics)
 
                 screenHeight = displayMetrics.heightPixels
                 screenWidth = displayMetrics.widthPixels
             } else { //Android 11
-                //mContext!!.display!!.getMetrics(displayMetrics)
+                //this@MainActivity!!.display!!.getMetrics(displayMetrics)
                 screenHeight = windowManager.currentWindowMetrics.bounds.height()
                 screenWidth = windowManager.currentWindowMetrics.bounds.width()
             }
@@ -471,7 +437,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         //load layout from DB
-        defaultPlayLayoutDataDB = Room.databaseBuilder(mContext as Context, DefaultPlayLayoutDataDB::class.java, DefaultPlayLayoutDataDB.DATABASE_NAME)
+        defaultPlayLayoutDataDB = Room.databaseBuilder(this@MainActivity, DefaultPlayLayoutDataDB::class.java, DefaultPlayLayoutDataDB.DATABASE_NAME)
             .allowMainThreadQueries()
             .addMigrations(migration12)
             .build()
@@ -547,7 +513,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         //load AdSetting from DB
-        defaultPlayAdSettingDataDB = Room.databaseBuilder(mContext as Context, DefaultPlayAdSettingDataDB::class.java, DefaultPlayAdSettingDataDB.DATABASE_NAME)
+        defaultPlayAdSettingDataDB = Room.databaseBuilder(this@MainActivity, DefaultPlayAdSettingDataDB::class.java, DefaultPlayAdSettingDataDB.DATABASE_NAME)
             .allowMainThreadQueries()
             .addMigrations(migration12)
             .build()
@@ -590,7 +556,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         //load marquee from DB
-        defaultPlayMarqueeDataDB = Room.databaseBuilder(mContext as Context, DefaultPlayMarqueeDataDB::class.java, DefaultPlayMarqueeDataDB.DATABASE_NAME)
+        defaultPlayMarqueeDataDB = Room.databaseBuilder(this@MainActivity, DefaultPlayMarqueeDataDB::class.java, DefaultPlayMarqueeDataDB.DATABASE_NAME)
             .allowMainThreadQueries()
             .addMigrations(migration12)
             .build()
@@ -612,7 +578,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         //load banner from DB
-        defaultPlayBannerDataDB = Room.databaseBuilder(mContext as Context, DefaultPlayBannerDataDB::class.java, DefaultPlayBannerDataDB.DATABASE_NAME)
+        defaultPlayBannerDataDB = Room.databaseBuilder(this@MainActivity, DefaultPlayBannerDataDB::class.java, DefaultPlayBannerDataDB.DATABASE_NAME)
             .allowMainThreadQueries()
             .addMigrations(migration12)
             .build()
@@ -638,7 +604,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         //load images from DB
-        defaultPlayImagesDataDB = Room.databaseBuilder(mContext as Context, DefaultPlayImagesDataDB::class.java, DefaultPlayImagesDataDB.DATABASE_NAME)
+        defaultPlayImagesDataDB = Room.databaseBuilder(this@MainActivity, DefaultPlayImagesDataDB::class.java, DefaultPlayImagesDataDB.DATABASE_NAME)
             .allowMainThreadQueries()
             .addMigrations(migration12)
             .build()
@@ -664,7 +630,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         //load video from DB
-        defaultPlayVideosDataDB = Room.databaseBuilder(mContext as Context, DefaultPlayVideosDataDB::class.java, DefaultPlayVideosDataDB.DATABASE_NAME)
+        defaultPlayVideosDataDB = Room.databaseBuilder(this@MainActivity, DefaultPlayVideosDataDB::class.java, DefaultPlayVideosDataDB.DATABASE_NAME)
             .allowMainThreadQueries()
             .addMigrations(migration12)
             .build()
@@ -692,7 +658,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         //load mix from db
-        defaultPlayMixDataDB = Room.databaseBuilder(mContext as Context, DefaultPlayMixDataDB::class.java, DefaultPlayMixDataDB.DATABASE_NAME)
+        defaultPlayMixDataDB = Room.databaseBuilder(this@MainActivity, DefaultPlayMixDataDB::class.java, DefaultPlayMixDataDB.DATABASE_NAME)
             .allowMainThreadQueries()
             .addMigrations(migration12)
             .build()
@@ -907,10 +873,10 @@ class MainActivity : AppCompatActivity() {
         }
 
         //animation for image
-        animMoveFromLeft = AnimationUtils.loadAnimation(mContext, R.anim.move_from_left)
-        animMoveToRight = AnimationUtils.loadAnimation(mContext, R.anim.move_to_right)
-        animMoveFromRight = AnimationUtils.loadAnimation(mContext, R.anim.move_from_right)
-        animMoveToLeft = AnimationUtils.loadAnimation(mContext, R.anim.move_to_left)
+        animMoveFromLeft = AnimationUtils.loadAnimation(this@MainActivity, R.anim.move_from_left)
+        animMoveToRight = AnimationUtils.loadAnimation(this@MainActivity, R.anim.move_to_right)
+        animMoveFromRight = AnimationUtils.loadAnimation(this@MainActivity, R.anim.move_from_right)
+        animMoveToLeft = AnimationUtils.loadAnimation(this@MainActivity, R.anim.move_to_left)
 
         val filter: IntentFilter
         @SuppressLint("CommitPrefEdits")
@@ -941,7 +907,7 @@ class MainActivity : AppCompatActivity() {
 
                         val getLayoutIntent = Intent()
                         getLayoutIntent.action = Constants.ACTION.ACTION_GET_LAYOUT
-                        mContext?.sendBroadcast(getLayoutIntent)
+                        this@MainActivity.sendBroadcast(getLayoutIntent)
 
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_LAYOUT, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_LAYOUT")
@@ -986,7 +952,7 @@ class MainActivity : AppCompatActivity() {
 
                             val getMarqueeIntent = Intent()
                             getMarqueeIntent.action = Constants.ACTION.ACTION_GET_MARQUEE_START
-                            mContext?.sendBroadcast(getMarqueeIntent)
+                            this@MainActivity.sendBroadcast(getMarqueeIntent)
                         }
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_AD_SETTING_EMPTY, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_AD_SETTING_EMPTY")
@@ -1004,7 +970,7 @@ class MainActivity : AppCompatActivity() {
                         //then get banner
                         val getBannerIntent = Intent()
                         getBannerIntent.action = Constants.ACTION.ACTION_GET_BANNER_START
-                        mContext?.sendBroadcast(getBannerIntent)
+                        this@MainActivity.sendBroadcast(getBannerIntent)
 
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_MARQUEE_EMPTY, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_MARQUEE_EMPTY")
@@ -1016,7 +982,7 @@ class MainActivity : AppCompatActivity() {
                         //then get banner
                         val getBannerIntent = Intent()
                         getBannerIntent.action = Constants.ACTION.ACTION_GET_BANNER_START
-                        mContext?.sendBroadcast(getBannerIntent)
+                        this@MainActivity.sendBroadcast(getBannerIntent)
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_MARQUEE_SUCCESS, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_MARQUEE_SUCCESS")
                         textViewShowInitSuccess!!.text = "Get marquee success"
@@ -1072,7 +1038,7 @@ class MainActivity : AppCompatActivity() {
                             //then get banner
                             val getBannerIntent = Intent()
                             getBannerIntent.action = Constants.ACTION.ACTION_GET_BANNER_START
-                            mContext?.sendBroadcast(getBannerIntent)
+                            this@MainActivity.sendBroadcast(getBannerIntent)
 
                         } else {
                             Log.d(mTag, "No AdSetting")
@@ -1108,7 +1074,7 @@ class MainActivity : AppCompatActivity() {
                             //then get images
                             val getImagesIntent = Intent()
                             getImagesIntent.action = Constants.ACTION.ACTION_GET_IMAGES_START
-                            mContext?.sendBroadcast(getImagesIntent)
+                            this@MainActivity.sendBroadcast(getImagesIntent)
                         }
 
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_BANNER_FAILED, ignoreCase = true)) {
@@ -1121,7 +1087,7 @@ class MainActivity : AppCompatActivity() {
                             //then get images
                             val getImagesIntent = Intent()
                             getImagesIntent.action = Constants.ACTION.ACTION_GET_IMAGES_START
-                            mContext?.sendBroadcast(getImagesIntent)
+                            this@MainActivity.sendBroadcast(getImagesIntent)
                         }
 
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_BANNER_SUCCESS, ignoreCase = true)) {
@@ -1142,7 +1108,7 @@ class MainActivity : AppCompatActivity() {
                         //then get images
                         val getImagesIntent = Intent()
                         getImagesIntent.action = Constants.ACTION.ACTION_GET_IMAGES_START
-                        mContext?.sendBroadcast(getImagesIntent)
+                        this@MainActivity.sendBroadcast(getImagesIntent)
 
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_BANNER_COMPLETE, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_BANNER_COMPLETE")
@@ -1162,7 +1128,7 @@ class MainActivity : AppCompatActivity() {
                         //then get images
                         val getImagesIntent = Intent()
                         getImagesIntent.action = Constants.ACTION.ACTION_GET_IMAGES_START
-                        mContext?.sendBroadcast(getImagesIntent)
+                        this@MainActivity.sendBroadcast(getImagesIntent)
 
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_IMAGES_START, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_IMAGES_START")
@@ -1195,7 +1161,7 @@ class MainActivity : AppCompatActivity() {
 
                             val getVideosIntent = Intent()
                             getVideosIntent.action = Constants.ACTION.ACTION_GET_VIDEOS_START
-                            mContext?.sendBroadcast(getVideosIntent)
+                            this@MainActivity.sendBroadcast(getVideosIntent)
                         }
 
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_IMAGES_FAILED, ignoreCase = true)) {
@@ -1207,7 +1173,7 @@ class MainActivity : AppCompatActivity() {
                         } else { //downloadImageComplete
                             val getVideosIntent = Intent()
                             getVideosIntent.action = Constants.ACTION.ACTION_GET_VIDEOS_START
-                            mContext?.sendBroadcast(getVideosIntent)
+                            this@MainActivity.sendBroadcast(getVideosIntent)
                         }
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_IMAGES_SUCCESS, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_IMAGES_SUCCESS")
@@ -1226,7 +1192,7 @@ class MainActivity : AppCompatActivity() {
                         //then download videos
                         val getVideosIntent = Intent()
                         getVideosIntent.action = Constants.ACTION.ACTION_GET_VIDEOS_START
-                        mContext?.sendBroadcast(getVideosIntent)
+                        this@MainActivity.sendBroadcast(getVideosIntent)
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_IMAGES_COMPLETE, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_IMAGES_COMPLETE")
                         textViewShowInitSuccess!!.text = "Get images complete"
@@ -1245,7 +1211,7 @@ class MainActivity : AppCompatActivity() {
                         //then download videos
                         val getVideosIntent = Intent()
                         getVideosIntent.action = Constants.ACTION.ACTION_GET_VIDEOS_START
-                        mContext?.sendBroadcast(getVideosIntent)
+                        this@MainActivity.sendBroadcast(getVideosIntent)
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_VIDEOS_START, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_VIDEOS_START")
                         textViewShowInitSuccess!!.text = "Get videos..."
@@ -1277,7 +1243,7 @@ class MainActivity : AppCompatActivity() {
                             //then download mix
                             val getMixIntent = Intent()
                             getMixIntent.action = Constants.ACTION.ACTION_GET_MIX_START
-                            mContext?.sendBroadcast(getMixIntent)
+                            this@MainActivity.sendBroadcast(getMixIntent)
                         }
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_VIDEOS_FAILED, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_VIDEOS_FAILED")
@@ -1293,7 +1259,7 @@ class MainActivity : AppCompatActivity() {
                         } else { //download complete
                             val getMixIntent = Intent()
                             getMixIntent.action = Constants.ACTION.ACTION_GET_MIX_START
-                            mContext?.sendBroadcast(getMixIntent)
+                            this@MainActivity.sendBroadcast(getMixIntent)
                         }
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_VIDEOS_SUCCESS, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_VIDEOS_SUCCESS")
@@ -1319,7 +1285,7 @@ class MainActivity : AppCompatActivity() {
                         //then download mix
                         val getMixIntent = Intent()
                         getMixIntent.action = Constants.ACTION.ACTION_GET_MIX_START
-                        mContext?.sendBroadcast(getMixIntent)
+                        this@MainActivity.sendBroadcast(getMixIntent)
 
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_VIDEOS_COMPLETE, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_VIDEOS_COMPLETE")
@@ -1344,7 +1310,7 @@ class MainActivity : AppCompatActivity() {
                             //then download mix
                             val getMixIntent = Intent()
                             getMixIntent.action = Constants.ACTION.ACTION_GET_MIX_START
-                            mContext?.sendBroadcast(getMixIntent)
+                            this@MainActivity.sendBroadcast(getMixIntent)
 
                         } else {
                             Log.d(mTag, "Not Yet")
@@ -1380,7 +1346,7 @@ class MainActivity : AppCompatActivity() {
                             //then play ad
                             val playAdIntent = Intent()
                             playAdIntent.action = Constants.ACTION.ACTION_START_PLAY_AD
-                            mContext?.sendBroadcast(playAdIntent)
+                            this@MainActivity.sendBroadcast(playAdIntent)
                         }
 
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_MIX_SUCCESS, ignoreCase = true)) {
@@ -1401,7 +1367,7 @@ class MainActivity : AppCompatActivity() {
                         } else {
                             val playAdIntent = Intent()
                             playAdIntent.action = Constants.ACTION.ACTION_START_PLAY_AD
-                            mContext?.sendBroadcast(playAdIntent)
+                            this@MainActivity.sendBroadcast(playAdIntent)
                         }
 
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_MIX_COMPLETE, ignoreCase = true)) {
@@ -1424,10 +1390,33 @@ class MainActivity : AppCompatActivity() {
                                 Log.d(mTag, "defaultMixPlayList.size = ${defaultMixPlayList!!.size}")
                             }
 
+                            //get current planId
+                            val currentTimestamp = getCurrentTimeStamp()
+                            Log.d(mTag, "currentTimestamp = $currentTimestamp")
+
+                            if (layoutList.size > 0) {
+                                getPlanUse(currentTimestamp)
+
+                                //get current plan idx
+                                if (currentPlanId > 0) {
+                                    if (adSettingList.size > 0) {
+                                        //get current plan idx
+                                        for (i in adSettingList.indices) {
+                                            if (currentPlanId == adSettingList[i].plan_id) {
+                                                currentAdSettingIdx = i
+                                                break
+                                            }
+                                        }
+                                    } else {
+                                        currentAdSettingIdx = -1
+                                    }
+                                }
+                            }
+
                             //then play ad
                             val playAdIntent = Intent()
                             playAdIntent.action = Constants.ACTION.ACTION_START_PLAY_AD
-                            mContext?.sendBroadcast(playAdIntent)
+                            this@MainActivity.sendBroadcast(playAdIntent)
 
                         } else {
                             Log.d(mTag, "Not Yet")
@@ -1436,10 +1425,33 @@ class MainActivity : AppCompatActivity() {
                     }  else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_MIX_EMPTY, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_MIX_EMPTY")
                         textViewShowInitSuccess!!.text = "Get mix empty"
+
+                        //get current planId
+                        val currentTimestamp = getCurrentTimeStamp()
+                        Log.d(mTag, "currentTimestamp = $currentTimestamp")
+
+                        if (layoutList.size > 0) {
+                            getPlanUse(currentTimestamp)
+
+                            //get current plan idx
+                            if (currentPlanId > 0) {
+                                if (adSettingList.size > 0) {
+                                    //get current plan idx
+                                    for (i in adSettingList.indices) {
+                                        if (currentPlanId == adSettingList[i].plan_id) {
+                                            currentAdSettingIdx = i
+                                            break
+                                        }
+                                    }
+                                } else {
+                                    currentAdSettingIdx = -1
+                                }
+                            }
+                        }
                         //start play ad
                         val startAdIntent = Intent()
                         startAdIntent.action = Constants.ACTION.ACTION_START_PLAY_AD
-                        mContext?.sendBroadcast(startAdIntent)
+                        this@MainActivity.sendBroadcast(startAdIntent)
 
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_START_PLAY_AD, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_START_PLAY_AD")
@@ -1482,10 +1494,10 @@ class MainActivity : AppCompatActivity() {
                                 if (downloadFileExt == "mp4") { //video
                                     //mixPlayIntent.action = Constants.ACTION.ACTION_MIX_TOP_PLAY_VIDEO_START
                                     mixPlayIntent.action = Constants.ACTION.ACTION_TOP_VIDEO_PLAY_START
-                                    mContext?.sendBroadcast(mixPlayIntent)
+                                    this@MainActivity.sendBroadcast(mixPlayIntent)
                                 } else { //image
                                     mixPlayIntent.action = Constants.ACTION.ACTION_MIX_TOP_PLAY_IMAGE_START
-                                    mContext?.sendBroadcast(mixPlayIntent)
+                                    this@MainActivity.sendBroadcast(mixPlayIntent)
                                 }
                             }
                         }
@@ -1528,7 +1540,7 @@ class MainActivity : AppCompatActivity() {
                                 } else { //image
                                     mixPlayIntent.action = Constants.ACTION.ACTION_MIX_TOP_PLAY_IMAGE_START
                                 }
-                                mContext?.sendBroadcast(mixPlayIntent)
+                                this@MainActivity.sendBroadcast(mixPlayIntent)
                             }
                         } else {
                             mixTopRunning = false
@@ -1589,70 +1601,13 @@ class MainActivity : AppCompatActivity() {
 
                                         val mixPlayFinishIntent = Intent()
                                         mixPlayFinishIntent.action = Constants.ACTION.ACTION_MIX_TOP_PLAY_FINISH
-                                        mContext?.sendBroadcast(mixPlayFinishIntent)
+                                        this@MainActivity.sendBroadcast(mixPlayFinishIntent)
                                     }
                                 } //onFinish
                             }.start()
                         }
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_MIX_TOP_PLAY_VIDEO_START, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_MIX_TOP_PLAY_VIDEO_START")
-                        /*
-                        if (layoutTop == 5) { //mix only
-                            imageViewTop!!.visibility = View.GONE
-                            imageViewTop2!!.visibility = View.GONE
-                            imageViewTop!!.setImageResource(0)
-                            imageViewTop2!!.setImageResource(0)
-                            videoViewTop!!.visibility = View.VISIBLE
-                            videoViewLayoutTop!!.visibility = View.VISIBLE
-
-                            if (mixList.size > 0 && checkDownloadMixAll()) { //at least one video can play
-                                //top
-                                val filePath = "$dest_videos_folder${mixList[currentMixIndexTop]}"
-                                Log.d(mTag, "start play -> $filePath")
-                                val file = File(filePath)
-                                if (file.exists()) {
-                                    val uriTop = Uri.fromFile(file)
-
-                                    videoViewTop!!.setVideoURI(uriTop)
-                                    //videoViewTop!!.start()
-                                    //videoRunningTop = true
-
-                                    videoViewTop!!.setOnPreparedListener { mp ->
-                                        Log.d(mTag, "videoViewTop prepared")
-                                        //mp.setWakeMode(mContext, PowerManager.PARTIAL_WAKE_LOCK)
-                                        mp.seekTo(0)
-                                        mp.start()
-                                        mixVideoRunningTop = true
-                                    }
-
-                                    videoViewTop!!.setOnErrorListener { mp, _, _ ->
-                                        Log.d("video", "mix videoViewTop setOnErrorListener ")
-
-                                        //mp.reset()
-                                        mixVideoRunningTop = false
-
-                                        val mixPlayFinishIntent = Intent()
-                                        mixPlayFinishIntent.action =
-                                            Constants.ACTION.ACTION_MIX_TOP_PLAY_FINISH
-                                        mContext?.sendBroadcast(mixPlayFinishIntent)
-
-                                        true
-                                    }
-                                    videoViewTop!!.setOnCompletionListener { mp ->
-
-                                        mp.reset()
-                                        mixVideoRunningTop = false
-
-                                        val mixPlayFinishIntent = Intent()
-                                        mixPlayFinishIntent.action =
-                                            Constants.ACTION.ACTION_MIX_TOP_PLAY_FINISH
-                                        mContext?.sendBroadcast(mixPlayFinishIntent)
-                                    }
-                                } else {
-                                    Log.d(mTag, "video top: play file not exist")
-                                }
-                            }
-                        }*/
 
                     } //center
                     else if (intent.action!!.equals(Constants.ACTION.ACTION_MIX_CENTER_PLAY_START, ignoreCase = true)) {
@@ -1688,10 +1643,10 @@ class MainActivity : AppCompatActivity() {
                                 if (downloadFileExt == "mp4") { //video
                                     //mixPlayIntent.action = Constants.ACTION.ACTION_MIX_CENTER_PLAY_VIDEO_START
                                     mixPlayIntent.action = Constants.ACTION.ACTION_CENTER_VIDEO_PLAY_START
-                                    mContext?.sendBroadcast(mixPlayIntent)
+                                    this@MainActivity.sendBroadcast(mixPlayIntent)
                                 } else { //image
                                     mixPlayIntent.action = Constants.ACTION.ACTION_MIX_CENTER_PLAY_IMAGE_START
-                                    mContext?.sendBroadcast(mixPlayIntent)
+                                    this@MainActivity.sendBroadcast(mixPlayIntent)
                                 }
                             }
                         }
@@ -1734,7 +1689,7 @@ class MainActivity : AppCompatActivity() {
                                 } else { //image
                                     mixPlayIntent.action = Constants.ACTION.ACTION_MIX_CENTER_PLAY_IMAGE_START
                                 }
-                                mContext?.sendBroadcast(mixPlayIntent)
+                                this@MainActivity.sendBroadcast(mixPlayIntent)
                             }
                         } else {
                             mixTopRunning = false
@@ -1795,75 +1750,18 @@ class MainActivity : AppCompatActivity() {
 
                                         val mixPlayFinishIntent = Intent()
                                         mixPlayFinishIntent.action = Constants.ACTION.ACTION_MIX_CENTER_PLAY_FINISH
-                                        mContext?.sendBroadcast(mixPlayFinishIntent)
+                                        this@MainActivity.sendBroadcast(mixPlayFinishIntent)
                                     }
                                 } //onFinish
                             }.start()
                         }
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_MIX_CENTER_PLAY_VIDEO_START, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_MIX_CENTER_PLAY_VIDEO_START")
-                        /*
-                        if (layoutCenter == 5) { //mix only
-                            imageViewCenter!!.visibility = View.GONE
-                            imageViewCenter2!!.visibility = View.GONE
-                            imageViewCenter!!.setImageResource(0)
-                            imageViewCenter2!!.setImageResource(0)
-                            videoViewCenter!!.visibility = View.VISIBLE
-                            videoViewLayoutCenter!!.visibility = View.VISIBLE
 
-                            if (mixList.size > 0 && checkDownloadMixAll()) { //at least one video can play
-                                //top
-                                val filePath = "$dest_videos_folder${mixList[currentMixIndexCenter]}"
-                                Log.d(mTag, "start play -> $filePath")
-                                val file = File(filePath)
-                                if (file.exists()) {
-                                    val uriCenter = Uri.fromFile(file)
-
-                                    videoViewCenter!!.setVideoURI(uriCenter)
-                                    //videoViewTop!!.start()
-                                    //videoRunningTop = true
-
-                                    videoViewCenter!!.setOnPreparedListener { mp ->
-                                        Log.d(mTag, "videoViewCenter prepared")
-                                        //mp.setWakeMode(mContext, PowerManager.PARTIAL_WAKE_LOCK)
-                                        mp.seekTo(0)
-                                        mp.start()
-                                        mixVideoRunningCenter = true
-                                    }
-
-                                    videoViewCenter!!.setOnErrorListener { mp, _, _ ->
-                                        Log.d("video", "mix videoViewCenter setOnErrorListener ")
-
-                                        //mp.reset()
-                                        mixVideoRunningCenter = false
-
-                                        val mixPlayFinishIntent = Intent()
-                                        mixPlayFinishIntent.action =
-                                            Constants.ACTION.ACTION_MIX_CENTER_PLAY_FINISH
-                                        mContext?.sendBroadcast(mixPlayFinishIntent)
-
-                                        true
-                                    }
-                                    videoViewCenter!!.setOnCompletionListener { mp ->
-
-                                        mp.reset()
-                                        mixVideoRunningCenter = false
-
-                                        val mixPlayFinishIntent = Intent()
-                                        mixPlayFinishIntent.action =
-                                            Constants.ACTION.ACTION_MIX_CENTER_PLAY_FINISH
-                                        mContext?.sendBroadcast(mixPlayFinishIntent)
-                                    }
-                                } else {
-                                    Log.d(mTag, "video center: play file not exist")
-                                }
-                            }
-                        }
-                        */
                     } //bottom
                     else if (intent.action!!.equals(Constants.ACTION.ACTION_MIX_BOTTOM_PLAY_START, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_MIX_BOTTOM_PLAY_START")
-                        messageViewBottom!!.text = "ACTION_MIX_BOTTOM_PLAY_START"
+                        //messageViewBottom!!.text = "ACTION_MIX_BOTTOM_PLAY_START"
                         currentMixIndexBottom = -1
                         Log.e(mTag, "mixList.size = ${mixList.size}")
 
@@ -1895,10 +1793,10 @@ class MainActivity : AppCompatActivity() {
                                 if (downloadFileExt == "mp4") { //video
                                     //mixPlayIntent.action = Constants.ACTION.ACTION_MIX_BOTTOM_PLAY_VIDEO_START
                                     mixPlayIntent.action = Constants.ACTION.ACTION_BOTTOM_VIDEO_PLAY_START
-                                    mContext?.sendBroadcast(mixPlayIntent)
+                                    this@MainActivity.sendBroadcast(mixPlayIntent)
                                 } else { //image
                                     mixPlayIntent.action = Constants.ACTION.ACTION_MIX_BOTTOM_PLAY_IMAGE_START
-                                    mContext?.sendBroadcast(mixPlayIntent)
+                                    this@MainActivity.sendBroadcast(mixPlayIntent)
                                 }
                             }
                         }
@@ -1906,11 +1804,11 @@ class MainActivity : AppCompatActivity() {
 
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_MIX_BOTTOM_PLAY_STOP, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_MIX_BOTTOM_PLAY_STOP")
-                        messageViewBottom!!.text = "ACTION_MIX_BOTTOM_PLAY_STOP"
+                        //messageViewBottom!!.text = "ACTION_MIX_BOTTOM_PLAY_STOP"
 
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_MIX_BOTTOM_PLAY_FINISH, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_MIX_BOTTOM_PLAY_FINISH")
-                        messageViewBottom!!.text = "ACTION_MIX_BOTTOM_PLAY_FINISH"
+                        //messageViewBottom!!.text = "ACTION_MIX_BOTTOM_PLAY_FINISH"
                         if (layoutBottom == 5) { //mix only
                             if (mixList.size > 0 && checkDownloadMixAll()) { //at least one image or video can play
                                 Log.e(mTag, "mixList.size > 0")
@@ -1941,14 +1839,14 @@ class MainActivity : AppCompatActivity() {
                                 } else { //image
                                     mixPlayIntent.action = Constants.ACTION.ACTION_MIX_BOTTOM_PLAY_IMAGE_START
                                 }
-                                mContext?.sendBroadcast(mixPlayIntent)
+                                this@MainActivity.sendBroadcast(mixPlayIntent)
                             }
                         } else {
                             mixTopRunning = false
                         }
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_MIX_BOTTOM_PLAY_IMAGE_START, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_MIX_BOTTOM_PLAY_IMAGE_START")
-                        messageViewBottom!!.text = "ACTION_MIX_BOTTOM_PLAY_IMAGE_START"
+                        //messageViewBottom!!.text = "ACTION_MIX_BOTTOM_PLAY_IMAGE_START"
                         var mixImagesPlayInterval = 7000
                         when(mixImageInterval) {
                             0 -> {
@@ -2002,72 +1900,13 @@ class MainActivity : AppCompatActivity() {
 
                                         val mixPlayFinishIntent = Intent()
                                         mixPlayFinishIntent.action = Constants.ACTION.ACTION_MIX_BOTTOM_PLAY_FINISH
-                                        mContext?.sendBroadcast(mixPlayFinishIntent)
+                                        this@MainActivity.sendBroadcast(mixPlayFinishIntent)
                                     }
                                 } //onFinish
                             }.start()
                         }
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_MIX_BOTTOM_PLAY_VIDEO_START, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_MIX_BOTTOM_PLAY_VIDEO_START")
-                        messageViewBottom!!.text = "ACTION_MIX_BOTTOM_PLAY_VIDEO_START"
-                        /*
-                        if (layoutBottom == 5) { //mix only
-                            imageViewBottom!!.visibility = View.GONE
-                            imageViewBottom2!!.visibility = View.GONE
-                            imageViewBottom!!.setImageResource(0)
-                            imageViewBottom2!!.setImageResource(0)
-                            videoViewBottom!!.visibility = View.VISIBLE
-                            videoViewLayoutBottom!!.visibility = View.VISIBLE
-
-
-                            if (mixList.size > 0 && checkDownloadMixAll()) { //at least one video can play
-                                //top
-                                val filePath = "$dest_videos_folder${mixList[currentMixIndexBottom]}"
-                                Log.d(mTag, "start play -> $filePath")
-                                val file = File(filePath)
-                                if (file.exists()) {
-                                    val uriBottom = Uri.fromFile(file)
-
-                                    videoViewBottom!!.setVideoURI(uriBottom)
-                                    //videoViewTop!!.start()
-                                    //videoRunningTop = true
-
-                                    videoViewBottom!!.setOnPreparedListener { mp ->
-                                        Log.d(mTag, "videoViewBottom prepared")
-                                        //mp.setWakeMode(mContext, PowerManager.PARTIAL_WAKE_LOCK)
-                                        mp.seekTo(0)
-                                        mp.start()
-                                        mixVideoRunningBottom = true
-                                    }
-
-                                    videoViewBottom!!.setOnErrorListener { mp, _, _ ->
-                                        Log.d("video", "mix videoViewBottom setOnErrorListener ")
-
-                                        //mp.reset()
-                                        mixVideoRunningBottom = false
-
-                                        val mixPlayFinishIntent = Intent()
-                                        mixPlayFinishIntent.action =
-                                            Constants.ACTION.ACTION_MIX_BOTTOM_PLAY_FINISH
-                                        mContext?.sendBroadcast(mixPlayFinishIntent)
-
-                                        true
-                                    }
-                                    videoViewBottom!!.setOnCompletionListener { mp ->
-
-                                        mp.reset()
-                                        mixVideoRunningBottom = false
-
-                                        val mixPlayFinishIntent = Intent()
-                                        mixPlayFinishIntent.action =
-                                                Constants.ACTION.ACTION_MIX_BOTTOM_PLAY_FINISH
-                                        mContext?.sendBroadcast(mixPlayFinishIntent)
-                                    }
-                                } else {
-                                    Log.d(mTag, "video bottom: play file not exist")
-                                }
-                            }
-                        }*/
 
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_TOP_VIDEO_PLAY_START, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_TOP_VIDEO_PLAY_START")
@@ -2101,59 +1940,7 @@ class MainActivity : AppCompatActivity() {
                                 val uriTop = Uri.fromFile(file)
 
                                 videoViewTop!!.setVideoURI(uriTop)
-                                //videoViewTop!!.start()
-                                //videoRunningTop = true
-                                /*
-                                videoViewTop!!.setOnPreparedListener { mp ->
-                                    Log.d(mTag, "videoViewTop prepared")
-                                    //mp.setWakeMode(mContext, PowerManager.PARTIAL_WAKE_LOCK)
-                                    mp.seekTo(0)
-                                    mp.start()
-                                    if (layoutTop == 3) {
-                                        videoRunningTop = true
-                                    } else if (layoutTop == 5){
-                                        mixVideoRunningTop = true
-                                    }
-                                }
 
-                                videoViewTop!!.setOnErrorListener { mp, _, _ ->
-                                    Log.d("video", "videoViewTop setOnErrorListener ")
-
-                                    //mp.reset()
-                                    videoRunningTop = false
-                                    mixVideoRunningTop = false
-                                    if (layoutTop == 3) {
-                                        val mixPlayFinishIntent = Intent()
-                                        mixPlayFinishIntent.action =
-                                            Constants.ACTION.ACTION_TOP_VIDEO_PLAY_FINISH
-                                        mContext?.sendBroadcast(mixPlayFinishIntent)
-                                    } else if (layoutTop == 5){
-                                        val mixPlayFinishIntent = Intent()
-                                        mixPlayFinishIntent.action =
-                                            Constants.ACTION.ACTION_MIX_TOP_PLAY_FINISH
-                                        mContext?.sendBroadcast(mixPlayFinishIntent)
-                                    }
-                                    true
-                                }
-                                videoViewTop!!.setOnCompletionListener { mp ->
-
-                                    mp.reset()
-                                    videoRunningTop = false
-                                    mixVideoRunningTop = false
-                                    if (layoutTop == 3) {
-                                        val videoPlayFinishIntent = Intent()
-                                        videoPlayFinishIntent.action =
-                                            Constants.ACTION.ACTION_TOP_VIDEO_PLAY_FINISH
-                                        mContext?.sendBroadcast(videoPlayFinishIntent)
-                                    } else if (layoutTop == 5){
-                                        val mixPlayFinishIntent = Intent()
-                                        mixPlayFinishIntent.action =
-                                            Constants.ACTION.ACTION_MIX_TOP_PLAY_FINISH
-                                        mContext?.sendBroadcast(mixPlayFinishIntent)
-                                    }
-
-
-                                }*/
                             } else {
                                 Log.d(mTag, "video top: play file not exist")
                             }
@@ -2191,7 +1978,7 @@ class MainActivity : AppCompatActivity() {
                                 val videoPlayStartIntent = Intent()
                                 videoPlayStartIntent.action =
                                     Constants.ACTION.ACTION_TOP_VIDEO_PLAY_START
-                                mContext?.sendBroadcast(videoPlayStartIntent)
+                                this@MainActivity.sendBroadcast(videoPlayStartIntent)
                             } else {
                                 Log.d(mTag, "videoList.size == 0")
                                 videoViewBottom!!.visibility = View.GONE
@@ -2231,62 +2018,7 @@ class MainActivity : AppCompatActivity() {
                                 val uriCenter = Uri.fromFile(file)
 
                                 videoViewCenter!!.setVideoURI(uriCenter)
-                                //videoViewTop!!.start()
-                                //videoRunningTop = true
-                                /*
-                                videoViewCenter!!.setOnPreparedListener { mp ->
-                                    Log.d(mTag, "videoViewCenter prepared")
-                                    //mp.setWakeMode(mContext, PowerManager.PARTIAL_WAKE_LOCK)
-                                    mp.seekTo(0)
-                                    mp.start()
-                                    if (layoutCenter == 3) {
-                                        videoRunningCenter = true
-                                    } else if (layoutCenter == 5){
-                                        mixVideoRunningCenter = true
-                                    }
-                                }
 
-                                videoViewCenter!!.setOnErrorListener { mp, _, _ ->
-                                    Log.d("video", "videoViewCenter setOnErrorListener ")
-
-                                    //mp.reset()
-                                    videoRunningCenter = false
-                                    mixVideoRunningCenter = false
-                                    if (layoutCenter == 3) {
-                                        val videoPlayFinishIntent = Intent()
-                                        videoPlayFinishIntent.action =
-                                            Constants.ACTION.ACTION_CENTER_VIDEO_PLAY_FINISH
-                                        mContext?.sendBroadcast(videoPlayFinishIntent)
-                                    } else if (layoutCenter == 5){
-                                        val mixPlayFinishIntent = Intent()
-                                        mixPlayFinishIntent.action =
-                                            Constants.ACTION.ACTION_MIX_CENTER_PLAY_FINISH
-                                        mContext?.sendBroadcast(mixPlayFinishIntent)
-                                    }
-
-
-
-                                    true
-                                }
-                                videoViewCenter!!.setOnCompletionListener { mp ->
-
-                                    mp.reset()
-                                    videoRunningCenter = false
-                                    mixVideoRunningCenter = false
-                                    if (layoutCenter == 3) {
-                                        val videoPlayFinishIntent = Intent()
-                                        videoPlayFinishIntent.action =
-                                            Constants.ACTION.ACTION_CENTER_VIDEO_PLAY_FINISH
-                                        mContext?.sendBroadcast(videoPlayFinishIntent)
-                                    } else if (layoutCenter == 5){
-                                        val mixPlayFinishIntent = Intent()
-                                        mixPlayFinishIntent.action =
-                                            Constants.ACTION.ACTION_MIX_CENTER_PLAY_FINISH
-                                        mContext?.sendBroadcast(mixPlayFinishIntent)
-                                    }
-
-
-                                }*/
                             } else {
                                 Log.d(mTag, "video center: play file not exist")
                             }
@@ -2324,7 +2056,7 @@ class MainActivity : AppCompatActivity() {
                                 val videoPlayStartIntent = Intent()
                                 videoPlayStartIntent.action =
                                     Constants.ACTION.ACTION_CENTER_VIDEO_PLAY_START
-                                mContext?.sendBroadcast(videoPlayStartIntent)
+                                this@MainActivity.sendBroadcast(videoPlayStartIntent)
                             } else {
                                 Log.d(mTag, "videoList.size == 0")
                                 videoViewBottom!!.visibility = View.GONE
@@ -2334,7 +2066,7 @@ class MainActivity : AppCompatActivity() {
                         }
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_BOTTOM_VIDEO_PLAY_START, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_BOTTOM_VIDEO_PLAY_START")
-                        messageViewBottom!!.text = "ACTION_BOTTOM_VIDEO_PLAY_START"
+                        //messageViewBottom!!.text = "ACTION_BOTTOM_VIDEO_PLAY_START"
                         var sizeAndCheckDownload = false
                         var filePath = ""
 
@@ -2364,62 +2096,7 @@ class MainActivity : AppCompatActivity() {
                                 val uriBottom = Uri.fromFile(file)
 
                                 videoViewBottom!!.setVideoURI(uriBottom)
-                                //videoViewTop!!.start()
-                                //videoRunningTop = true
-                                /*
-                                videoViewBottom!!.setOnPreparedListener { mp ->
-                                    Log.d(mTag, "videoViewBottom prepared")
-                                    //mp.setWakeMode(mContext, PowerManager.PARTIAL_WAKE_LOCK)
-                                    mp.seekTo(0)
-                                    mp.start()
-                                    if (layoutBottom == 3) {
-                                        videoRunningBottom = true
-                                    } else if (layoutBottom == 5){
-                                        mixVideoRunningBottom = true
-                                    }
-                                }
 
-                                videoViewBottom!!.setOnErrorListener { mp, _, _ ->
-                                    Log.d("video", "mix videoViewBottom setOnErrorListener ")
-
-                                    //mp.reset()
-                                    videoRunningBottom = false
-                                    mixVideoRunningBottom = false
-                                    if (layoutBottom == 3) {
-                                        val mixPlayFinishIntent = Intent()
-                                        mixPlayFinishIntent.action =
-                                            Constants.ACTION.ACTION_BOTTOM_VIDEO_PLAY_FINISH
-                                        mContext?.sendBroadcast(mixPlayFinishIntent)
-                                    } else if (layoutBottom == 5){
-                                        val mixPlayFinishIntent = Intent()
-                                        mixPlayFinishIntent.action =
-                                            Constants.ACTION.ACTION_MIX_BOTTOM_PLAY_FINISH
-                                        mContext?.sendBroadcast(mixPlayFinishIntent)
-                                    }
-
-
-
-                                    true
-                                }
-                                videoViewBottom!!.setOnCompletionListener { mp ->
-
-                                    mp.reset()
-                                    videoRunningBottom = false
-                                    mixVideoRunningBottom = false
-                                    if (layoutBottom == 3) {
-                                        val videoPlayFinishIntent = Intent()
-                                        videoPlayFinishIntent.action =
-                                            Constants.ACTION.ACTION_BOTTOM_VIDEO_PLAY_FINISH
-                                        mContext?.sendBroadcast(videoPlayFinishIntent)
-                                    } else if (layoutBottom == 5){
-                                        val mixPlayFinishIntent = Intent()
-                                        mixPlayFinishIntent.action =
-                                            Constants.ACTION.ACTION_MIX_BOTTOM_PLAY_FINISH
-                                        mContext?.sendBroadcast(mixPlayFinishIntent)
-                                    }
-
-
-                                }*/
                             } else {
                                 Log.d(mTag, "video bottom: play file not exist")
                             }
@@ -2427,11 +2104,11 @@ class MainActivity : AppCompatActivity() {
 
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_BOTTOM_VIDEO_PLAY_STOP, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_BOTTOM_VIDEO_PLAY_STOP")
-                        messageViewBottom!!.text = "ACTION_BOTTOM_VIDEO_PLAY_STOP"
+                        //!!.text = "ACTION_BOTTOM_VIDEO_PLAY_STOP"
 
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_BOTTOM_VIDEO_PLAY_FINISH, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_BOTTOM_VIDEO_PLAY_FINISH")
-                        messageViewBottom!!.text = "ACTION_BOTTOM_VIDEO_PLAY_FINISH"
+                        //messageViewBottom!!.text = "ACTION_BOTTOM_VIDEO_PLAY_FINISH"
                         if (layoutBottom == 3) { //video
                             if (videoList.size > 0 && checkDownloadVideosAll()) {
                                 //videoRunningBottom = false
@@ -2458,7 +2135,7 @@ class MainActivity : AppCompatActivity() {
                                 val videoPlayStartIntent = Intent()
                                 videoPlayStartIntent.action =
                                     Constants.ACTION.ACTION_BOTTOM_VIDEO_PLAY_START
-                                mContext?.sendBroadcast(videoPlayStartIntent)
+                                this@MainActivity.sendBroadcast(videoPlayStartIntent)
                             } else {
                                 Log.d(mTag, "videoList.size == 0")
                                 videoViewBottom!!.visibility = View.GONE
@@ -2587,7 +2264,7 @@ class MainActivity : AppCompatActivity() {
                             val getPlayContentCompleteIntent = Intent()
                             getPlayContentCompleteIntent.action =
                                 Constants.ACTION.ACTION_GET_CURRENT_PLAY_CONTENT_COMPLETE
-                            mContext?.sendBroadcast(getPlayContentCompleteIntent)
+                            this@MainActivity.sendBroadcast(getPlayContentCompleteIntent)
                         } else {
                             Log.d(mTag, "No AdSetting")
                         }
@@ -2597,7 +2274,7 @@ class MainActivity : AppCompatActivity() {
 
                         val playAdIntent = Intent()
                         playAdIntent.action = Constants.ACTION.ACTION_START_PLAY_AD
-                        mContext?.sendBroadcast(playAdIntent)
+                        this@MainActivity.sendBroadcast(playAdIntent)
                     }
                 }
             }
@@ -2689,9 +2366,9 @@ class MainActivity : AppCompatActivity() {
             filter.addAction(Constants.ACTION.ACTION_GET_CURRENT_PLAY_CONTENT_COMPLETE)
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                mContext!!.registerReceiver(mReceiver, filter, RECEIVER_EXPORTED)
+                this@MainActivity!!.registerReceiver(mReceiver, filter, RECEIVER_EXPORTED)
             } else {
-                mContext!!.registerReceiver(mReceiver, filter)
+                this@MainActivity!!.registerReceiver(mReceiver, filter)
             }
             isRegister = true
             Log.d(mTag, "registerReceiver mReceiver")
@@ -2702,7 +2379,7 @@ class MainActivity : AppCompatActivity() {
         Log.i(mTag, "onDestroy")
         if (isRegister && mReceiver != null) {
             try {
-                mContext!!.unregisterReceiver(mReceiver)
+                this@MainActivity!!.unregisterReceiver(mReceiver)
             } catch (e: IllegalArgumentException) {
                 e.printStackTrace()
             }
@@ -2932,10 +2609,10 @@ class MainActivity : AppCompatActivity() {
                             /*
                             val playAdIntent = Intent()
                             playAdIntent.action = Constants.ACTION.ACTION_START_PLAY_AD
-                            mContext?.sendBroadcast(playAdIntent)*/
+                            this@MainActivity.sendBroadcast(playAdIntent)*/
                             val getPlayContentIntent = Intent()
                             getPlayContentIntent.action = Constants.ACTION.ACTION_GET_CURRENT_PLAY_CONTENT_START
-                            mContext?.sendBroadcast(getPlayContentIntent)
+                            this@MainActivity.sendBroadcast(getPlayContentIntent)
                         }
                     } else {
                         Log.e(mTag, "adSettingList.size == 0")
@@ -3022,7 +2699,7 @@ class MainActivity : AppCompatActivity() {
                             //get layout first
                             val successIntent = Intent()
                             successIntent.action = Constants.ACTION.ACTION_PING_WEB_SUCCESS
-                            mContext?.sendBroadcast(successIntent)
+                            this@MainActivity.sendBroadcast(successIntent)
                             //getLayout()
                         }
 
@@ -3042,7 +2719,7 @@ class MainActivity : AppCompatActivity() {
                         infoRenew = true
                         val successIntent = Intent()
                         successIntent.action = Constants.ACTION.ACTION_PING_WEB_SUCCESS
-                        mContext?.sendBroadcast(successIntent)
+                        this@MainActivity.sendBroadcast(successIntent)
                     } else if (json["result"] == -1) {
                         Log.d(mTag, "->no deviceID")
                     }
@@ -3052,7 +2729,7 @@ class MainActivity : AppCompatActivity() {
                     Log.e(mTag, "server error")
                     val failedIntent = Intent()
                     failedIntent.action = Constants.ACTION.ACTION_PING_WEB_FAILED
-                    mContext?.sendBroadcast(failedIntent)
+                    this@MainActivity.sendBroadcast(failedIntent)
                 }
             }
 
@@ -3125,10 +2802,10 @@ class MainActivity : AppCompatActivity() {
                             defaultPlayLayoutDataDB!!.defaultPlayLayoutDataDao().update(defaultPlayLayoutData)
                         }
 
-                        //planStartTimeString = layoutList[0].plan_start_time
-                        //plan2StartTimeString = layoutList[0].plan2_start_time
-                        //plan3StartTimeString = layoutList[0].plan3_start_time
-                        //plan4StartTimeString = layoutList[0].plan4_start_time
+                        planStartTimeString = layoutList[0].plan_start_time
+                        plan2StartTimeString = layoutList[0].plan2_start_time
+                        plan3StartTimeString = layoutList[0].plan3_start_time
+                        plan4StartTimeString = layoutList[0].plan4_start_time
 
                         planStartTime = getTimeStampFromString(layoutList[0].plan_start_time)
                         plan2StartTime = getTimeStampFromString(layoutList[0].plan2_start_time)
@@ -3202,18 +2879,18 @@ class MainActivity : AppCompatActivity() {
                         successIntent.putExtra("PLAN2_ID", layoutList[0].plan2_id)
                         successIntent.putExtra("PLAN3_ID", layoutList[0].plan3_id)
                         successIntent.putExtra("PLAN4_ID", layoutList[0].plan4_id)
-                        mContext?.sendBroadcast(successIntent)
+                        this@MainActivity.sendBroadcast(successIntent)
                     } else {
                         val failedIntent = Intent()
                         failedIntent.action = Constants.ACTION.ACTION_GET_LAYOUT_FAILED
-                        mContext?.sendBroadcast(failedIntent)
+                        this@MainActivity.sendBroadcast(failedIntent)
                     }
                 } catch (ex: Exception) {
 
                     Log.e(mTag, "Server error")
                     val failedIntent = Intent()
                     failedIntent.action = Constants.ACTION.ACTION_GET_LAYOUT_FAILED
-                    mContext?.sendBroadcast(failedIntent)
+                    this@MainActivity.sendBroadcast(failedIntent)
                 }
             }
 
@@ -3303,18 +2980,18 @@ class MainActivity : AppCompatActivity() {
 
                         val successIntent = Intent()
                         successIntent.action = Constants.ACTION.ACTION_GET_AD_SETTING_SUCCESS
-                        mContext?.sendBroadcast(successIntent)
+                        this@MainActivity.sendBroadcast(successIntent)
                     } else {
                         val emptyIntent = Intent()
                         emptyIntent.action = Constants.ACTION.ACTION_GET_AD_SETTING_EMPTY
-                        mContext?.sendBroadcast(emptyIntent)
+                        this@MainActivity.sendBroadcast(emptyIntent)
                     }
                 } catch (ex: Exception) {
 
                     Log.e(mTag, "Server error")
                     val failedIntent = Intent()
                     failedIntent.action = Constants.ACTION.ACTION_GET_AD_SETTING_FAILED
-                    mContext?.sendBroadcast(failedIntent)
+                    this@MainActivity.sendBroadcast(failedIntent)
                 }
             }
 
@@ -3365,11 +3042,11 @@ class MainActivity : AppCompatActivity() {
                     if (marqueeList.size > 0) {
                         val successIntent = Intent()
                         successIntent.action = Constants.ACTION.ACTION_GET_MARQUEE_SUCCESS
-                        mContext?.sendBroadcast(successIntent)
+                        this@MainActivity.sendBroadcast(successIntent)
                     } else {
                         val emptyIntent = Intent()
                         emptyIntent.action = Constants.ACTION.ACTION_GET_MARQUEE_EMPTY
-                        mContext?.sendBroadcast(emptyIntent)
+                        this@MainActivity.sendBroadcast(emptyIntent)
                     }
 
                 } catch (ex: Exception) {
@@ -3377,7 +3054,7 @@ class MainActivity : AppCompatActivity() {
                     Log.e(mTag, "Server error")
                     val failedIntent = Intent()
                     failedIntent.action = Constants.ACTION.ACTION_GET_MARQUEE_FAILED
-                    mContext?.sendBroadcast(failedIntent)
+                    this@MainActivity.sendBroadcast(failedIntent)
                 }
             }
 
@@ -3442,13 +3119,13 @@ class MainActivity : AppCompatActivity() {
                         if (downloadBannerComplete == bannerList.size) {
                             val completeIntent = Intent()
                             completeIntent.action = Constants.ACTION.ACTION_GET_BANNER_COMPLETE
-                            mContext?.sendBroadcast(completeIntent)
+                            this@MainActivity.sendBroadcast(completeIntent)
                         } else {
                             val successIntent = Intent()
                             successIntent.action = Constants.ACTION.ACTION_GET_BANNER_SUCCESS
                             successIntent.putExtra("idx", downloadIdx)
                             successIntent.putExtra("fileName", bannerList[downloadIdx])
-                            mContext?.sendBroadcast(successIntent)
+                            this@MainActivity.sendBroadcast(successIntent)
                         }
                     } catch (ex: Exception) {
                         Log.e(mTag, ex.toString())
@@ -3458,7 +3135,7 @@ class MainActivity : AppCompatActivity() {
                         val failedIntent = Intent()
                         failedIntent.action = Constants.ACTION.ACTION_GET_BANNER_FAILED
                         failedIntent.putExtra("ERROR_STRING", ex.toString())
-                        mContext?.sendBroadcast(failedIntent)
+                        this@MainActivity.sendBroadcast(failedIntent)
 
                     }
                 }.start()
@@ -3466,7 +3143,7 @@ class MainActivity : AppCompatActivity() {
                 if (downloadBannerComplete == bannerList.size) {
                     val completeIntent = Intent()
                     completeIntent.action = Constants.ACTION.ACTION_GET_BANNER_COMPLETE
-                    mContext?.sendBroadcast(completeIntent)
+                    this@MainActivity.sendBroadcast(completeIntent)
                 }
             }
 
@@ -3475,7 +3152,7 @@ class MainActivity : AppCompatActivity() {
         } else {
             val emptyIntent = Intent()
             emptyIntent.action = Constants.ACTION.ACTION_GET_BANNER_EMPTY
-            mContext?.sendBroadcast(emptyIntent)
+            this@MainActivity.sendBroadcast(emptyIntent)
         }
     }
 
@@ -3491,6 +3168,11 @@ class MainActivity : AppCompatActivity() {
                 Log.d(mTag, "destPath = $destPath")
 
                 val file = File(destPath)
+
+                if (file.exists() && !downloadImageReadyArray[i]) { //get 2 same filename while download
+                    downloadImageReadyArray[i] = true
+                }
+
                 if(!file.exists() && i <= downloadImageComplete) {
                     downloadIdx = i
                     break
@@ -3499,6 +3181,7 @@ class MainActivity : AppCompatActivity() {
                     downloadImageComplete += 1
                     downloadImageReadyArray[i] = true
                 }*/
+
             }
 
             Log.d(mTag, "downloadImageComplete = $downloadImageComplete, downloadImageReadyArray = $downloadImageReadyArray")
@@ -3523,13 +3206,13 @@ class MainActivity : AppCompatActivity() {
                         if (downloadImageComplete == imageList.size) {
                             val completeIntent = Intent()
                             completeIntent.action = Constants.ACTION.ACTION_GET_IMAGES_COMPLETE
-                            mContext?.sendBroadcast(completeIntent)
+                            this@MainActivity.sendBroadcast(completeIntent)
                         } else {
                             val successIntent = Intent()
                             successIntent.action = Constants.ACTION.ACTION_GET_IMAGES_SUCCESS
                             successIntent.putExtra("idx", downloadIdx)
                             successIntent.putExtra("fileName", imageList[downloadIdx])
-                            mContext?.sendBroadcast(successIntent)
+                            this@MainActivity.sendBroadcast(successIntent)
                         }
                     } catch (ex: Exception) {
                         Log.e(mTag, ex.toString())
@@ -3539,7 +3222,7 @@ class MainActivity : AppCompatActivity() {
                         val failedIntent = Intent()
                         failedIntent.action = Constants.ACTION.ACTION_GET_IMAGES_FAILED
                         failedIntent.putExtra("ERROR_STRING", ex.toString())
-                        mContext?.sendBroadcast(failedIntent)
+                        this@MainActivity.sendBroadcast(failedIntent)
 
                     }
                 }.start()
@@ -3547,7 +3230,7 @@ class MainActivity : AppCompatActivity() {
                 if (downloadImageComplete == imageList.size) {
                     val completeIntent = Intent()
                     completeIntent.action = Constants.ACTION.ACTION_GET_IMAGES_COMPLETE
-                    mContext?.sendBroadcast(completeIntent)
+                    this@MainActivity.sendBroadcast(completeIntent)
                 }
             }
 
@@ -3556,7 +3239,7 @@ class MainActivity : AppCompatActivity() {
         } else {
             val emptyIntent = Intent()
             emptyIntent.action = Constants.ACTION.ACTION_GET_IMAGES_EMPTY
-            mContext?.sendBroadcast(emptyIntent)
+            this@MainActivity.sendBroadcast(emptyIntent)
         }
     }
 
@@ -3573,6 +3256,11 @@ class MainActivity : AppCompatActivity() {
                 Log.d(mTag, "destPath = $destPath")
 
                 val file = File(destPath)
+
+                if (file.exists() && !downloadVideoReadyArray[i]) { //get 2 same filename while download
+                    downloadVideoReadyArray[i] = true
+                }
+
                 if(!file.exists() && i <= downloadVideoComplete) {
                     downloadIdx = i
                     break
@@ -3581,6 +3269,7 @@ class MainActivity : AppCompatActivity() {
                     downloadVideoComplete += 1
                     downloadVideoReadyArray[i] = true
                 }*/
+
             }
             Log.d(mTag, "downloadVideoComplete = $downloadVideoComplete, downloadVideoReadyArray = $downloadVideoReadyArray")
 
@@ -3607,13 +3296,13 @@ class MainActivity : AppCompatActivity() {
 
                             val completeIntent = Intent()
                             completeIntent.action = Constants.ACTION.ACTION_GET_VIDEOS_COMPLETE
-                            mContext?.sendBroadcast(completeIntent)
+                            this@MainActivity.sendBroadcast(completeIntent)
                         } else {
                             val successIntent = Intent()
                             successIntent.action = Constants.ACTION.ACTION_GET_VIDEOS_SUCCESS
                             successIntent.putExtra("idx", downloadIdx)
                             successIntent.putExtra("fileName", videoList[downloadIdx])
-                            mContext?.sendBroadcast(successIntent)
+                            this@MainActivity.sendBroadcast(successIntent)
                         }
                     } catch (ex: Exception) {
                         Log.e(mTag, ex.toString())
@@ -3623,7 +3312,7 @@ class MainActivity : AppCompatActivity() {
                         val failedIntent = Intent()
                         failedIntent.action = Constants.ACTION.ACTION_GET_VIDEOS_FAILED
                         failedIntent.putExtra("ERROR_STRING", ex.toString())
-                        mContext?.sendBroadcast(failedIntent)
+                        this@MainActivity.sendBroadcast(failedIntent)
                     }
 
                 }.start()
@@ -3631,7 +3320,13 @@ class MainActivity : AppCompatActivity() {
                 if (downloadVideoComplete == videoList.size) {
                     val completeIntent = Intent()
                     completeIntent.action = Constants.ACTION.ACTION_GET_VIDEOS_COMPLETE
-                    mContext?.sendBroadcast(completeIntent)
+                    this@MainActivity.sendBroadcast(completeIntent)
+                } else {
+                    val successIntent = Intent()
+                    successIntent.action = Constants.ACTION.ACTION_GET_VIDEOS_SUCCESS
+                    successIntent.putExtra("idx", downloadIdx)
+                    successIntent.putExtra("fileName", videoList[downloadIdx])
+                    this@MainActivity.sendBroadcast(successIntent)
                 }
             }
 
@@ -3639,7 +3334,7 @@ class MainActivity : AppCompatActivity() {
         } else {
             val emptyIntent = Intent()
             emptyIntent.action = Constants.ACTION.ACTION_GET_VIDEOS_EMPTY
-            mContext?.sendBroadcast(emptyIntent)
+            this@MainActivity.sendBroadcast(emptyIntent)
         }
     }
 
@@ -3669,11 +3364,15 @@ class MainActivity : AppCompatActivity() {
                 Log.d(mTag, "destPath = $destPath")
 
                 val file = File(destPath)
+
+                if (file.exists() && !downloadMixReadyArray[i]) { //get 2 same filename while download
+                    downloadMixReadyArray[i] = true
+                }
+
                 if(!file.exists() && i <= downloadMixComplete) {
                     downloadIdx = i
                     break
                 }
-
             }
 
             Log.d(mTag, "downloadMixComplete = $downloadMixComplete, downloadMixReadyArray = $downloadMixReadyArray")
@@ -3698,49 +3397,57 @@ class MainActivity : AppCompatActivity() {
                         downloadMixReadyArray[downloadIdx] = true
 
                         if (downloadMixComplete == mixList.size) {
-                            textViewShowInitSuccess!!.text = "Get mix complete"
+                            //textViewShowInitSuccess!!.text = "Get mix complete"
                             val completeIntent = Intent()
                             completeIntent.action = Constants.ACTION.ACTION_GET_MIX_COMPLETE
-                            mContext?.sendBroadcast(completeIntent)
+                            this@MainActivity.sendBroadcast(completeIntent)
                         } else {
+                            /*
                             var mixText = "mixList = $mixList\n"
                             val readyText = "downloadMixReadyArray = $downloadMixReadyArray"
                             mixText += readyText
                             textViewShowInitSuccess!!.text = mixText
+                            */
                             val successIntent = Intent()
                             successIntent.action = Constants.ACTION.ACTION_GET_MIX_SUCCESS
                             successIntent.putExtra("idx", downloadIdx)
                             successIntent.putExtra("fileName", mixList[downloadIdx])
-                            mContext?.sendBroadcast(successIntent)
+                            this@MainActivity.sendBroadcast(successIntent)
                         }
                     } catch (ex: Exception) {
                         Log.e(mTag, ex.toString())
                         //we can't stuck on download failed, keep try next one
                         downloadMixComplete += 1
                         downloadMixReadyArray[downloadIdx] = false
-                        textViewShowInitSuccess!!.text = "Get mix failed"
+                        //textViewShowInitSuccess!!.text = "Get mix failed"
                         val failedIntent = Intent()
                         failedIntent.action = Constants.ACTION.ACTION_GET_MIX_FAILED
                         failedIntent.putExtra("ERROR_STRING", ex.toString())
-                        mContext?.sendBroadcast(failedIntent)
+                        this@MainActivity.sendBroadcast(failedIntent)
                     }
 
                 }.start()
             } else { //downloadIdx == -1
                 if (downloadMixComplete == mixList.size) {
-                    textViewShowInitSuccess!!.text = "Get mix complete"
+                    //textViewShowInitSuccess!!.text = "Get mix complete"
                     val completeIntent = Intent()
                     completeIntent.action = Constants.ACTION.ACTION_GET_MIX_COMPLETE
-                    mContext?.sendBroadcast(completeIntent)
+                    this@MainActivity.sendBroadcast(completeIntent)
+                } else {
+                    val successIntent = Intent()
+                    successIntent.action = Constants.ACTION.ACTION_GET_MIX_SUCCESS
+                    successIntent.putExtra("idx", downloadIdx)
+                    successIntent.putExtra("fileName", mixList[downloadIdx])
+                    this@MainActivity.sendBroadcast(successIntent)
                 }
             }
 
 
         } else {
-            textViewShowInitSuccess!!.text = "Get mix empty"
+            //textViewShowInitSuccess!!.text = "Get mix empty"
             val emptyIntent = Intent()
             emptyIntent.action = Constants.ACTION.ACTION_GET_MIX_EMPTY
-            mContext?.sendBroadcast(emptyIntent)
+            this@MainActivity.sendBroadcast(emptyIntent)
         }
     }
 
@@ -4462,7 +4169,7 @@ class MainActivity : AppCompatActivity() {
                     }
                     //main LinearLayout
                     if (mainLinearLayout == null) {
-                        mainLinearLayout = LinearLayout(mContext)
+                        mainLinearLayout = LinearLayout(this@MainActivity)
                         mainLinearLayout!!.setPadding(12,12,12,12)
                     }
                     mainLinearLayout!!.removeAllViews()
@@ -4641,7 +4348,7 @@ class MainActivity : AppCompatActivity() {
 
                     //linearLayoutTriangle for new layout
                     if (linearLayoutTriangle == null) {
-                        linearLayoutTriangle = LinearLayout(mContext)
+                        linearLayoutTriangle = LinearLayout(this@MainActivity)
                     }
                     linearLayoutTriangle!!.removeAllViews()
                     linearLayoutTriangle!!.layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT)
@@ -4658,7 +4365,7 @@ class MainActivity : AppCompatActivity() {
 
                     //linearLayoutTop
                     if (linearLayoutTop == null) {
-                        linearLayoutTop = LinearLayout(mContext)
+                        linearLayoutTop = LinearLayout(this@MainActivity)
                     }
                     linearLayoutTop!!.removeAllViews()
                     //linearLayoutTopWeight = layoutTopWeight / mainLayoutWeight * 100
@@ -4672,7 +4379,7 @@ class MainActivity : AppCompatActivity() {
                         1 -> {
                             //textViewTop
                             if (textViewTop == null) {
-                                textViewTop = SpeedMarquee(mContext as  Context)
+                                textViewTop = ScrollTextView(this@MainActivity as  Context)
                                 textViewTop!!.isFocusable = false
                                 textViewTop!!.ellipsize = TextUtils.TruncateAt.MARQUEE
                                 textViewTop!!.isSingleLine = true
@@ -4723,7 +4430,8 @@ class MainActivity : AppCompatActivity() {
                                 }
                             }
                             //speed
-                            textViewTop!!.setSpeed(marqueeSpeed.toFloat())
+                            //textViewTop!!.setSpeed(marqueeSpeed.toFloat())
+                            textViewTop!!.rndDuration = 100000 / (marqueeSpeed / 50)
                             textViewTop!!.visibility = View.GONE
                             /*
                             textViewTop!!.post(Runnable {
@@ -4751,7 +4459,7 @@ class MainActivity : AppCompatActivity() {
                         2 -> {
                             //imageViewTop
                             if (imageViewTop == null) {
-                                imageViewTop = ImageView(mContext)
+                                imageViewTop = ImageView(this@MainActivity)
                             }
                             imageViewTop!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
                             imageViewTop!!.visibility = View.GONE
@@ -4759,7 +4467,7 @@ class MainActivity : AppCompatActivity() {
                             linearLayoutTop!!.addView(imageViewTop)
                             //imageViewTop2
                             if (imageViewTop2 == null) {
-                                imageViewTop2 = ImageView(mContext)
+                                imageViewTop2 = ImageView(this@MainActivity)
                             }
                             imageViewTop2!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
                             imageViewTop2!!.visibility = View.GONE
@@ -4777,7 +4485,7 @@ class MainActivity : AppCompatActivity() {
                         3 -> {
                             //videoViewLayoutTop
                             if (videoViewLayoutTop == null) {
-                                videoViewLayoutTop = RelativeLayout(mContext)
+                                videoViewLayoutTop = RelativeLayout(this@MainActivity)
                             }
                             videoViewLayoutTop!!.removeAllViews()
                             videoViewLayoutTop!!.layoutParams = RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT)
@@ -4787,7 +4495,7 @@ class MainActivity : AppCompatActivity() {
                             linearLayoutTop!!.setBackgroundColor(Color.parseColor(defaultBackGroundColor))
                             //videoViewTop
                             if (videoViewTop == null) {
-                                videoViewTop = VideoView(mContext)
+                                videoViewTop = VideoView(this@MainActivity)
                                 /*videoViewTop!!.setOnTouchListener(OnTouchListener { v, event -> // do nothing here......
                                     true
                                 })*/
@@ -4812,7 +4520,7 @@ class MainActivity : AppCompatActivity() {
                         4 -> { //banner
                             //imageViewTop
                             if (imageViewTop == null) {
-                                imageViewTop = ImageView(mContext)
+                                imageViewTop = ImageView(this@MainActivity)
                             }
                             imageViewTop!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
                             imageViewTop!!.visibility = View.GONE
@@ -4825,7 +4533,7 @@ class MainActivity : AppCompatActivity() {
                             }
                             //imageViewTop2
                             /*if (imageViewTop2 == null) {
-                                imageViewTop2 = ImageView(mContext)
+                                imageViewTop2 = ImageView(this@MainActivity)
                             }
                             imageViewTop2!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
                             imageViewTop2!!.visibility = View.GONE
@@ -4835,7 +4543,7 @@ class MainActivity : AppCompatActivity() {
                         5 -> { //mix
                             //image
                             if (imageViewTop == null) {
-                                imageViewTop = ImageView(mContext)
+                                imageViewTop = ImageView(this@MainActivity)
                             }
                             imageViewTop!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
                             imageViewTop!!.visibility = View.GONE
@@ -4843,7 +4551,7 @@ class MainActivity : AppCompatActivity() {
                             linearLayoutTop!!.addView(imageViewTop)
                             //imageViewTop2
                             if (imageViewTop2 == null) {
-                                imageViewTop2 = ImageView(mContext)
+                                imageViewTop2 = ImageView(this@MainActivity)
                             }
                             imageViewTop2!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
                             imageViewTop2!!.visibility = View.GONE
@@ -4858,7 +4566,7 @@ class MainActivity : AppCompatActivity() {
                             }
                             //video
                             if (videoViewLayoutTop == null) {
-                                videoViewLayoutTop = RelativeLayout(mContext)
+                                videoViewLayoutTop = RelativeLayout(this@MainActivity)
                             }
                             videoViewLayoutTop!!.removeAllViews()
                             videoViewLayoutTop!!.layoutParams = RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT)
@@ -4868,7 +4576,7 @@ class MainActivity : AppCompatActivity() {
                             linearLayoutTop!!.setBackgroundColor(Color.parseColor(defaultBackGroundColor))
                             //videoViewTop
                             if (videoViewTop == null) {
-                                videoViewTop = VideoView(mContext)
+                                videoViewTop = VideoView(this@MainActivity)
                                 /*videoViewTop!!.setOnTouchListener(OnTouchListener { v, event -> // do nothing here......
                                     true
                                 })*/
@@ -4894,7 +4602,7 @@ class MainActivity : AppCompatActivity() {
 
                     //LinearLayoutCenter
                     if (linearLayoutCenter == null) {
-                        linearLayoutCenter = LinearLayout(mContext)
+                        linearLayoutCenter = LinearLayout(this@MainActivity)
                     }
                     linearLayoutCenter!!.removeAllViews()
                     //linearLayoutCenterWeight = layoutCenterWeight / mainLayoutWeight * 100
@@ -4909,7 +4617,7 @@ class MainActivity : AppCompatActivity() {
                         1 -> {
                             //textViewCenter
                             if (textViewCenter == null) {
-                                textViewCenter = ScrollTextView(mContext as Context)
+                                textViewCenter = ScrollTextView(this@MainActivity)
                                 textViewCenter!!.ellipsize = TextUtils.TruncateAt.MARQUEE
                                 textViewCenter!!.isSingleLine = true
                                 textViewCenter!!.freezesText = true
@@ -4944,7 +4652,7 @@ class MainActivity : AppCompatActivity() {
                             }
                             //speed
                             //textViewCenter!!.setSpeed(marqueeSpeed.toFloat())
-                            textViewCenter!!.rndDuration = 10000
+                            textViewCenter!!.rndDuration = 100000 / (marqueeSpeed / 50)
                             textViewCenter!!.startScroll()
 
                             textViewCenter!!.visibility = View.GONE
@@ -4966,14 +4674,14 @@ class MainActivity : AppCompatActivity() {
                         2 -> {
                             //imageViewCenter
                             if (imageViewCenter == null) {
-                                imageViewCenter = ImageView(mContext)
+                                imageViewCenter = ImageView(this@MainActivity)
                             }
                             imageViewCenter!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
                             imageViewCenter!!.visibility = View.GONE
                             linearLayoutCenter!!.addView(imageViewCenter)
                             //imageViewCenter2
                             if (imageViewCenter2 == null) {
-                                imageViewCenter2 = ImageView(mContext)
+                                imageViewCenter2 = ImageView(this@MainActivity)
                             }
                             imageViewCenter2!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
                             imageViewCenter2!!.visibility = View.GONE
@@ -4990,7 +4698,7 @@ class MainActivity : AppCompatActivity() {
                         3 -> {
                             //videoViewLayoutCenter
                             if (videoViewLayoutCenter == null) {
-                                videoViewLayoutCenter = RelativeLayout(mContext)
+                                videoViewLayoutCenter = RelativeLayout(this@MainActivity)
                             }
                             videoViewLayoutCenter!!.removeAllViews()
                             videoViewLayoutCenter!!.layoutParams = RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT)
@@ -5001,7 +4709,7 @@ class MainActivity : AppCompatActivity() {
                             linearLayoutCenter!!.setBackgroundColor(Color.parseColor(defaultBackGroundColor))
                             //videoViewCenter
                             if (videoViewCenter == null) {
-                                videoViewCenter = VideoView(mContext)
+                                videoViewCenter = VideoView(this@MainActivity)
                                 /*videoViewCenter!!.setOnTouchListener(OnTouchListener { v, event -> // do nothing here......
                                     true
                                 })*/
@@ -5026,7 +4734,7 @@ class MainActivity : AppCompatActivity() {
                         4 -> { //banner
                             //imageViewCenter
                             if (imageViewCenter == null) {
-                                imageViewCenter = ImageView(mContext)
+                                imageViewCenter = ImageView(this@MainActivity)
                             }
                             imageViewCenter!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
                             imageViewCenter!!.visibility = View.GONE
@@ -5040,7 +4748,7 @@ class MainActivity : AppCompatActivity() {
                             //imageViewCenter2
                             /*
                             if (imageViewCenter2 == null) {
-                                imageViewCenter2 = ImageView(mContext)
+                                imageViewCenter2 = ImageView(this@MainActivity)
                             }
                             imageViewCenter2!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
                             imageViewCenter2!!.visibility = View.GONE
@@ -5050,14 +4758,14 @@ class MainActivity : AppCompatActivity() {
                         5 -> { //mix
                             //image
                             if (imageViewCenter == null) {
-                                imageViewCenter = ImageView(mContext)
+                                imageViewCenter = ImageView(this@MainActivity)
                             }
                             imageViewCenter!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
                             imageViewCenter!!.visibility = View.GONE
                             linearLayoutCenter!!.addView(imageViewCenter)
                             //imageViewTop2
                             if (imageViewCenter2 == null) {
-                                imageViewCenter2 = ImageView(mContext)
+                                imageViewCenter2 = ImageView(this@MainActivity)
                             }
                             imageViewCenter2!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
                             imageViewCenter2!!.visibility = View.GONE
@@ -5072,7 +4780,7 @@ class MainActivity : AppCompatActivity() {
                             }
                             //video
                             if (videoViewLayoutCenter == null) {
-                                videoViewLayoutCenter = RelativeLayout(mContext)
+                                videoViewLayoutCenter = RelativeLayout(this@MainActivity)
 
                             }
                             videoViewLayoutCenter!!.removeAllViews()
@@ -5083,7 +4791,7 @@ class MainActivity : AppCompatActivity() {
                             linearLayoutCenter!!.setBackgroundColor(Color.parseColor(defaultBackGroundColor))
                             //videoViewCenter
                             if (videoViewCenter == null) {
-                                videoViewCenter = VideoView(mContext)
+                                videoViewCenter = VideoView(this@MainActivity)
                                 /*videoViewCenter!!.setOnTouchListener(OnTouchListener { v, event -> // do nothing here......
                                     true
                                 })*/
@@ -5108,7 +4816,7 @@ class MainActivity : AppCompatActivity() {
 
                     //LinearLayoutBottom
                     if (linearLayoutBottom == null) {
-                        linearLayoutBottom = LinearLayout(mContext)
+                        linearLayoutBottom = LinearLayout(this@MainActivity)
                     }
                     linearLayoutBottom!!.removeAllViews()
                     //linearLayoutBottomWeight = layoutBottomWeight / mainLayoutWeight * 100
@@ -5118,18 +4826,21 @@ class MainActivity : AppCompatActivity() {
                     //linearLayoutBottom!!.setBackgroundColor(Color.parseColor(marqueeBackground))
                     //linearLayoutBottom!!.weightSum = 2.0F
                     //messageView
+                    /*
                     if (messageViewBottom == null) {
-                        messageViewBottom = TextView(mContext)
+                        messageViewBottom = TextView(this@MainActivity)
                         messageViewBottom!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
                     }
                     messageViewBottom!!.text = "Hello"
                     messageViewBottom!!.setTextColor(Color.parseColor("#FFFFFF"))
                     linearLayoutBottom!!.addView(messageViewBottom)
+
+                     */
                     when (layoutBottom) {
                         1 -> {
                             //textViewBottom
                             if (textViewBottom == null) {
-                                textViewBottom = SpeedMarquee(mContext as Context)
+                                textViewBottom = ScrollTextView(this@MainActivity)
                                 textViewBottom!!.isFocusable = false
                                 textViewBottom!!.ellipsize = TextUtils.TruncateAt.MARQUEE
                                 textViewBottom!!.isSingleLine = true
@@ -5162,7 +4873,8 @@ class MainActivity : AppCompatActivity() {
                                 }
                             }
                             //speed
-                            textViewBottom!!.setSpeed(marqueeSpeed.toFloat())
+                            //textViewBottom!!.setSpeed(marqueeSpeed.toFloat())
+                            textViewBottom!!.rndDuration = 100000 / (marqueeSpeed / 50)
                             textViewBottom!!.visibility = View.GONE
 
                             linearLayoutBottom!!.addView(textViewBottom)
@@ -5183,14 +4895,14 @@ class MainActivity : AppCompatActivity() {
                         2 -> {
                             //imageViewBottom
                             if (imageViewBottom == null) {
-                                imageViewBottom = ImageView(mContext)
+                                imageViewBottom = ImageView(this@MainActivity)
                             }
                             imageViewBottom!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
                             imageViewBottom!!.visibility = View.GONE
                             linearLayoutBottom!!.addView(imageViewBottom)
                             //imageViewBottom2
                             if (imageViewBottom2 == null) {
-                                imageViewBottom2 = ImageView(mContext)
+                                imageViewBottom2 = ImageView(this@MainActivity)
                             }
                             imageViewBottom2!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
                             imageViewBottom2!!.visibility = View.GONE
@@ -5207,7 +4919,7 @@ class MainActivity : AppCompatActivity() {
                         3 -> {
                             //videoViewLayoutBottom
                             if (videoViewLayoutBottom == null) {
-                                videoViewLayoutBottom = RelativeLayout(mContext)
+                                videoViewLayoutBottom = RelativeLayout(this@MainActivity)
                             }
                             videoViewLayoutBottom!!.removeAllViews()
                             videoViewLayoutBottom!!.layoutParams = RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT)
@@ -5217,7 +4929,7 @@ class MainActivity : AppCompatActivity() {
                             linearLayoutBottom!!.setBackgroundColor(Color.parseColor(defaultBackGroundColor))
                             //videoViewBottom
                             if (videoViewBottom == null) {
-                                videoViewBottom = VideoView(mContext)
+                                videoViewBottom = VideoView(this@MainActivity)
                                 /*videoViewBottom!!.setOnTouchListener(OnTouchListener { v, event -> // do nothing here......
                                     true
                                 })*/
@@ -5241,7 +4953,7 @@ class MainActivity : AppCompatActivity() {
                         4 -> {
                             //imageViewBottom
                             if (imageViewBottom == null) {
-                                imageViewBottom = ImageView(mContext)
+                                imageViewBottom = ImageView(this@MainActivity)
                             }
                             imageViewBottom!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
                             imageViewBottom!!.visibility = View.GONE
@@ -5255,7 +4967,7 @@ class MainActivity : AppCompatActivity() {
                             /*
                             //imageViewBottom2
                             if (imageViewBottom2 == null) {
-                                imageViewBottom2 = ImageView(mContext)
+                                imageViewBottom2 = ImageView(this@MainActivity)
                             }
                             imageViewBottom2!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
                             imageViewBottom2!!.visibility = View.GONE
@@ -5265,14 +4977,14 @@ class MainActivity : AppCompatActivity() {
                         5 -> { //mix
                             //image
                             if (imageViewBottom == null) {
-                                imageViewBottom = ImageView(mContext)
+                                imageViewBottom = ImageView(this@MainActivity)
                             }
                             imageViewBottom!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
                             imageViewBottom!!.visibility = View.GONE
                             linearLayoutBottom!!.addView(imageViewBottom)
                             //imageViewTop2
                             if (imageViewBottom2 == null) {
-                                imageViewBottom2 = ImageView(mContext)
+                                imageViewBottom2 = ImageView(this@MainActivity)
                             }
                             imageViewBottom2!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
                             imageViewBottom2!!.visibility = View.GONE
@@ -5287,7 +4999,7 @@ class MainActivity : AppCompatActivity() {
                             }
                             //video
                             if (videoViewLayoutBottom == null) {
-                                videoViewLayoutBottom = RelativeLayout(mContext)
+                                videoViewLayoutBottom = RelativeLayout(this@MainActivity)
                             }
                             videoViewLayoutBottom!!.removeAllViews()
                             videoViewLayoutBottom!!.layoutParams = RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT)
@@ -5297,7 +5009,7 @@ class MainActivity : AppCompatActivity() {
                             linearLayoutBottom!!.setBackgroundColor(Color.parseColor(defaultBackGroundColor))
                             //videoViewBottom
                             if (videoViewBottom == null) {
-                                videoViewBottom = VideoView(mContext)
+                                videoViewBottom = VideoView(this@MainActivity)
                                 /*videoViewBottom!!.setOnTouchListener(OnTouchListener { v, event -> // do nothing here......
                                     true
                                 })*/
@@ -5414,7 +5126,7 @@ class MainActivity : AppCompatActivity() {
 
                     if (videoViewTop != null) {
                         if (mediaControllerTop == null) {
-                            mediaControllerTop = MediaController(mContext)
+                            mediaControllerTop = MediaController(this@MainActivity)
                         }
                         // anchor view for the videoView
                         mediaControllerTop!!.setAnchorView(videoViewTop)
@@ -5429,7 +5141,7 @@ class MainActivity : AppCompatActivity() {
 
                         videoViewTop!!.setOnPreparedListener { mp ->
                             Log.d(mTag, "videoViewTop prepared")
-                            //mp.setWakeMode(mContext, PowerManager.PARTIAL_WAKE_LOCK)
+                            //mp.setWakeMode(this@MainActivity, PowerManager.PARTIAL_WAKE_LOCK)
                             mp.seekTo(0)
                             mp.start()
                             if (layoutTop == 3) {
@@ -5449,12 +5161,12 @@ class MainActivity : AppCompatActivity() {
                                 val mixPlayFinishIntent = Intent()
                                 mixPlayFinishIntent.action =
                                     Constants.ACTION.ACTION_TOP_VIDEO_PLAY_FINISH
-                                mContext?.sendBroadcast(mixPlayFinishIntent)
+                                this@MainActivity.sendBroadcast(mixPlayFinishIntent)
                             } else if (layoutTop == 5){
                                 val mixPlayFinishIntent = Intent()
                                 mixPlayFinishIntent.action =
                                     Constants.ACTION.ACTION_MIX_TOP_PLAY_FINISH
-                                mContext?.sendBroadcast(mixPlayFinishIntent)
+                                this@MainActivity.sendBroadcast(mixPlayFinishIntent)
                             }
                             true
                         }
@@ -5467,12 +5179,12 @@ class MainActivity : AppCompatActivity() {
                                 val videoPlayFinishIntent = Intent()
                                 videoPlayFinishIntent.action =
                                     Constants.ACTION.ACTION_TOP_VIDEO_PLAY_FINISH
-                                mContext?.sendBroadcast(videoPlayFinishIntent)
+                                this@MainActivity.sendBroadcast(videoPlayFinishIntent)
                             } else if (layoutTop == 5){
                                 val mixPlayFinishIntent = Intent()
                                 mixPlayFinishIntent.action =
                                     Constants.ACTION.ACTION_MIX_TOP_PLAY_FINISH
-                                mContext?.sendBroadcast(mixPlayFinishIntent)
+                                this@MainActivity.sendBroadcast(mixPlayFinishIntent)
                             }
 
 
@@ -5481,7 +5193,7 @@ class MainActivity : AppCompatActivity() {
 
                     if (videoViewCenter != null) {
                         if (mediaControllerCenter == null) {
-                            mediaControllerCenter = MediaController(mContext)
+                            mediaControllerCenter = MediaController(this@MainActivity)
                         }
                         // anchor view for the videoView
                         mediaControllerCenter!!.setAnchorView(videoViewCenter)
@@ -5496,7 +5208,7 @@ class MainActivity : AppCompatActivity() {
 
                         videoViewCenter!!.setOnPreparedListener { mp ->
                             Log.d(mTag, "videoViewCenter prepared")
-                            //mp.setWakeMode(mContext, PowerManager.PARTIAL_WAKE_LOCK)
+                            //mp.setWakeMode(this@MainActivity, PowerManager.PARTIAL_WAKE_LOCK)
                             mp.seekTo(0)
                             mp.start()
                             if (layoutCenter == 3) {
@@ -5515,12 +5227,12 @@ class MainActivity : AppCompatActivity() {
                                 val videoPlayFinishIntent = Intent()
                                 videoPlayFinishIntent.action =
                                     Constants.ACTION.ACTION_CENTER_VIDEO_PLAY_FINISH
-                                mContext?.sendBroadcast(videoPlayFinishIntent)
+                                this@MainActivity.sendBroadcast(videoPlayFinishIntent)
                             } else if (layoutCenter == 5){
                                 val mixPlayFinishIntent = Intent()
                                 mixPlayFinishIntent.action =
                                     Constants.ACTION.ACTION_MIX_CENTER_PLAY_FINISH
-                                mContext?.sendBroadcast(mixPlayFinishIntent)
+                                this@MainActivity.sendBroadcast(mixPlayFinishIntent)
                             }
                             true
                         }
@@ -5533,19 +5245,19 @@ class MainActivity : AppCompatActivity() {
                                 val videoPlayFinishIntent = Intent()
                                 videoPlayFinishIntent.action =
                                     Constants.ACTION.ACTION_CENTER_VIDEO_PLAY_FINISH
-                                mContext?.sendBroadcast(videoPlayFinishIntent)
+                                this@MainActivity.sendBroadcast(videoPlayFinishIntent)
                             } else if (layoutCenter == 5){
                                 val mixPlayFinishIntent = Intent()
                                 mixPlayFinishIntent.action =
                                     Constants.ACTION.ACTION_MIX_CENTER_PLAY_FINISH
-                                mContext?.sendBroadcast(mixPlayFinishIntent)
+                                this@MainActivity.sendBroadcast(mixPlayFinishIntent)
                             }
                         }
                     }
 
                     if (videoViewBottom != null) {
                         if (mediaControllerBottom == null) {
-                            mediaControllerBottom = MediaController(mContext)
+                            mediaControllerBottom = MediaController(this@MainActivity)
                         }
                         // anchor view for the videoView
                         mediaControllerBottom!!.setAnchorView(videoViewBottom)
@@ -5560,7 +5272,7 @@ class MainActivity : AppCompatActivity() {
 
                         videoViewBottom!!.setOnPreparedListener { mp ->
                             Log.d(mTag, "videoViewBottom prepared")
-                            //mp.setWakeMode(mContext, PowerManager.PARTIAL_WAKE_LOCK)
+                            //mp.setWakeMode(this@MainActivity, PowerManager.PARTIAL_WAKE_LOCK)
                             mp.seekTo(0)
                             mp.start()
                             if (layoutBottom == 3) {
@@ -5580,12 +5292,12 @@ class MainActivity : AppCompatActivity() {
                                 val mixPlayFinishIntent = Intent()
                                 mixPlayFinishIntent.action =
                                     Constants.ACTION.ACTION_BOTTOM_VIDEO_PLAY_FINISH
-                                mContext?.sendBroadcast(mixPlayFinishIntent)
+                                this@MainActivity.sendBroadcast(mixPlayFinishIntent)
                             } else if (layoutBottom == 5){
                                 val mixPlayFinishIntent = Intent()
                                 mixPlayFinishIntent.action =
                                     Constants.ACTION.ACTION_MIX_BOTTOM_PLAY_FINISH
-                                mContext?.sendBroadcast(mixPlayFinishIntent)
+                                this@MainActivity.sendBroadcast(mixPlayFinishIntent)
                             }
 
 
@@ -5601,12 +5313,12 @@ class MainActivity : AppCompatActivity() {
                                 val videoPlayFinishIntent = Intent()
                                 videoPlayFinishIntent.action =
                                     Constants.ACTION.ACTION_BOTTOM_VIDEO_PLAY_FINISH
-                                mContext?.sendBroadcast(videoPlayFinishIntent)
+                                this@MainActivity.sendBroadcast(videoPlayFinishIntent)
                             } else if (layoutBottom == 5){
                                 val mixPlayFinishIntent = Intent()
                                 mixPlayFinishIntent.action =
                                     Constants.ACTION.ACTION_MIX_BOTTOM_PLAY_FINISH
-                                mContext?.sendBroadcast(mixPlayFinishIntent)
+                                this@MainActivity.sendBroadcast(mixPlayFinishIntent)
                             }
 
 
@@ -5934,7 +5646,7 @@ class MainActivity : AppCompatActivity() {
                             if (bannerList.size > 0 && checkDownloadBannerAll()) { //at least one image cant play
                                 //top
                                 imageViewTop!!.visibility = View.VISIBLE
-                                //Picasso.with(mContext).load(imageUrlTop).into(imageViewTop)
+                                //Picasso.with(this@MainActivity).load(imageUrlTop).into(imageViewTop)
                                 val srcPath = "$dest_banner_folder/${bannerList[0]}"
                                 val file = File(srcPath)
                                 if (file.exists()) {
@@ -5951,7 +5663,7 @@ class MainActivity : AppCompatActivity() {
                             if (bannerList.size > 0 && checkDownloadBannerAll()) {
                                 //center
                                 imageViewCenter!!.visibility = View.VISIBLE
-                                //Picasso.with(mContext).load(imageUrlCenter).into(imageViewCenter)
+                                //Picasso.with(this@MainActivity).load(imageUrlCenter).into(imageViewCenter)
                                 val srcPath = "$dest_banner_folder/${bannerList[0]}"
                                 val file = File(srcPath)
                                 if (file.exists()) {
@@ -5966,7 +5678,7 @@ class MainActivity : AppCompatActivity() {
                             if (bannerList.size > 0 && checkDownloadBannerAll()) {
                                 //bottom
                                 imageViewBottom!!.visibility = View.VISIBLE
-                                //Picasso.with(mContext).load(imageUrlBottom).into(imageViewBottom)
+                                //Picasso.with(this@MainActivity).load(imageUrlBottom).into(imageViewBottom)
                                 val srcPath = "$dest_banner_folder/${bannerList[0]}"
                                 val file = File(srcPath)
                                 if (file.exists()) {
@@ -6007,7 +5719,7 @@ class MainActivity : AppCompatActivity() {
                                 }
                                 //top
                                 imageViewTop!!.visibility = View.VISIBLE
-                                //Picasso.with(mContext).load(imageUrlTop).into(imageViewTop)
+                                //Picasso.with(this@MainActivity).load(imageUrlTop).into(imageViewTop)
                                 val srcPath = "$dest_images_folder/${imageList[currentImageIndexTop]}"
                                 val file = File(srcPath)
                                 if (file.exists()) {
@@ -6040,7 +5752,7 @@ class MainActivity : AppCompatActivity() {
                                 }
                                 //center
                                 imageViewCenter!!.visibility = View.VISIBLE
-                                //Picasso.with(mContext).load(imageUrlCenter).into(imageViewCenter)
+                                //Picasso.with(this@MainActivity).load(imageUrlCenter).into(imageViewCenter)
                                 val srcPath = "$dest_images_folder/${imageList[currentImageIndexCenter]}"
                                 val file = File(srcPath)
                                 if (file.exists()) {
@@ -6072,7 +5784,7 @@ class MainActivity : AppCompatActivity() {
                                 }
                                 //bottom
                                 imageViewBottom!!.visibility = View.VISIBLE
-                                //Picasso.with(mContext).load(imageUrlBottom).into(imageViewBottom)
+                                //Picasso.with(this@MainActivity).load(imageUrlBottom).into(imageViewBottom)
                                 val srcPath = "$dest_images_folder/${imageList[currentImageIndexBottom]}"
                                 val file = File(srcPath)
                                 if (file.exists()) {
@@ -6122,14 +5834,14 @@ class MainActivity : AppCompatActivity() {
                                                     imageViewTop!!.visibility = View.GONE
                                                     imageViewTop2!!.setImageURI(Uri.fromFile(file))
                                                     imageViewTop2!!.visibility = View.VISIBLE
-                                                    //Picasso.with(mContext).load(imageUrlTop).into(imageViewTop2)
+                                                    //Picasso.with(this@MainActivity).load(imageUrlTop).into(imageViewTop2)
                                                     imageViewTop2!!.startAnimation(animMoveFromLeft)
                                                 } else {
                                                     imageViewTop2!!.startAnimation(animMoveToRight)
                                                     imageViewTop2!!.visibility = View.GONE
                                                     imageViewTop!!.setImageURI(Uri.fromFile(file))
                                                     imageViewTop!!.visibility = View.VISIBLE
-                                                    //Picasso.with(mContext).load(imageUrlTop).into(imageViewTop)
+                                                    //Picasso.with(this@MainActivity).load(imageUrlTop).into(imageViewTop)
                                                     imageViewTop!!.startAnimation(animMoveFromLeft)
                                                 }
                                             }
@@ -6160,14 +5872,14 @@ class MainActivity : AppCompatActivity() {
                                                     imageViewCenter!!.visibility = View.GONE
                                                     imageViewCenter2!!.setImageURI(Uri.fromFile(file))
                                                     imageViewCenter2!!.visibility = View.VISIBLE
-                                                    //Picasso.with(mContext).load(imageUrlCenter).into(imageViewCenter2)
+                                                    //Picasso.with(this@MainActivity).load(imageUrlCenter).into(imageViewCenter2)
                                                     imageViewCenter2!!.startAnimation(animMoveFromRight)
                                                 } else { //imageViewCenter!!.visibility == View.GONE
                                                     imageViewCenter2!!.startAnimation(animMoveToLeft)
                                                     imageViewCenter2!!.visibility = View.GONE
                                                     imageViewCenter!!.setImageURI(Uri.fromFile(file))
                                                     imageViewCenter!!.visibility = View.VISIBLE
-                                                    //Picasso.with(mContext).load(imageUrlCenter).into(imageViewCenter)
+                                                    //Picasso.with(this@MainActivity).load(imageUrlCenter).into(imageViewCenter)
                                                     imageViewCenter!!.startAnimation(animMoveFromRight)
                                                 }
                                             }
@@ -6198,14 +5910,14 @@ class MainActivity : AppCompatActivity() {
                                                     imageViewBottom!!.visibility = View.GONE
                                                     imageViewBottom2!!.setImageURI(Uri.fromFile(file))
                                                     imageViewBottom2!!.visibility = View.VISIBLE
-                                                    //Picasso.with(mContext).load(imageUrlBottom).into(imageViewBottom2)
+                                                    //Picasso.with(this@MainActivity).load(imageUrlBottom).into(imageViewBottom2)
                                                     imageViewBottom2!!.startAnimation(animMoveFromLeft)
                                                 } else {
                                                     imageViewBottom2!!.startAnimation(animMoveToRight)
                                                     imageViewBottom2!!.visibility = View.GONE
                                                     imageViewBottom!!.setImageURI(Uri.fromFile(file))
                                                     imageViewBottom!!.visibility = View.VISIBLE
-                                                    //Picasso.with(mContext).load(imageUrlBottom).into(imageViewBottom)
+                                                    //Picasso.with(this@MainActivity).load(imageUrlBottom).into(imageViewBottom)
                                                     imageViewBottom!!.startAnimation(animMoveFromLeft)
                                                 }
                                             }
@@ -6254,7 +5966,7 @@ class MainActivity : AppCompatActivity() {
 
                                 val mixPlayIntent = Intent()
                                 mixPlayIntent.action = Constants.ACTION.ACTION_TOP_VIDEO_PLAY_START
-                                mContext?.sendBroadcast(mixPlayIntent)
+                                this@MainActivity.sendBroadcast(mixPlayIntent)
                             }
                         } else {
                             Log.d(mTag, "layoutTop not video")
@@ -6264,129 +5976,6 @@ class MainActivity : AppCompatActivity() {
                             //exoPlayerViewTop!!.player!!.stop()
                             videoRunningTop = false
                         }
-
-
-                        //top
-                        /*
-                        if (layoutTop == 3) {
-                            if (videoList.size > 0 && checkDownloadVideosAll()) { //at least one video can play
-                                if (videosMode == 1) { //random
-
-                                    var nextTop: Int
-                                    do {
-                                        nextTop = Random.nextInt(videoList.size)
-
-                                    } while ((nextTop == currentVideoIndexTop && videoList.size > 1) || !downloadVideoReadyArray[nextTop])
-                                    currentVideoIndexTop = nextTop
-                                    Log.d(mTag, "downloadVideoReadyArray[nextTop] = ${downloadVideoReadyArray[nextTop]}")
-                                    Log.d(mTag, "top videosMode == 1 (random), currentVideoIndexTop = $currentVideoIndexTop")
-                                } else { //circle
-                                    do {
-                                        currentVideoIndexTop += 1
-                                        if (currentVideoIndexTop >= videoList.size) {
-                                            currentVideoIndexTop = 0
-                                        }
-                                    } while (!downloadVideoReadyArray[currentVideoIndexTop])
-
-                                }
-
-                                //top
-                                val filePath = "$dest_videos_folder${videoList[currentVideoIndexTop]}"
-                                Log.d(mTag, "start play -> $filePath")
-                                val file = File(filePath)
-                                if (file.exists()) {
-                                    val uriTop = Uri.fromFile(file)
-
-                                    videoViewTop!!.setVideoURI(uriTop)
-                                    //videoViewTop!!.start()
-                                    //videoRunningTop = true
-
-                                    videoViewTop!!.setOnPreparedListener { mp->
-                                        Log.d(mTag, "videoViewTop prepared")
-                                        //mp.setWakeMode(mContext, PowerManager.PARTIAL_WAKE_LOCK)
-                                        mp.seekTo(0)
-                                        mp.start()
-                                        videoRunningTop = true
-                                    }
-
-                                    videoViewTop!!.setOnErrorListener { mp, _, _ ->
-                                        Log.d("video", "setOnErrorListener ")
-
-                                        mp.reset()
-                                        videoRunningTop = false
-
-                                        if (videoList.size > 0 && checkDownloadVideosAll()) {
-                                            if (videosMode == 1) { //random
-                                                var nextTop: Int
-                                                do {
-                                                    nextTop = Random.nextInt(videoList.size)
-                                                } while ((nextTop == currentVideoIndexTop && videoList.size > 1 && !checkDownloadVideosOnlyOne()) || !downloadVideoReadyArray[nextTop])
-                                                currentVideoIndexTop = nextTop
-                                            } else { //circle
-                                                do {
-                                                    currentVideoIndexTop += 1
-                                                    if (currentVideoIndexTop >= videoList.size) {
-                                                        currentVideoIndexTop = 0
-                                                    }
-                                                } while (!downloadVideoReadyArray[currentVideoIndexTop])
-                                            }
-                                            val srcPath = "$dest_videos_folder${videoList[currentVideoIndexTop]}"
-                                            val fileVideo = File(srcPath)
-                                            if (fileVideo.exists()) {
-                                                val uriTopVideo = Uri.fromFile(fileVideo)
-                                                videoViewTop!!.setVideoURI(uriTopVideo)
-                                            }
-
-                                        } else {
-                                            Log.d(mTag, "videoList.size == 0")
-                                            videoViewTop!!.visibility = View.GONE
-                                        }
-
-                                        true
-                                    }
-                                    videoViewTop!!.setOnCompletionListener { mp->
-
-                                        mp.reset()
-                                        videoRunningTop = false
-
-                                        if (videoList.size > 0 && checkDownloadVideosAll()) {
-                                            if (videosMode == 1) { //random
-                                                var nextTop: Int
-                                                do {
-                                                    nextTop = Random.nextInt(videoList.size)
-                                                } while ((nextTop == currentVideoIndexTop && videoList.size > 1 && !checkDownloadVideosOnlyOne()) || !downloadVideoReadyArray[nextTop])
-                                                currentVideoIndexTop = nextTop
-                                            } else { //circle
-                                                do {
-                                                    currentVideoIndexTop += 1
-                                                    if (currentVideoIndexTop >= videoList.size) {
-                                                        currentVideoIndexTop = 0
-                                                    }
-                                                } while (!downloadVideoReadyArray[currentVideoIndexTop])
-                                            }
-                                            val srcPath = "$dest_videos_folder${videoList[currentVideoIndexTop]}"
-                                            val fileVideo = File(srcPath)
-                                            if (fileVideo.exists()) {
-                                                val uriTopVideo = Uri.fromFile(fileVideo)
-                                                videoViewTop!!.setVideoURI(uriTopVideo)
-                                            }
-
-                                        } else {
-                                            Log.d(mTag, "videoList.size == 0")
-                                            videoViewTop!!.visibility = View.GONE
-                                        }
-                                    }
-                                } else {
-                                    Log.d(mTag, "video top: play file not exist")
-                                }
-                            }
-                        } else {
-                            if (videoViewTop != null) {
-                                videoViewTop!!.stopPlayback()
-                            }
-                            //exoPlayerViewTop!!.player!!.stop()
-                            videoRunningTop = false
-                        }*/
 
                         //center
                         if (layoutCenter == 3) {
@@ -6408,7 +5997,7 @@ class MainActivity : AppCompatActivity() {
 
                                 val mixPlayIntent = Intent()
                                 mixPlayIntent.action = Constants.ACTION.ACTION_CENTER_VIDEO_PLAY_START
-                                mContext?.sendBroadcast(mixPlayIntent)
+                                this@MainActivity.sendBroadcast(mixPlayIntent)
                             }
                         } else {
                             Log.d(mTag, "layoutCenter not video")
@@ -6418,131 +6007,6 @@ class MainActivity : AppCompatActivity() {
                             //exoPlayerViewCenter!!.player!!.stop()
                             videoRunningCenter = false
                         }
-
-                        //center
-                        /*if (layoutCenter == 3) {
-                            if (videoList.size > 0 && checkDownloadVideosAll()) {
-                                if (videosMode == 1) { //random
-                                    var nextCenter: Int
-                                    do {
-                                        nextCenter = Random.nextInt(videoList.size)
-                                    } while ((nextCenter == currentVideoIndexCenter && videoList.size > 1) || !downloadVideoReadyArray[nextCenter])
-                                    currentVideoIndexCenter = nextCenter
-                                } else { //circle
-                                    do {
-                                        currentVideoIndexCenter += 1
-                                        if (currentVideoIndexCenter >= videoList.size) {
-                                            currentVideoIndexCenter = 0
-                                        }
-                                    } while (!downloadVideoReadyArray[currentVideoIndexCenter])
-                                }
-
-                                //top
-                                val filePath = "$dest_videos_folder${videoList[currentVideoIndexCenter]}"
-                                val file = File(filePath)
-                                val uriCenter = Uri.fromFile(file)
-                                if (file.exists()) {
-                                    //center
-                                    //val uriCenter = Uri.parse(videoList[currentVideoIndexCenter])
-
-
-                                    videoViewCenter!!.setVideoURI(uriCenter)
-                                    //videoViewCenter!!.start()
-                                    //videoRunningCenter = true
-
-                                    videoViewCenter!!.setOnPreparedListener { mp->
-                                        Log.d(mTag, "videoViewCenter prepared")
-                                        //mp.setWakeMode(mContext, PowerManager.PARTIAL_WAKE_LOCK)
-                                        mp.start()
-                                        mp.seekTo(0)
-                                        videoRunningCenter = true
-                                    }
-                                    videoViewCenter!!.setOnErrorListener { mp, _, _ ->
-                                        Log.d("video", "setOnErrorListener ")
-
-                                        mp.reset()
-                                        if (videoList.size > 0 && checkDownloadVideosAll()) {
-                                            videoRunningCenter = false
-                                            if (videosMode == 1) { //random
-                                                var nextCenter: Int
-                                                do {
-                                                    nextCenter = Random.nextInt(videoList.size)
-                                                } while ((nextCenter == currentVideoIndexCenter && videoList.size > 1 && !checkDownloadVideosOnlyOne()) || !downloadVideoReadyArray[nextCenter])
-                                                currentVideoIndexCenter = nextCenter
-                                            } else { //circle
-                                                do {
-                                                    currentVideoIndexCenter += 1
-                                                    if (currentVideoIndexCenter >= videoList.size) {
-                                                        currentVideoIndexCenter = 0
-                                                    }
-                                                } while (!downloadVideoReadyArray[currentVideoIndexCenter])
-
-                                            }
-                                            val srcPath = "$dest_videos_folder${videoList[currentVideoIndexCenter]}"
-                                            val fileVideo = File(srcPath)
-                                            if (fileVideo.exists()) {
-                                                val uriCenterVideo = Uri.fromFile(fileVideo)
-
-                                                //val uri = Uri.parse(videoList[currentVideoIndexCenter])
-                                                videoViewCenter!!.setVideoURI(uriCenterVideo)
-                                                //videoViewCenter!!.start()
-                                                //videoRunningCenter = true
-                                            }
-                                        } else {
-                                            Log.d(mTag, "videoList.size == 0")
-                                            videoViewCenter!!.visibility = View.GONE
-                                        }
-
-                                        true
-                                    }
-
-                                    videoViewCenter!!.setOnCompletionListener { mp->
-                                        Log.d(mTag, "videoViewCenter play complete")
-                                        mp.reset()
-                                        if (videoList.size > 0 && checkDownloadVideosAll()) {
-                                            videoRunningCenter = false
-                                            if (videosMode == 1) { //random
-                                                var nextCenter: Int
-                                                do {
-                                                    nextCenter = Random.nextInt(videoList.size)
-                                                } while ((nextCenter == currentVideoIndexCenter && videoList.size > 1 && !checkDownloadVideosOnlyOne()) || !downloadVideoReadyArray[nextCenter])
-                                                currentVideoIndexCenter = nextCenter
-                                            } else { //circle
-                                                do {
-                                                    currentVideoIndexCenter += 1
-                                                    if (currentVideoIndexCenter >= videoList.size) {
-                                                        currentVideoIndexCenter = 0
-                                                    }
-                                                } while (!downloadVideoReadyArray[currentVideoIndexCenter])
-
-                                            }
-                                            val srcPath = "$dest_videos_folder${videoList[currentVideoIndexCenter]}"
-                                            val fileVideo = File(srcPath)
-                                            if (fileVideo.exists()) {
-                                                val uriCenterVideo = Uri.fromFile(fileVideo)
-
-                                                //val uri = Uri.parse(videoList[currentVideoIndexCenter])
-                                                videoViewCenter!!.setVideoURI(uriCenterVideo)
-                                                //videoViewCenter!!.start()
-                                                //videoRunningCenter = true
-                                            }
-                                        } else {
-                                            Log.d(mTag, "videoList.size == 0")
-                                            videoViewCenter!!.visibility = View.GONE
-                                        }
-
-                                    }
-                                } else {
-                                    Log.d(mTag, "video center: play file not exist")
-                                }
-                            }
-                        } else {
-                            if (videoViewCenter != null) {
-                                videoViewCenter!!.stopPlayback()
-                            }
-                            //exoPlayerViewCenter!!.player!!.stop()
-                            videoRunningCenter = false
-                        }*/
 
                         //bottom
                         if (layoutBottom == 3) {
@@ -6566,7 +6030,7 @@ class MainActivity : AppCompatActivity() {
 
                                 val mixPlayIntent = Intent()
                                 mixPlayIntent.action = Constants.ACTION.ACTION_BOTTOM_VIDEO_PLAY_START
-                                mContext?.sendBroadcast(mixPlayIntent)
+                                this@MainActivity.sendBroadcast(mixPlayIntent)
                             }
                         } else {
                             Log.d(mTag, "layoutBottom not video")
@@ -6576,135 +6040,6 @@ class MainActivity : AppCompatActivity() {
                             //exoPlayerViewBottom!!.player!!.stop()
                             videoRunningBottom = false
                         }
-
-                        /*if (layoutBottom == 3) {
-                            if (videoList.size > 0 && checkDownloadVideosAll()) {
-                                if (videosMode == 1) { //random
-                                    var nextBottom: Int
-                                    do {
-                                        nextBottom = Random.nextInt(videoList.size)
-                                    } while ((nextBottom == currentVideoIndexBottom && videoList.size > 1) || !downloadVideoReadyArray[nextBottom])
-                                    currentVideoIndexBottom = nextBottom
-                                } else { //circle
-                                    do {
-                                        currentVideoIndexBottom += 1
-                                        if (currentVideoIndexBottom >= videoList.size) {
-                                            currentVideoIndexBottom = 0
-                                        }
-                                    } while (!downloadVideoReadyArray[currentVideoIndexBottom])
-                                }
-
-                                Log.d(mTag, "start => currentVideoIndexBottom = $currentVideoIndexBottom")
-
-
-                                val filePath = "$dest_videos_folder${videoList[currentVideoIndexBottom]}"
-                                Log.d(mTag, "=> filePath = $filePath")
-                                val file = File(filePath)
-                                if (file.exists()) {
-                                    val uriBottom = Uri.fromFile(file)
-                                    videoViewBottom!!.setVideoURI(uriBottom)
-                                    //videoViewBottom!!.start()
-                                    //videoRunningBottom = true
-
-                                    videoViewBottom!!.setOnPreparedListener { mp->
-                                        Log.d(mTag, "videoViewBottom prepared, path = $filePath")
-                                        //mp.setWakeMode(mContext, PowerManager.PARTIAL_WAKE_LOCK)
-                                        mp.start()
-                                        mp.seekTo(0)
-                                        videoRunningBottom = true
-                                    }
-
-                                    //videoViewBottom!!.start()
-                                    //videoRunningBottom = true
-                                    videoViewBottom!!.setOnErrorListener { mp, _, _ ->
-                                        Log.d("video", "setOnErrorListener ")
-
-                                        mp.reset()
-                                        if (videoList.size > 0 && checkDownloadVideosAll()) {
-                                            videoRunningBottom = false
-                                            if (videosMode == 1) { //random
-                                                var nextBottom: Int
-                                                do {
-                                                    nextBottom = Random.nextInt(videoList.size)
-                                                    Log.d(mTag, "nextBottom = $nextBottom")
-                                                } while ((nextBottom == currentVideoIndexBottom && videoList.size > 1 && !checkDownloadVideosOnlyOne()) || !downloadVideoReadyArray[nextBottom])
-                                                currentVideoIndexBottom = nextBottom
-                                            } else { //circle
-                                                do {
-                                                    currentVideoIndexBottom += 1
-                                                    if (currentVideoIndexBottom >= videoList.size) {
-                                                        currentVideoIndexBottom = 0
-                                                    }
-                                                } while (!downloadVideoReadyArray[currentVideoIndexBottom])
-
-                                            }
-                                            Log.d(mTag, "videoList.size = ${videoList.size}, currentVideoIndexBottom = $currentVideoIndexBottom")
-                                            val srcPath = "$dest_videos_folder${videoList[currentVideoIndexBottom]}"
-                                            Log.d(mTag, "==>srcPath = $srcPath")
-
-                                            val fileVideo = File(srcPath)
-                                            if (fileVideo.exists()) {
-                                                val uriBottomVideo = Uri.fromFile(fileVideo)
-                                                videoViewBottom!!.setVideoURI(uriBottomVideo)
-                                                //videoViewBottom!!.start()
-                                                //videoRunningBottom = true
-                                            }
-                                        } else {
-                                            Log.d(mTag, "videoList.size == 0")
-                                            videoViewBottom!!.visibility = View.GONE
-                                        }
-
-                                        true
-                                    }
-                                    videoViewBottom!!.setOnCompletionListener { mp->
-                                        Log.d(mTag, "videoViewBottom play complete")
-
-                                        mp.reset()
-                                        if (videoList.size > 0 && checkDownloadVideosAll()) {
-                                            videoRunningBottom = false
-                                            if (videosMode == 1) { //random
-                                                var nextBottom: Int
-                                                do {
-                                                    nextBottom = Random.nextInt(videoList.size)
-                                                    Log.d(mTag, "nextBottom = $nextBottom")
-                                                } while ((nextBottom == currentVideoIndexBottom && videoList.size > 1 && !checkDownloadVideosOnlyOne()) || !downloadVideoReadyArray[nextBottom])
-                                                currentVideoIndexBottom = nextBottom
-                                            } else { //circle
-                                                do {
-                                                    currentVideoIndexBottom += 1
-                                                    if (currentVideoIndexBottom >= videoList.size) {
-                                                        currentVideoIndexBottom = 0
-                                                    }
-                                                } while (!downloadVideoReadyArray[currentVideoIndexBottom])
-
-                                            }
-                                            Log.d(mTag, "videoList.size = ${videoList.size}, currentVideoIndexBottom = $currentVideoIndexBottom")
-                                            val srcPath = "$dest_videos_folder${videoList[currentVideoIndexBottom]}"
-                                            Log.d(mTag, "==>srcPath = $srcPath")
-
-                                            val fileVideo = File(srcPath)
-                                            if (fileVideo.exists()) {
-                                                val uriBottomVideo = Uri.fromFile(fileVideo)
-                                                videoViewBottom!!.setVideoURI(uriBottomVideo)
-                                                //videoViewBottom!!.start()
-                                                //videoRunningBottom = true
-                                            }
-                                        } else {
-                                            Log.d(mTag, "videoList.size == 0")
-                                            videoViewBottom!!.visibility = View.GONE
-                                        }
-                                    }
-                                } else {
-                                    Log.d(mTag, "video bottom: play file not exist")
-                                }
-                            }
-                        } else {
-                            if (videoViewBottom != null) {
-                                videoViewBottom!!.stopPlayback()
-                            }
-                            //exoPlayerViewBottom!!.player!!.stop()
-                            videoRunningBottom = false
-                        }*/
                     } else { //all are not video
                         Log.d(mTag, "all are not video")
                         videoRunningTop = false
@@ -6722,7 +6057,7 @@ class MainActivity : AppCompatActivity() {
                                 mixTopRunning = true
                                 val mixPlayIntent = Intent()
                                 mixPlayIntent.action = Constants.ACTION.ACTION_MIX_TOP_PLAY_START
-                                mContext?.sendBroadcast(mixPlayIntent)
+                                this@MainActivity.sendBroadcast(mixPlayIntent)
                             }
                         } else {
                             Log.d(mTag, "layoutTop not mix")
@@ -6733,7 +6068,7 @@ class MainActivity : AppCompatActivity() {
                                 mixCenterRunning = true
                                 val mixPlayIntent = Intent()
                                 mixPlayIntent.action = Constants.ACTION.ACTION_MIX_CENTER_PLAY_START
-                                mContext?.sendBroadcast(mixPlayIntent)
+                                this@MainActivity.sendBroadcast(mixPlayIntent)
                             }
                         } else {
                             Log.d(mTag, "layoutCenter not mix")
@@ -6745,7 +6080,7 @@ class MainActivity : AppCompatActivity() {
                                 mixBottomRunning = true
                                 val mixPlayIntent = Intent()
                                 mixPlayIntent.action = Constants.ACTION.ACTION_MIX_BOTTOM_PLAY_START
-                                mContext?.sendBroadcast(mixPlayIntent)
+                                this@MainActivity.sendBroadcast(mixPlayIntent)
                             }
                         } else {
                             Log.d(mTag, "layoutBottom not mix")
@@ -7100,7 +6435,7 @@ class MainActivity : AppCompatActivity() {
 
                     val testServerIPAndPortIntent = Intent()
                     testServerIPAndPortIntent.action = Constants.ACTION.ACTION_TEST_IP_AND_PORT
-                    mContext?.sendBroadcast(testServerIPAndPortIntent)
+                    this@MainActivity.sendBroadcast(testServerIPAndPortIntent)
 
                     textViewShowInitSuccess!!.text = getString(R.string.ad_client_wait_for_server)
                     textViewShowInitSuccess!!.visibility = View.VISIBLE
