@@ -12,4 +12,42 @@
     <string name="client_screen_height">螢幕高度</string>
     <string name="ad_client_wait_for_server">等待伺服器回應</string>
     <string name="ad_client_connect_server_success_no_setting">連線伺服器成功\n尚未設定廣告</string>
+
+    <string name="get_layout_start">要求取得佈局…</string>
+    <string name="get_layout_failed_retry">取得佈局失敗. 重新嘗試…</string>
+    <string name="get_layout_success">成功取得佈局資訊.</string>
+    <string name="get_ad_setting_start">取得播放內容…</string>
+    <string name="get_ad_setting_failed_retry">取得播放內容失敗. 重新嘗試.</string>
+    <string name="get_ad_setting_success">成功取得播放內容.</string>
+    <string name="get_ad_setting_empty">廣告設定為空. 請前往後台設定.</string>
+    <string name="get_marquee_start">取得跑馬燈…</string>
+    <string name="get_marquee_failed">取得跑馬燈失敗</string>
+    <string name="get_marquee_success">成功取得跑馬燈</string>
+    <string name="get_marquee_empty">跑馬燈為空</string>
+
+    <string name="get_banner_start">要求取得橫幅…</string>
+    <string name="get_banner_failed">取得橫幅失敗</string>
+    <string name="get_banner_success">取得橫幅成功</string>
+    <string name="get_banner_empty">橫幅為空</string>
+    <string name="get_banner_complete">取得橫幅完成</string>
+
+    <string name="get_image_start">要求取得圖片…</string>
+    <string name="get_image_failed">取得圖片失敗</string>
+    <string name="get_image_success">取得圖片成功</string>
+    <string name="get_image_empty">圖片為空</string>
+    <string name="get_image_complete">取得圖片完成</string>
+
+    <string name="get_video_start">要求取得影片…</string>
+    <string name="get_video_failed">取得影片失敗</string>
+    <string name="get_video_success">取得影片成功</string>
+    <string name="get_video_empty">影片為空</string>
+    <string name="get_video_complete">取得影片</string>
+
+    <string name="get_mix_start">要求取得混合播放內容…</string>
+    <string name="get_mix_failed">取得混合播放內容失敗</string>
+    <string name="get_mix_success">取得混合播放內容成功</string>
+    <string name="get_mix_empty">混合播放內容為空</string>
+    <string name="get_mix_complete">取得混合播放內容完成</string>
+
+    <string name="start_play_ad">準備開始播放…</string>
 </resources>

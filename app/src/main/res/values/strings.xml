@@ -11,4 +11,42 @@
     <string name="client_screen_height">Screen Height</string>
     <string name="ad_client_wait_for_server">Wait for response from server</string>
     <string name="ad_client_connect_server_success_no_setting">Connect server success.\nNo Ad Setting.</string>
+
+    <string name="get_layout_start">Get layout…</string>
+    <string name="get_layout_failed_retry">Get layout failed. Retry…</string>
+    <string name="get_layout_success">Get layout success.</string>
+    <string name="get_ad_setting_start">Get content…</string>
+    <string name="get_ad_setting_failed_retry">Get Ad setting failed. Retry…</string>
+    <string name="get_ad_setting_success">Get ad setting success.</string>
+    <string name="get_ad_setting_empty">Ad setting is empty. Please setup ad setting in server.</string>
+    <string name="get_marquee_start">Get marquee…</string>
+    <string name="get_marquee_failed">Get marquee failed.</string>
+    <string name="get_marquee_success">Get marquee success</string>
+    <string name="get_marquee_empty">Get marquee empty</string>
+
+    <string name="get_banner_start">Get banner…</string>
+    <string name="get_banner_failed">Get banner failed.</string>
+    <string name="get_banner_success">Get banner success</string>
+    <string name="get_banner_empty">Get banner empty</string>
+    <string name="get_banner_complete">Get banner complete</string>
+
+    <string name="get_image_start">Get image…</string>
+    <string name="get_image_failed">Get image failed.</string>
+    <string name="get_image_success">Get image success</string>
+    <string name="get_image_empty">Get image empty</string>
+    <string name="get_image_complete">Get image complete</string>
+
+    <string name="get_video_start">Get video…</string>
+    <string name="get_video_failed">Get video failed.</string>
+    <string name="get_video_success">Get video success</string>
+    <string name="get_video_empty">Get video empty</string>
+    <string name="get_video_complete">Get video complete</string>
+
+    <string name="get_mix_start">Get mix…</string>
+    <string name="get_mix_failed">Get mix failed.</string>
+    <string name="get_mix_success">Get mix success</string>
+    <string name="get_mix_empty">Get mix empty</string>
+    <string name="get_mix_complete">Get mix complete</string>
+
+    <string name="start_play_ad">Start play Ad</string>
 </resources>

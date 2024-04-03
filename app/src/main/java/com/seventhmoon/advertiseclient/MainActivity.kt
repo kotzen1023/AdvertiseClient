@@ -29,7 +29,6 @@ import android.util.DisplayMetrics
 import android.util.Log
 import android.view.Gravity
 import android.view.View
-import android.view.View.OnFocusChangeListener
 import android.view.View.OnTouchListener
 import android.view.ViewGroup
 import android.view.WindowInsets
@@ -41,7 +40,6 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.LinearLayout
-import android.widget.LinearLayout.LayoutParams
 import android.widget.MediaController
 import android.widget.RelativeLayout
 import android.widget.TextView
@@ -243,7 +241,8 @@ class MainActivity : AppCompatActivity() {
             // length may be negative because it is based on http header
 
             val (progress, length) = msg.obj as Pair<*, *>
-            textViewProgress!!.text = "$progress/$length"
+            val progressStr = "$progress/$length"
+            textViewProgress!!.text = progressStr
             //Log.d(mTag, "progress = $progress, length = $length")
         }
     }
@@ -305,9 +304,9 @@ class MainActivity : AppCompatActivity() {
     var animMoveToLeft : Animation ?= null
 
     //layout global
-    var layoutTop = 0
-    var layoutCenter = 0
-    var layoutBottom = 0
+    private var layoutTop = 0
+    private var layoutCenter = 0
+    private var layoutBottom = 0
 
     private var mixMode = 0
     private var mixImageInterval = 0
@@ -322,6 +321,22 @@ class MainActivity : AppCompatActivity() {
     private var marqueeMode = 0
     private var imagesMode = 0
     private var videosMode = 0
+
+    private var mainLayoutWeight = 0
+    private var layoutTopWeight = 0
+    private var layoutCenterWeight = 0
+    private var layoutBottomWeight = 0
+    private var layoutTriangleWeight = 0
+
+    private var layoutTopWidth = 0
+    private var layoutCenterWidth = 0
+    private var layoutBottomWidth = 0
+
+    private var layoutTopHeight = 0
+    private var layoutCenterHeight = 0
+    private var layoutBottomHeight = 0
+
+    private val defaultBackGroundColor = "#000000"
 
     @SuppressLint("HardwareIds")
     @RequiresApi(Build.VERSION_CODES.R)
@@ -836,26 +851,27 @@ class MainActivity : AppCompatActivity() {
 
             //because marquee download is unnecessary, start with image
             //downloadImageComplete = 0
-
+            clearAllNotInAllList()
             if (bannerList.size > 0) {
                 checkBannerExists()
-                clearBannersNotInBannerList()
+                //clearBannersNotInBannerList()
             }
 
             if (imageList.size > 0) {
                 checkImagesExists()
-                clearImagesNotInImageList()
+                //clearImagesNotInImageList()
             }
 
             if (videoList.size > 0) {
                 checkVideosExists()
-                clearVideosNotInVideoList()
+                //clearVideosNotInVideoList()
             }
 
             if (mixList.size > 0) {
                 checkMixExists()
-                clearMixNotInMixList()
+                //clearMixNotInMixList()
             }
+
 
 
             infoRenew = true
@@ -913,18 +929,18 @@ class MainActivity : AppCompatActivity() {
                         Log.d(mTag, "ACTION_GET_LAYOUT")
 
                         getLayout()
-                        textViewShowInitSuccess!!.text = "Get Layout..."
+                        textViewShowInitSuccess!!.text = getString(R.string.get_layout_start)
 
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_LAYOUT_FAILED, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_LAYOUT_FAILED")
 
-                        textViewShowInitSuccess!!.text = "Get Layout failed"
+                        textViewShowInitSuccess!!.text = getString(R.string.get_layout_failed_retry)
                         getLayout()
 
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_LAYOUT_SUCCESS, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_LAYOUT_SUCCESS")
 
-                        textViewShowInitSuccess!!.text = "Get Layout success"
+                        textViewShowInitSuccess!!.text = getString(R.string.get_layout_success)
 
                         val planId = intent.getIntExtra("PLAN_ID", 0)
                         val plan2Id = intent.getIntExtra("PLAN2_ID", 0)
@@ -937,17 +953,25 @@ class MainActivity : AppCompatActivity() {
                         Log.d(mTag, "plan4Id = $plan4Id")
 
                         if (planId > 0 || plan2Id > 0 || plan3Id > 0 || plan4Id > 0) {
-                            textViewShowInitSuccess!!.text = "Get AdSetting..."
+                            textViewShowInitSuccess!!.text = getString(R.string.get_ad_setting_start)
                             getAdSetting(planId, plan2Id, plan3Id, plan4Id)
                         }
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_AD_SETTING_FAILED, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_AD_SETTING_FAILED")
 
-                        textViewShowInitSuccess!!.text = "Get AdSetting failed"
+                        textViewShowInitSuccess!!.text = getString(R.string.get_ad_setting_failed_retry)
+                        if (layoutList.size > 0) {
+                            getAdSetting(
+                                layoutList[0].plan_id,
+                                layoutList[0].plan2_id,
+                                layoutList[0].plan3_id,
+                                layoutList[0].plan4_id
+                            )
+                        }
 
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_AD_SETTING_SUCCESS, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_AD_SETTING_SUCCESS")
-                        textViewShowInitSuccess!!.text = "Get AdSetting success"
+                        textViewShowInitSuccess!!.text = getString(R.string.get_layout_success)
                         if (adSettingList.size > 0) {
 
                             val getMarqueeIntent = Intent()
@@ -956,16 +980,16 @@ class MainActivity : AppCompatActivity() {
                         }
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_AD_SETTING_EMPTY, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_AD_SETTING_EMPTY")
-                        textViewShowInitSuccess!!.text = "Get AdSetting empty"
+                        textViewShowInitSuccess!!.text = getString(R.string.get_ad_setting_empty)
 
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_MARQUEE_START, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_MARQUEE_START")
                         //get Marquee
-                        textViewShowInitSuccess!!.text = "Get marquee..."
+                        textViewShowInitSuccess!!.text = getString(R.string.get_marquee_start)
                         getMarquee()
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_MARQUEE_FAILED, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_MARQUEE_FAILED")
-                        textViewShowInitSuccess!!.text = "Get marquee failed"
+                        textViewShowInitSuccess!!.text = getString(R.string.get_marquee_failed)
 
                         //then get banner
                         val getBannerIntent = Intent()
@@ -974,7 +998,7 @@ class MainActivity : AppCompatActivity() {
 
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_MARQUEE_EMPTY, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_MARQUEE_EMPTY")
-                        textViewShowInitSuccess!!.text = "Get marquee empty"
+                        textViewShowInitSuccess!!.text = getString(R.string.get_marquee_empty)
                         playMarqueeList.clear()
                         defaultMarqueePlayList!!.clear()
                         defaultPlayMarqueeDataDB!!.defaultPlayMarqueeDataDao().clearTable()
@@ -985,7 +1009,7 @@ class MainActivity : AppCompatActivity() {
                         this@MainActivity.sendBroadcast(getBannerIntent)
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_MARQUEE_SUCCESS, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_MARQUEE_SUCCESS")
-                        textViewShowInitSuccess!!.text = "Get marquee success"
+                        textViewShowInitSuccess!!.text = getString(R.string.get_marquee_success)
                         //clear before add
                         playMarqueeList.clear()
                         defaultMarqueePlayList!!.clear()
@@ -1045,7 +1069,10 @@ class MainActivity : AppCompatActivity() {
                         }
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_BANNER_START, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_BANNER_START")
-                        textViewShowInitSuccess!!.text = "Get banner..."
+
+                        clearAllNotInAllList()
+
+                        textViewShowInitSuccess!!.text = getString(R.string.get_banner_start)
                         if (adSettingList[currentAdSettingIdx].plan_banner.isNotEmpty()) {
                             val bannerArray =
                                 adSettingList[currentAdSettingIdx].plan_banner.split(",")
@@ -1063,7 +1090,7 @@ class MainActivity : AppCompatActivity() {
                                 )
 
                                 checkBannerExists()
-                                clearBannersNotInBannerList()
+                                //clearBannersNotInBannerList()
                                 downloadBanner()
                             }
                         } else {
@@ -1092,14 +1119,14 @@ class MainActivity : AppCompatActivity() {
 
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_BANNER_SUCCESS, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_BANNER_SUCCESS")
-                        textViewShowInitSuccess!!.text = "Get banner success"
+                        textViewShowInitSuccess!!.text = getString(R.string.get_banner_success)
                         if (downloadBannerComplete < bannerList.size) {
                             downloadBanner()
                         }
 
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_BANNER_EMPTY, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_BANNER_EMPTY")
-                        textViewShowInitSuccess!!.text = "Get banner empty"
+                        textViewShowInitSuccess!!.text = getString(R.string.get_banner_empty)
                         //no banner, clear list and table
                         bannerList.clear()
                         defaultBannerPlayList!!.clear()
@@ -1112,7 +1139,7 @@ class MainActivity : AppCompatActivity() {
 
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_BANNER_COMPLETE, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_BANNER_COMPLETE")
-                        textViewShowInitSuccess!!.text = "Get banner complete"
+                        textViewShowInitSuccess!!.text = getString(R.string.get_banner_complete)
                         if (bannerList.size > 0) {
                             //clear before add
                             defaultPlayBannerDataDB!!.defaultPlayBannerDataDao().clearTable()
@@ -1132,7 +1159,7 @@ class MainActivity : AppCompatActivity() {
 
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_IMAGES_START, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_IMAGES_START")
-                        textViewShowInitSuccess!!.text = "Get images..."
+                        textViewShowInitSuccess!!.text = getString(R.string.get_image_start)
                         if (adSettingList[currentAdSettingIdx].plan_images.isNotEmpty()) {
                             val imagesArray =
                                 adSettingList[currentAdSettingIdx].plan_images.split(",")
@@ -1150,7 +1177,7 @@ class MainActivity : AppCompatActivity() {
                                 )
                                 //downloadImageComplete = 0
                                 checkImagesExists()
-                                clearImagesNotInImageList()
+                                //clearImagesNotInImageList()
                                 downloadImages()
                             }
                         } else {
@@ -1183,7 +1210,7 @@ class MainActivity : AppCompatActivity() {
                         }
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_IMAGES_EMPTY, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_IMAGES_EMPTY")
-                        textViewShowInitSuccess!!.text = "Get images empty"
+                        textViewShowInitSuccess!!.text = getString(R.string.get_image_empty)
                         //clear
                         imageList.clear()
                         defaultImagesPlayList!!.clear()
@@ -1195,7 +1222,7 @@ class MainActivity : AppCompatActivity() {
                         this@MainActivity.sendBroadcast(getVideosIntent)
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_IMAGES_COMPLETE, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_IMAGES_COMPLETE")
-                        textViewShowInitSuccess!!.text = "Get images complete"
+                        textViewShowInitSuccess!!.text = getString(R.string.get_image_complete)
                         if (imageList.size > 0) {
                             //clear before add
                             defaultPlayImagesDataDB!!.defaultPlayImagesDataDao().clearTable()
@@ -1214,7 +1241,7 @@ class MainActivity : AppCompatActivity() {
                         this@MainActivity.sendBroadcast(getVideosIntent)
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_VIDEOS_START, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_VIDEOS_START")
-                        textViewShowInitSuccess!!.text = "Get videos..."
+                        textViewShowInitSuccess!!.text = getString(R.string.get_video_start)
                         if (adSettingList[currentAdSettingIdx].plan_videos.isNotEmpty()) {
                             val videosArray = adSettingList[currentAdSettingIdx].plan_videos.split(",")
 
@@ -1233,7 +1260,7 @@ class MainActivity : AppCompatActivity() {
                             //then download videos
                             //downloadVideoComplete = 0
                             checkVideosExists()
-                            clearVideosNotInVideoList()
+                            //clearVideosNotInVideoList()
                             downloadVideos()
                         } else { //video is empty
                             videoList.clear()
@@ -1277,7 +1304,7 @@ class MainActivity : AppCompatActivity() {
                         }
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_VIDEOS_EMPTY, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_VIDEOS_EMPTY")
-                        textViewShowInitSuccess!!.text = "Get videos empty"
+                        textViewShowInitSuccess!!.text = getString(R.string.get_video_empty)
                         videoList.clear()
                         defaultVideosPlayList!!.clear()
                         defaultPlayVideosDataDB!!.defaultPlayVideosDataDao().clearTable()
@@ -1292,7 +1319,7 @@ class MainActivity : AppCompatActivity() {
 
 
 
-                        textViewShowInitSuccess!!.text = "Get videos complete"
+                        textViewShowInitSuccess!!.text = getString(R.string.get_video_complete)
                         if (downloadVideoComplete == videoList.size) {
                             if (videoList.size > 0) {
 
@@ -1317,7 +1344,7 @@ class MainActivity : AppCompatActivity() {
                         }
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_MIX_START, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_MIX_START")
-                        textViewShowInitSuccess!!.text = "Get mix..."
+                        textViewShowInitSuccess!!.text = getString(R.string.get_mix_start)
                         if (adSettingList[currentAdSettingIdx].plan_mix.isNotEmpty()) {
                             val mixArray = adSettingList[currentAdSettingIdx].plan_mix.split(",")
 
@@ -1336,7 +1363,7 @@ class MainActivity : AppCompatActivity() {
                             //then download videos
                             //downloadVideoComplete = 0
                             checkMixExists()
-                            clearMixNotInMixList()
+                            //clearMixNotInMixList()
                             downloadMix()
                         } else { //mix is empty
                             mixList.clear()
@@ -1355,7 +1382,8 @@ class MainActivity : AppCompatActivity() {
                         if (downloadMixComplete < mixList.size) {
                             downloadMix()
                         } else {
-                            textViewShowInitSuccess!!.text = "mixList.size = ${mixList.size}, downloadMixComplete = $downloadMixComplete"
+                            val mixStr = "mixList.size = ${mixList.size}, downloadMixComplete = $downloadMixComplete"
+                            textViewShowInitSuccess!!.text = mixStr
                         }
 
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_MIX_FAILED, ignoreCase = true)) {
@@ -1375,7 +1403,7 @@ class MainActivity : AppCompatActivity() {
 
                         textViewProgress!!.visibility = View.GONE
 
-                        textViewShowInitSuccess!!.text = "Get mix complete"
+                        textViewShowInitSuccess!!.text = getString(R.string.get_mix_complete)
                         if (downloadMixComplete == mixList.size) {
                             if (mixList.size > 0) {
 
@@ -1424,7 +1452,7 @@ class MainActivity : AppCompatActivity() {
 
                     }  else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_MIX_EMPTY, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_MIX_EMPTY")
-                        textViewShowInitSuccess!!.text = "Get mix empty"
+                        textViewShowInitSuccess!!.text = getString(R.string.get_mix_empty)
 
                         //get current planId
                         val currentTimestamp = getCurrentTimeStamp()
@@ -1455,7 +1483,7 @@ class MainActivity : AppCompatActivity() {
 
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_START_PLAY_AD, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_START_PLAY_AD")
-                        textViewShowInitSuccess!!.text = "play ad..."
+                        textViewShowInitSuccess!!.text = getString(R.string.start_play_ad)
                         //start to play
                         if (infoRenew) {
                             Log.d(mTag, "start to play!")
@@ -2366,9 +2394,9 @@ class MainActivity : AppCompatActivity() {
             filter.addAction(Constants.ACTION.ACTION_GET_CURRENT_PLAY_CONTENT_COMPLETE)
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                this@MainActivity!!.registerReceiver(mReceiver, filter, RECEIVER_EXPORTED)
+                this@MainActivity.registerReceiver(mReceiver, filter, RECEIVER_EXPORTED)
             } else {
-                this@MainActivity!!.registerReceiver(mReceiver, filter)
+                this@MainActivity.registerReceiver(mReceiver, filter)
             }
             isRegister = true
             Log.d(mTag, "registerReceiver mReceiver")
@@ -2379,7 +2407,7 @@ class MainActivity : AppCompatActivity() {
         Log.i(mTag, "onDestroy")
         if (isRegister && mReceiver != null) {
             try {
-                this@MainActivity!!.unregisterReceiver(mReceiver)
+                this@MainActivity.unregisterReceiver(mReceiver)
             } catch (e: IllegalArgumentException) {
                 e.printStackTrace()
             }
@@ -2449,7 +2477,7 @@ class MainActivity : AppCompatActivity() {
     private var getPingCallback: Callback = object : Callback {
 
         override fun onFailure(call: Call, e: IOException) {
-            Log.e(mTag, "e = ${e}")
+            Log.e(mTag, "e = $e")
             runOnUiThread(netErrRunnable)
             //for auto plan change
             runOnUiThread {
@@ -3277,7 +3305,8 @@ class MainActivity : AppCompatActivity() {
                 val srcPath = server_videos_folder
                 val destPath = "$dest_videos_folder${videoList[downloadIdx]}"
                 Log.d(mTag, "start download file : ${videoList[downloadIdx]} to $dest_videos_folder")
-                textViewShowInitSuccess!!.text = "download ${videoList[downloadIdx]}"
+                val downloadStr = "download ${videoList[downloadIdx]}"
+                textViewShowInitSuccess!!.text = downloadStr
                 textViewProgress!!.visibility = View.VISIBLE
                 Thread {
                     try {
@@ -3300,8 +3329,8 @@ class MainActivity : AppCompatActivity() {
                         } else {
                             val successIntent = Intent()
                             successIntent.action = Constants.ACTION.ACTION_GET_VIDEOS_SUCCESS
-                            successIntent.putExtra("idx", downloadIdx)
-                            successIntent.putExtra("fileName", videoList[downloadIdx])
+                            //successIntent.putExtra("idx", downloadIdx)
+                            //successIntent.putExtra("fileName", videoList[downloadIdx])
                             this@MainActivity.sendBroadcast(successIntent)
                         }
                     } catch (ex: Exception) {
@@ -3324,8 +3353,8 @@ class MainActivity : AppCompatActivity() {
                 } else {
                     val successIntent = Intent()
                     successIntent.action = Constants.ACTION.ACTION_GET_VIDEOS_SUCCESS
-                    successIntent.putExtra("idx", downloadIdx)
-                    successIntent.putExtra("fileName", videoList[downloadIdx])
+                    //successIntent.putExtra("idx", downloadIdx)
+                    //successIntent.putExtra("fileName", videoList[downloadIdx])
                     this@MainActivity.sendBroadcast(successIntent)
                 }
             }
@@ -3383,7 +3412,8 @@ class MainActivity : AppCompatActivity() {
                 //val srcPath = server_videos_folder
                 //val destPath = "$dest_videos_folder${videoList[downloadIdx]}"
                 Log.d(mTag, "start download file : ${mixList[downloadIdx]} as $destPath")
-                textViewShowInitSuccess!!.text = "download ${mixList[downloadIdx]}"
+                val downloadStr = "download ${mixList[downloadIdx]}"
+                textViewShowInitSuccess!!.text = downloadStr
                 Thread {
                     try {
                         val totalSize = download(srcPath, destPath, mixList[downloadIdx]) { progress, length ->
@@ -3410,8 +3440,8 @@ class MainActivity : AppCompatActivity() {
                             */
                             val successIntent = Intent()
                             successIntent.action = Constants.ACTION.ACTION_GET_MIX_SUCCESS
-                            successIntent.putExtra("idx", downloadIdx)
-                            successIntent.putExtra("fileName", mixList[downloadIdx])
+                            //successIntent.putExtra("idx", downloadIdx)
+                            //successIntent.putExtra("fileName", mixList[downloadIdx])
                             this@MainActivity.sendBroadcast(successIntent)
                         }
                     } catch (ex: Exception) {
@@ -3436,8 +3466,8 @@ class MainActivity : AppCompatActivity() {
                 } else {
                     val successIntent = Intent()
                     successIntent.action = Constants.ACTION.ACTION_GET_MIX_SUCCESS
-                    successIntent.putExtra("idx", downloadIdx)
-                    successIntent.putExtra("fileName", mixList[downloadIdx])
+                    //successIntent.putExtra("idx", downloadIdx)
+                    //successIntent.putExtra("fileName", mixList[downloadIdx])
                     this@MainActivity.sendBroadcast(successIntent)
                 }
             }
@@ -3956,6 +3986,172 @@ class MainActivity : AppCompatActivity() {
         Log.d(mTag, "=== clearMixNotInMixList end ===")
     }
 
+    fun clearAllNotInAllList() {
+        Log.d(mTag, "=== clearAllNotInAllList start ===")
+
+        if (adSettingList.size > 0) {
+            val bannerDirectory = File(dest_banner_folder)
+            val imageDirectory = File(dest_images_folder)
+            val videoDirectory = File(dest_videos_folder)
+            val bannerFiles = bannerDirectory.listFiles()
+            val imageFiles = imageDirectory.listFiles()
+            val videoFiles = videoDirectory.listFiles()
+
+            Log.d(mTag, "bannerFiles -> $bannerFiles")
+            Log.d(mTag, "imageFiles -> $imageFiles")
+            Log.d(mTag, "videoFiles -> $videoFiles")
+
+            //banner
+            if (bannerDirectory.isDirectory && bannerFiles != null) {
+                for (i in bannerFiles.indices) {
+                    var found = false
+
+                    for (j in adSettingList.indices) {
+                        if (adSettingList[j].plan_banner.isNotEmpty()) {
+                            val imagesArray = adSettingList[j].plan_banner.split(",")
+                            for (k in imagesArray.indices) {
+                                if (bannerFiles[i].name == imagesArray[k]) {
+                                    found = true
+                                    break
+                                }
+                            }
+                        }
+                    }
+
+                    if (!found) { //not found in bannerList, delete it!
+                        val deletePath = "$dest_banner_folder${bannerFiles[i].name}"
+                        val deleteFile = File(deletePath)
+                        val deleteUri  = Uri.fromFile(deleteFile)
+                        Log.d(mTag, "deleteUri = $deleteUri")
+                        try {
+                            if (deleteFile.exists()) {
+                                deleteFile.delete()
+                                //val cr = contentResolver
+                                //cr.delete(deleteUri, null, null)
+                                Log.d(mTag, "Delete $deletePath")
+                            }
+
+                        } catch (e: java.lang.Exception) {
+                            e.printStackTrace()
+                        }
+                    }
+                }
+            }
+
+            //images
+            if (imageDirectory.isDirectory && imageFiles != null) {
+
+                for (i in imageFiles.indices) {
+                    var found = false
+
+                    if (adSettingList.size > 0) {
+                        for (j in adSettingList.indices) {
+                            //images
+                            if (adSettingList[j].plan_images.isNotEmpty()) {
+                                val imagesArray = adSettingList[j].plan_images.split(",")
+                                for (k in imagesArray.indices) {
+                                    if (imageFiles[i].name == imagesArray[k]) {
+                                        found = true
+                                        break
+                                    }
+                                }
+                            }
+                            //mix
+                            if (adSettingList[j].plan_mix.isNotEmpty()) {
+                                val mixArray = adSettingList[j].plan_mix.split(",")
+                                for (k in mixArray.indices) {
+                                    if (imageFiles[i].name == mixArray[k]) {
+                                        found = true
+                                        break
+                                    }
+                                }
+                            }
+
+                            if (found) {
+                                break
+                            }
+                        }
+                    }
+
+                    if (!found) { //not found in imageList and mixList, delete it!
+                        val deletePath = "$dest_images_folder${imageFiles[i].name}"
+                        val deleteFile = File(deletePath)
+                        val deleteUri  = Uri.fromFile(deleteFile)
+                        Log.d(mTag, "deleteUri = $deleteUri")
+                        try {
+                            if (deleteFile.exists()) {
+                                deleteFile.delete()
+                                //val cr = contentResolver
+                                //cr.delete(deleteUri, null, null)
+                                Log.d(mTag, "Delete $deletePath")
+                            }
+
+                        } catch (e: java.lang.Exception) {
+                            e.printStackTrace()
+                        }
+                    }
+                }
+            }
+            //videos
+            if (videoDirectory.isDirectory && videoFiles != null) {
+
+                for (i in videoFiles.indices) {
+                    var found = false
+
+                    if (adSettingList.size > 0) {
+                        for (j in adSettingList.indices) {
+                            //videos
+                            if (adSettingList[j].plan_videos.isNotEmpty()) {
+                                val videosArray = adSettingList[j].plan_videos.split(",")
+                                for (k in videosArray.indices) {
+                                    if (videoFiles[i].name == videosArray[k]) {
+                                        found = true
+                                        break
+                                    }
+                                }
+                            }
+                            //mix
+                            if (adSettingList[j].plan_mix.isNotEmpty()) {
+                                val mixArray = adSettingList[j].plan_mix.split(",")
+                                for (k in mixArray.indices) {
+                                    if (videoFiles[i].name == mixArray[k]) {
+                                        found = true
+                                        break
+                                    }
+                                }
+                            }
+
+                            if (found) {
+                                break
+                            }
+                        }
+                    }
+
+                    if (!found) { //not found in videoList and mixList, delete it!
+                        val deletePath = "$dest_videos_folder${videoFiles[i].name}"
+                        val deleteFile = File(deletePath)
+                        val deleteUri  = Uri.fromFile(deleteFile)
+                        Log.d(mTag, "deleteUri = $deleteUri")
+                        try {
+                            if (deleteFile.exists()) {
+                                deleteFile.delete()
+                                //val cr = contentResolver
+                                //cr.delete(deleteUri, null, null)
+                                Log.d(mTag, "Delete $deletePath")
+                            }
+
+                        } catch (e: java.lang.Exception) {
+                            e.printStackTrace()
+                        }
+                    }
+                }
+            }
+        } else {
+            Log.e(mTag , "adSettingList.size == 0")
+        }
+        Log.d(mTag, "=== clearAllNotInAllList end ===")
+    }
+
 
     @SuppressLint("SourceLockedOrientationActivity")
     fun playAd() {
@@ -4021,21 +4217,19 @@ class MainActivity : AppCompatActivity() {
                     layoutCenter = 0
                     layoutBottom = 0
 
-                    var mainLayoutWeight = 0
-                    var layoutTopWeight = 0
-                    var layoutCenterWeight = 0
-                    var layoutBottomWeight = 0
-                    var layoutTriangleWeight = 0
+                    mainLayoutWeight = 0
+                    layoutTopWeight = 0
+                    layoutCenterWeight = 0
+                    layoutBottomWeight = 0
+                    layoutTriangleWeight = 0
 
-                    var layoutTopWidth = 0
-                    var layoutCenterWidth = 0
-                    var layoutBottomWidth = 0
+                    layoutTopWidth = 0
+                    layoutCenterWidth = 0
+                    layoutBottomWidth = 0
 
-                    var layoutTopHeight = 0
-                    var layoutCenterHeight = 0
-                    var layoutBottomHeight = 0
-
-                    val defaultBackGroundColor = "#000000"
+                    layoutTopHeight = 0
+                    layoutCenterHeight = 0
+                    layoutBottomHeight = 0
 
                     when(layoutList[0].border) {
                         1 -> rootView!!.setBackgroundResource(R.drawable.border_gold)
