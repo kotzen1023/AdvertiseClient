@@ -278,7 +278,7 @@ class MainActivity : AppCompatActivity() {
     var pingCount: Int = 0
     //for Log
     private var process: Process? = null
-    private var debugLog: Boolean = true
+    private var debugLog: Boolean = false
 
     private var planStartTimeString : String = "--:--"
     private var plan2StartTimeString : String = "--:--"
