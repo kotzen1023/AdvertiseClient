@@ -358,7 +358,7 @@ class MainActivity : AppCompatActivity() {
 
         
 
-        //handleUncaughtException()
+        handleUncaughtException()
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             checkAndRequestPermissions()
@@ -1405,6 +1405,7 @@ class MainActivity : AppCompatActivity() {
 
                         textViewShowInitSuccess!!.text = getString(R.string.get_mix_complete)
                         if (downloadMixComplete == mixList.size) {
+                            //textViewShowInitSuccess!!.text = "1..."
                             if (mixList.size > 0) {
 
                                 //clear before add
@@ -1417,11 +1418,11 @@ class MainActivity : AppCompatActivity() {
                                 defaultMixPlayList = defaultPlayMixDataDB!!.defaultPlayMixDataDao().getAll() as ArrayList<DefaultPlayMixData>
                                 Log.d(mTag, "defaultMixPlayList.size = ${defaultMixPlayList!!.size}")
                             }
-
+                            //textViewShowInitSuccess!!.text = "2..."
                             //get current planId
                             val currentTimestamp = getCurrentTimeStamp()
                             Log.d(mTag, "currentTimestamp = $currentTimestamp")
-
+                            //textViewShowInitSuccess!!.text = "3..."
                             if (layoutList.size > 0) {
                                 getPlanUse(currentTimestamp)
 
@@ -1439,16 +1440,19 @@ class MainActivity : AppCompatActivity() {
                                         currentAdSettingIdx = -1
                                     }
                                 }
+                                //textViewShowInitSuccess!!.text = "currentPlanUse = $currentPlanUse, currentPlanId = $currentPlanId, currentAdSettingIdx = $currentAdSettingIdx"
                             }
 
-                            //then play ad
-                            val playAdIntent = Intent()
-                            playAdIntent.action = Constants.ACTION.ACTION_START_PLAY_AD
-                            this@MainActivity.sendBroadcast(playAdIntent)
-
                         } else {
-                            Log.d(mTag, "Not Yet")
+                            textViewShowInitSuccess!!.text = "downloadMixComplete != mixList.size"
+
                         }
+                        infoRenew = true
+
+                        //then play ad
+                        val playAdIntent = Intent()
+                        playAdIntent.action = Constants.ACTION.ACTION_START_PLAY_AD
+                        this@MainActivity.sendBroadcast(playAdIntent)
 
                     }  else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_MIX_EMPTY, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_MIX_EMPTY")
@@ -4291,9 +4295,9 @@ class MainActivity : AppCompatActivity() {
                     //val layoutBottom = layoutList[0].layout_bottom
                     val layoutOrientation = layoutList[0].layoutOrientation
 
-                    val marqueeMode = adSettingList[currentAdSettingIdx].marquee_mode
-                    val imagesMode = adSettingList[currentAdSettingIdx].images_mode
-                    val videosMode = adSettingList[currentAdSettingIdx].videos_mode
+                    marqueeMode = adSettingList[currentAdSettingIdx].marquee_mode
+                    imagesMode = adSettingList[currentAdSettingIdx].images_mode
+                    videosMode = adSettingList[currentAdSettingIdx].videos_mode
 
 
                     val imageInterval = adSettingList[currentAdSettingIdx].image_interval
@@ -6416,10 +6420,15 @@ class MainActivity : AppCompatActivity() {
                 val perms: HashMap<String, Int> = HashMap()
 
                 // Initialize the map with both permissions
-                perms[Manifest.permission.READ_EXTERNAL_STORAGE] = PackageManager.PERMISSION_GRANTED
-                perms[Manifest.permission.WRITE_EXTERNAL_STORAGE] = PackageManager.PERMISSION_GRANTED
-                perms[Manifest.permission.READ_MEDIA_VIDEO] = PackageManager.PERMISSION_GRANTED
-                perms[Manifest.permission.READ_MEDIA_IMAGES] = PackageManager.PERMISSION_GRANTED
+                if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2) {
+                    perms[Manifest.permission.READ_EXTERNAL_STORAGE] =
+                        PackageManager.PERMISSION_GRANTED
+                    perms[Manifest.permission.WRITE_EXTERNAL_STORAGE] =
+                        PackageManager.PERMISSION_GRANTED
+                } else {
+                    perms[Manifest.permission.READ_MEDIA_VIDEO] = PackageManager.PERMISSION_GRANTED
+                    perms[Manifest.permission.READ_MEDIA_IMAGES] = PackageManager.PERMISSION_GRANTED
+                }
                 //perms[Manifest.permission.FOREGROUND_SERVICE] = PackageManager.PERMISSION_GRANTED
                 //perms[Manifest.permission.INTERNET] = PackageManager.PERMISSION_GRANTED
                 //perms[Manifest.permission.ACCESS_NETWORK_STATE] = PackageManager.PERMISSION_GRANTED
@@ -6436,11 +6445,13 @@ class MainActivity : AppCompatActivity() {
                         Log.d(mTag, "perms[permissions[$i]] = ${perms[permissions[i]]}")
 
                     }
-                    // Check for both permissions
-                    if (perms[Manifest.permission.READ_EXTERNAL_STORAGE] == PackageManager.PERMISSION_GRANTED
-                        && perms[Manifest.permission.WRITE_EXTERNAL_STORAGE] == PackageManager.PERMISSION_GRANTED
-                        && perms[Manifest.permission.READ_MEDIA_VIDEO] == PackageManager.PERMISSION_GRANTED
-                        && perms[Manifest.permission.READ_MEDIA_IMAGES] == PackageManager.PERMISSION_GRANTED
+
+                    if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2) {
+                        // Check for both permissions
+                        if (perms[Manifest.permission.READ_EXTERNAL_STORAGE] == PackageManager.PERMISSION_GRANTED
+                            && perms[Manifest.permission.WRITE_EXTERNAL_STORAGE] == PackageManager.PERMISSION_GRANTED
+                            //&& perms[Manifest.permission.READ_MEDIA_VIDEO] == PackageManager.PERMISSION_GRANTED
+                            //&& perms[Manifest.permission.READ_MEDIA_IMAGES] == PackageManager.PERMISSION_GRANTED
                         //&& perms[Manifest.permission.FOREGROUND_SERVICE] == PackageManager.PERMISSION_GRANTED
                         //&& perms[Manifest.permission.INTERNET] == PackageManager.PERMISSION_GRANTED
                         //&& perms[Manifest.permission.ACCESS_NETWORK_STATE] == PackageManager.PERMISSION_GRANTED
@@ -6448,44 +6459,44 @@ class MainActivity : AppCompatActivity() {
                         //&& perms[Manifest.permission.CHANGE_WIFI_STATE] == PackageManager.PERMISSION_GRANTED
                         //&& perms[Manifest.permission.ACCESS_COARSE_LOCATION] == PackageManager.PERMISSION_GRANTED
                         //&& perms[Manifest.permission.REQUEST_INSTALL_PACKAGES] == PackageManager.PERMISSION_GRANTED
-                    ) {
-                        Log.d(mTag, "permission granted")
-                        //create local folder
-                        dest_banner_folder = Environment.getExternalStorageDirectory().toString() + "/Download/banner/"
-                        dest_images_folder = Environment.getExternalStorageDirectory().toString() + "/Download/images/"
-                        dest_videos_folder = Environment.getExternalStorageDirectory().toString() + "/Download/videos/"
-                        val bannerDir = File(dest_banner_folder)
-                        bannerDir.mkdirs()
-                        val imagesDir = File(dest_images_folder)
-                        imagesDir.mkdirs()
-                        val videoDir = File(dest_videos_folder)
-                        videoDir.mkdirs()
-                        if (debugLog) {
-                            initLog()
-                        }
-                    } else {
-                        Log.d(mTag, "Some permissions are not granted ask again ")
+                        ) {
+                            Log.d(mTag, "permission granted")
+                            //create local folder
+                            dest_banner_folder = Environment.getExternalStorageDirectory().toString() + "/Download/banner/"
+                            dest_images_folder = Environment.getExternalStorageDirectory().toString() + "/Download/images/"
+                            dest_videos_folder = Environment.getExternalStorageDirectory().toString() + "/Download/videos/"
+                            val bannerDir = File(dest_banner_folder)
+                            bannerDir.mkdirs()
+                            val imagesDir = File(dest_images_folder)
+                            imagesDir.mkdirs()
+                            val videoDir = File(dest_videos_folder)
+                            videoDir.mkdirs()
+                            if (debugLog) {
+                                initLog()
+                            }
+                        } else {
+                            Log.d(mTag, "Some permissions are not granted ask again ")
 
-                        if (ActivityCompat.shouldShowRequestPermissionRationale(
-                                this,
-                                Manifest.permission.READ_EXTERNAL_STORAGE
-                            )
-                            || ActivityCompat.shouldShowRequestPermissionRationale(
-                                this,
-                                Manifest.permission.WRITE_EXTERNAL_STORAGE
-                            )
-                            || ActivityCompat.shouldShowRequestPermissionRationale(
-                                this,
-                                Manifest.permission.READ_MEDIA_VIDEO
-                            )
-                            || ActivityCompat.shouldShowRequestPermissionRationale(
-                                this,
-                                Manifest.permission.READ_MEDIA_IMAGES
-                            )
-                            ||ActivityCompat.shouldShowRequestPermissionRationale(
-                                this,
-                                Manifest.permission.INTERNET
-                            )/*
+                            if (ActivityCompat.shouldShowRequestPermissionRationale(
+                                    this,
+                                    Manifest.permission.READ_EXTERNAL_STORAGE
+                                )
+                                || ActivityCompat.shouldShowRequestPermissionRationale(
+                                    this,
+                                    Manifest.permission.WRITE_EXTERNAL_STORAGE
+                                )/*
+                                || ActivityCompat.shouldShowRequestPermissionRationale(
+                                    this,
+                                    Manifest.permission.READ_MEDIA_VIDEO
+                                )
+                                || ActivityCompat.shouldShowRequestPermissionRationale(
+                                    this,
+                                    Manifest.permission.READ_MEDIA_IMAGES
+                                )*/
+                                ||ActivityCompat.shouldShowRequestPermissionRationale(
+                                    this,
+                                    Manifest.permission.INTERNET
+                                )/*
                             ||ActivityCompat.shouldShowRequestPermissionRationale(
                                 this,
                                 Manifest.permission.FOREGROUND_SERVICE
@@ -6510,25 +6521,112 @@ class MainActivity : AppCompatActivity() {
                                 this,
                                 Manifest.permission.REQUEST_INSTALL_PACKAGES
                             )*/
-                        ) {
-                            showDialogOK { _, which ->
-                                when (which) {
-                                    DialogInterface.BUTTON_POSITIVE -> checkAndRequestPermissions()
-                                    DialogInterface.BUTTON_NEGATIVE ->
-                                        // proceed with logic by disabling the related features or quit the app.
-                                        finish()
+                            ) {
+                                showDialogOK { _, which ->
+                                    when (which) {
+                                        DialogInterface.BUTTON_POSITIVE -> checkAndRequestPermissions()
+                                        DialogInterface.BUTTON_NEGATIVE ->
+                                            // proceed with logic by disabling the related features or quit the app.
+                                            finish()
+                                    }
                                 }
+                            } else {
+                                Toast.makeText(this, "Go to settings and enable permissions", Toast.LENGTH_LONG)
+                                    .show()
+                            }
+                        }
+                    } else {
+                        // Check for both permissions
+                        if (//perms[Manifest.permission.READ_EXTERNAL_STORAGE] == PackageManager.PERMISSION_GRANTED
+                            //&& perms[Manifest.permission.WRITE_EXTERNAL_STORAGE] == PackageManager.PERMISSION_GRANTED
+                            perms[Manifest.permission.READ_MEDIA_VIDEO] == PackageManager.PERMISSION_GRANTED
+                            && perms[Manifest.permission.READ_MEDIA_IMAGES] == PackageManager.PERMISSION_GRANTED
+                        //&& perms[Manifest.permission.FOREGROUND_SERVICE] == PackageManager.PERMISSION_GRANTED
+                        //&& perms[Manifest.permission.INTERNET] == PackageManager.PERMISSION_GRANTED
+                        //&& perms[Manifest.permission.ACCESS_NETWORK_STATE] == PackageManager.PERMISSION_GRANTED
+                        //&& perms[Manifest.permission.ACCESS_WIFI_STATE] == PackageManager.PERMISSION_GRANTED
+                        //&& perms[Manifest.permission.CHANGE_WIFI_STATE] == PackageManager.PERMISSION_GRANTED
+                        //&& perms[Manifest.permission.ACCESS_COARSE_LOCATION] == PackageManager.PERMISSION_GRANTED
+                        //&& perms[Manifest.permission.REQUEST_INSTALL_PACKAGES] == PackageManager.PERMISSION_GRANTED
+                        ) {
+                            Log.d(mTag, "permission granted")
+                            //create local folder
+                            dest_banner_folder = Environment.getExternalStorageDirectory().toString() + "/Download/banner/"
+                            dest_images_folder = Environment.getExternalStorageDirectory().toString() + "/Download/images/"
+                            dest_videos_folder = Environment.getExternalStorageDirectory().toString() + "/Download/videos/"
+                            val bannerDir = File(dest_banner_folder)
+                            bannerDir.mkdirs()
+                            val imagesDir = File(dest_images_folder)
+                            imagesDir.mkdirs()
+                            val videoDir = File(dest_videos_folder)
+                            videoDir.mkdirs()
+                            if (debugLog) {
+                                initLog()
                             }
                         } else {
-                            Toast.makeText(this, "Go to settings and enable permissions", Toast.LENGTH_LONG)
-                                .show()
-                            //                            //proceed with logic by disabling the related features or quit the app.
-                        }//|| ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_NETWORK_STATE )
-                        //|| ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_WIFI_STATE )
-                        //permission is denied (and never ask again is  checked)
-                        //shouldShowRequestPermissionRationale will return false
-                    }//&& perms.get(Manifest.permission.ACCESS_NETWORK_STATE) == PackageManager.PERMISSION_GRANTED &&
-                    //perms.get(Manifest.permission.ACCESS_WIFI_STATE) == PackageManager.PERMISSION_GRANTED
+                            Log.d(mTag, "Some permissions are not granted ask again ")
+
+                            if (/*ActivityCompat.shouldShowRequestPermissionRationale(
+                                    this,
+                                    Manifest.permission.READ_EXTERNAL_STORAGE
+                                )
+                                || ActivityCompat.shouldShowRequestPermissionRationale(
+                                    this,
+                                    Manifest.permission.WRITE_EXTERNAL_STORAGE
+                                )*/
+                                ActivityCompat.shouldShowRequestPermissionRationale(
+                                    this,
+                                    Manifest.permission.READ_MEDIA_VIDEO
+                                )
+                                || ActivityCompat.shouldShowRequestPermissionRationale(
+                                    this,
+                                    Manifest.permission.READ_MEDIA_IMAGES
+                                )
+                                ||ActivityCompat.shouldShowRequestPermissionRationale(
+                                    this,
+                                    Manifest.permission.INTERNET
+                                )/*
+                            ||ActivityCompat.shouldShowRequestPermissionRationale(
+                                this,
+                                Manifest.permission.FOREGROUND_SERVICE
+                            )
+                            || ActivityCompat.shouldShowRequestPermissionRationale(
+                                this,
+                                Manifest.permission.ACCESS_NETWORK_STATE
+                            )
+                            || ActivityCompat.shouldShowRequestPermissionRationale(
+                                this,
+                                Manifest.permission.ACCESS_WIFI_STATE
+                            )
+                            || ActivityCompat.shouldShowRequestPermissionRationale(
+                                this,
+                                Manifest.permission.CHANGE_WIFI_STATE
+                            )
+                            || ActivityCompat.shouldShowRequestPermissionRationale(
+                                this,
+                                Manifest.permission.ACCESS_COARSE_LOCATION
+                            )
+                            || ActivityCompat.shouldShowRequestPermissionRationale(
+                                this,
+                                Manifest.permission.REQUEST_INSTALL_PACKAGES
+                            )*/
+                            ) {
+                                showDialogOK { _, which ->
+                                    when (which) {
+                                        DialogInterface.BUTTON_POSITIVE -> checkAndRequestPermissions()
+                                        DialogInterface.BUTTON_NEGATIVE ->
+                                            // proceed with logic by disabling the related features or quit the app.
+                                            finish()
+                                    }
+                                }
+                            } else {
+                                Toast.makeText(this, "Go to settings and enable permissions", Toast.LENGTH_LONG)
+                                    .show()
+                            }
+                        }
+                    }
+
+
                 }
             }
         }
