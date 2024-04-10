@@ -135,6 +135,7 @@ class MainActivity : AppCompatActivity() {
     private var rootView: ViewGroup? = null
     //main Linearlayout
     private var mainLinearLayout : LinearLayout ?= null
+    private var textViewShowState : TextView ?= null
     private var textViewShowInitSuccess : TextView ?= null
     private var textViewProgress: TextView ?= null
     //top
@@ -233,7 +234,7 @@ class MainActivity : AppCompatActivity() {
     )
 
     private val httpPrefix = "http://"
-    private val defaultIpAddress = "192.168.0.253"
+    private val defaultIpAddress = "35.194.240.47"
 
     private val handler = object : Handler(Looper.getMainLooper()) {
 
@@ -350,7 +351,7 @@ class MainActivity : AppCompatActivity() {
         rootView = findViewById<View>(android.R.id.content) as ViewGroup
 
 
-
+        textViewShowState = findViewById(R.id.textViewShowState)
         textViewShowInitSuccess = findViewById(R.id.textViewShowInitSuccess)
         textViewProgress = findViewById(R.id.textViewProgress)
 
@@ -930,17 +931,20 @@ class MainActivity : AppCompatActivity() {
 
                         getLayout()
                         textViewShowInitSuccess!!.text = getString(R.string.get_layout_start)
+                        textViewShowState!!.text = "ACTION_GET_LAYOUT"
 
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_LAYOUT_FAILED, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_LAYOUT_FAILED")
 
                         textViewShowInitSuccess!!.text = getString(R.string.get_layout_failed_retry)
+                        textViewShowState!!.text = "ACTION_GET_LAYOUT_FAILED"
                         getLayout()
 
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_LAYOUT_SUCCESS, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_LAYOUT_SUCCESS")
 
                         textViewShowInitSuccess!!.text = getString(R.string.get_layout_success)
+                        textViewShowState!!.text = "ACTION_GET_LAYOUT_SUCCESS"
 
                         val planId = intent.getIntExtra("PLAN_ID", 0)
                         val plan2Id = intent.getIntExtra("PLAN2_ID", 0)
@@ -960,6 +964,7 @@ class MainActivity : AppCompatActivity() {
                         Log.d(mTag, "ACTION_GET_AD_SETTING_FAILED")
 
                         textViewShowInitSuccess!!.text = getString(R.string.get_ad_setting_failed_retry)
+                        textViewShowState!!.text = "ACTION_GET_AD_SETTING_FAILED"
                         if (layoutList.size > 0) {
                             getAdSetting(
                                 layoutList[0].plan_id,
@@ -972,6 +977,7 @@ class MainActivity : AppCompatActivity() {
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_AD_SETTING_SUCCESS, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_AD_SETTING_SUCCESS")
                         textViewShowInitSuccess!!.text = getString(R.string.get_layout_success)
+                        textViewShowState!!.text = "ACTION_GET_AD_SETTING_SUCCESS"
                         if (adSettingList.size > 0) {
 
                             val getMarqueeIntent = Intent()
@@ -981,15 +987,18 @@ class MainActivity : AppCompatActivity() {
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_AD_SETTING_EMPTY, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_AD_SETTING_EMPTY")
                         textViewShowInitSuccess!!.text = getString(R.string.get_ad_setting_empty)
+                        textViewShowState!!.text = "ACTION_GET_AD_SETTING_EMPTY"
 
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_MARQUEE_START, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_MARQUEE_START")
                         //get Marquee
                         textViewShowInitSuccess!!.text = getString(R.string.get_marquee_start)
+                        textViewShowState!!.text = "ACTION_GET_MARQUEE_START"
                         getMarquee()
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_MARQUEE_FAILED, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_MARQUEE_FAILED")
                         textViewShowInitSuccess!!.text = getString(R.string.get_marquee_failed)
+                        textViewShowState!!.text = "ACTION_GET_MARQUEE_FAILED"
 
                         //then get banner
                         val getBannerIntent = Intent()
@@ -999,6 +1008,7 @@ class MainActivity : AppCompatActivity() {
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_MARQUEE_EMPTY, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_MARQUEE_EMPTY")
                         textViewShowInitSuccess!!.text = getString(R.string.get_marquee_empty)
+                        textViewShowState!!.text = "ACTION_GET_MARQUEE_EMPTY"
                         playMarqueeList.clear()
                         defaultMarqueePlayList!!.clear()
                         defaultPlayMarqueeDataDB!!.defaultPlayMarqueeDataDao().clearTable()
@@ -1010,6 +1020,7 @@ class MainActivity : AppCompatActivity() {
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_MARQUEE_SUCCESS, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_MARQUEE_SUCCESS")
                         textViewShowInitSuccess!!.text = getString(R.string.get_marquee_success)
+                        textViewShowState!!.text = "ACTION_GET_MARQUEE_SUCCESS"
                         //clear before add
                         playMarqueeList.clear()
                         defaultMarqueePlayList!!.clear()
@@ -1073,6 +1084,7 @@ class MainActivity : AppCompatActivity() {
                         clearAllNotInAllList()
 
                         textViewShowInitSuccess!!.text = getString(R.string.get_banner_start)
+                        textViewShowState!!.text = "ACTION_GET_BANNER_START"
                         if (adSettingList[currentAdSettingIdx].plan_banner.isNotEmpty()) {
                             val bannerArray =
                                 adSettingList[currentAdSettingIdx].plan_banner.split(",")
@@ -1108,6 +1120,7 @@ class MainActivity : AppCompatActivity() {
                         Log.d(mTag, "ACTION_GET_BANNER_FAILED")
                         val errorStr = intent.getStringExtra("ERROR_STRING")
                         textViewShowInitSuccess!!.text = errorStr
+                        textViewShowState!!.text = "ACTION_GET_BANNER_FAILED"
                         if (downloadBannerComplete < bannerList.size) {
                             downloadBanner()
                         } else { //complete
@@ -1120,6 +1133,7 @@ class MainActivity : AppCompatActivity() {
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_BANNER_SUCCESS, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_BANNER_SUCCESS")
                         textViewShowInitSuccess!!.text = getString(R.string.get_banner_success)
+                        textViewShowState!!.text = "ACTION_GET_BANNER_SUCCESS"
                         if (downloadBannerComplete < bannerList.size) {
                             downloadBanner()
                         }
@@ -1127,6 +1141,7 @@ class MainActivity : AppCompatActivity() {
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_BANNER_EMPTY, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_BANNER_EMPTY")
                         textViewShowInitSuccess!!.text = getString(R.string.get_banner_empty)
+                        textViewShowState!!.text = "ACTION_GET_BANNER_EMPTY"
                         //no banner, clear list and table
                         bannerList.clear()
                         defaultBannerPlayList!!.clear()
@@ -1140,6 +1155,7 @@ class MainActivity : AppCompatActivity() {
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_BANNER_COMPLETE, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_BANNER_COMPLETE")
                         textViewShowInitSuccess!!.text = getString(R.string.get_banner_complete)
+                        textViewShowState!!.text = "ACTION_GET_BANNER_COMPLETE"
                         if (bannerList.size > 0) {
                             //clear before add
                             defaultPlayBannerDataDB!!.defaultPlayBannerDataDao().clearTable()
@@ -1160,6 +1176,7 @@ class MainActivity : AppCompatActivity() {
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_IMAGES_START, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_IMAGES_START")
                         textViewShowInitSuccess!!.text = getString(R.string.get_image_start)
+                        textViewShowState!!.text = "ACTION_GET_IMAGES_START"
                         if (adSettingList[currentAdSettingIdx].plan_images.isNotEmpty()) {
                             val imagesArray =
                                 adSettingList[currentAdSettingIdx].plan_images.split(",")
@@ -1195,6 +1212,7 @@ class MainActivity : AppCompatActivity() {
                         Log.d(mTag, "ACTION_GET_IMAGES_FAILED")
                         val errorStr = intent.getStringExtra("ERROR_STRING")
                         textViewShowInitSuccess!!.text = errorStr
+                        textViewShowState!!.text = "ACTION_GET_IMAGES_FAILED"
                         if (downloadImageComplete < imageList.size) {
                             downloadImages()
                         } else { //downloadImageComplete
@@ -1211,6 +1229,7 @@ class MainActivity : AppCompatActivity() {
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_IMAGES_EMPTY, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_IMAGES_EMPTY")
                         textViewShowInitSuccess!!.text = getString(R.string.get_image_empty)
+                        textViewShowState!!.text = "ACTION_GET_IMAGES_EMPTY"
                         //clear
                         imageList.clear()
                         defaultImagesPlayList!!.clear()
@@ -1223,6 +1242,7 @@ class MainActivity : AppCompatActivity() {
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_IMAGES_COMPLETE, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_IMAGES_COMPLETE")
                         textViewShowInitSuccess!!.text = getString(R.string.get_image_complete)
+                        textViewShowState!!.text = "ACTION_GET_IMAGES_COMPLETE"
                         if (imageList.size > 0) {
                             //clear before add
                             defaultPlayImagesDataDB!!.defaultPlayImagesDataDao().clearTable()
@@ -1242,6 +1262,7 @@ class MainActivity : AppCompatActivity() {
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_VIDEOS_START, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_VIDEOS_START")
                         textViewShowInitSuccess!!.text = getString(R.string.get_video_start)
+                        textViewShowState!!.text = "ACTION_GET_VIDEOS_START"
                         if (adSettingList[currentAdSettingIdx].plan_videos.isNotEmpty()) {
                             val videosArray = adSettingList[currentAdSettingIdx].plan_videos.split(",")
 
@@ -1278,6 +1299,7 @@ class MainActivity : AppCompatActivity() {
                         val errorString = intent.getStringExtra("ERROR_STRING")
 
                         textViewShowInitSuccess!!.text = "$errorString"
+                        textViewShowState!!.text = "ACTION_GET_VIDEOS_FAILED"
 
                         Log.e(mTag, "downloadVideoComplete = $downloadVideoComplete, videoList.size = ${videoList.size}")
 
@@ -1305,6 +1327,7 @@ class MainActivity : AppCompatActivity() {
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_VIDEOS_EMPTY, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_VIDEOS_EMPTY")
                         textViewShowInitSuccess!!.text = getString(R.string.get_video_empty)
+                        textViewShowState!!.text = "ACTION_GET_VIDEOS_EMPTY"
                         videoList.clear()
                         defaultVideosPlayList!!.clear()
                         defaultPlayVideosDataDB!!.defaultPlayVideosDataDao().clearTable()
@@ -1320,6 +1343,7 @@ class MainActivity : AppCompatActivity() {
 
 
                         textViewShowInitSuccess!!.text = getString(R.string.get_video_complete)
+                        textViewShowState!!.text = "ACTION_GET_VIDEOS_COMPLETE"
                         if (downloadVideoComplete == videoList.size) {
                             if (videoList.size > 0) {
 
@@ -1345,6 +1369,7 @@ class MainActivity : AppCompatActivity() {
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_MIX_START, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_MIX_START")
                         textViewShowInitSuccess!!.text = getString(R.string.get_mix_start)
+                        textViewShowState!!.text = "ACTION_GET_MIX_START"
                         if (adSettingList[currentAdSettingIdx].plan_mix.isNotEmpty()) {
                             val mixArray = adSettingList[currentAdSettingIdx].plan_mix.split(",")
 
@@ -1378,18 +1403,27 @@ class MainActivity : AppCompatActivity() {
 
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_MIX_SUCCESS, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_MIX_SUCCESS")
-
+                        textViewShowState!!.text = "ACTION_GET_MIX_SUCCESS"
+                        val mixStr = "mixList.size = ${mixList.size}, downloadMixComplete = $downloadMixComplete"
+                        textViewShowInitSuccess!!.text = mixStr
                         if (downloadMixComplete < mixList.size) {
                             downloadMix()
                         } else {
-                            val mixStr = "mixList.size = ${mixList.size}, downloadMixComplete = $downloadMixComplete"
-                            textViewShowInitSuccess!!.text = mixStr
+                            textViewShowState!!.text = "ACTION_GET_MIX_COMPLETE"
+                            //val mixStr = "mixList.size = ${mixList.size}, downloadMixComplete = $downloadMixComplete"
+                            //textViewShowInitSuccess!!.text = mixStr
+                            /*
+                            val completeIntent = Intent()
+                            completeIntent.action = Constants.ACTION.ACTION_GET_MIX_COMPLETE
+                            this@MainActivity.sendBroadcast(completeIntent)
+                            */
                         }
 
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_MIX_FAILED, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_MIX_FAILED")
                         val errorStr = intent.getStringExtra("ERROR_STRING")
                         textViewShowInitSuccess!!.text = errorStr
+                        textViewShowState!!.text = "ACTION_GET_MIX_FAILED"
                         if (downloadMixComplete < mixList.size) {
                             downloadMix()
                         } else {
@@ -1404,6 +1438,7 @@ class MainActivity : AppCompatActivity() {
                         textViewProgress!!.visibility = View.GONE
 
                         textViewShowInitSuccess!!.text = getString(R.string.get_mix_complete)
+                        textViewShowState!!.text = "ACTION_GET_MIX_COMPLETE"
                         if (downloadMixComplete == mixList.size) {
                             //textViewShowInitSuccess!!.text = "1..."
                             if (mixList.size > 0) {
@@ -1457,7 +1492,7 @@ class MainActivity : AppCompatActivity() {
                     }  else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_MIX_EMPTY, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_MIX_EMPTY")
                         textViewShowInitSuccess!!.text = getString(R.string.get_mix_empty)
-
+                        textViewShowState!!.text = "ACTION_GET_MIX_EMPTY"
                         //get current planId
                         val currentTimestamp = getCurrentTimeStamp()
                         Log.d(mTag, "currentTimestamp = $currentTimestamp")
@@ -1488,6 +1523,7 @@ class MainActivity : AppCompatActivity() {
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_START_PLAY_AD, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_START_PLAY_AD")
                         textViewShowInitSuccess!!.text = getString(R.string.start_play_ad)
+                        textViewShowState!!.text = "ACTION_START_PLAY_AD"
                         //start to play
                         if (infoRenew) {
                             Log.d(mTag, "start to play!")
@@ -2713,6 +2749,7 @@ class MainActivity : AppCompatActivity() {
                         if (!receivePingSuccess) {
                             textViewShowInitSuccess!!.visibility = View.VISIBLE
                             textViewShowInitSuccess!!.text = getString(R.string.ad_client_connect_server_success_no_setting)
+                            textViewShowState!!.visibility = View.VISIBLE
                             receivePingSuccess = true
                         }
 
@@ -2744,6 +2781,7 @@ class MainActivity : AppCompatActivity() {
                         if (!receivePingSuccess) {
                             textViewShowInitSuccess!!.visibility = View.VISIBLE
                             textViewShowInitSuccess!!.text = getString(R.string.ad_client_connect_server_success_no_setting)
+                            textViewShowState!!.visibility = View.VISIBLE
                             receivePingSuccess = true
                         }
                         //orientationChanged = false
@@ -3400,6 +3438,7 @@ class MainActivity : AppCompatActivity() {
 
                 if (file.exists() && !downloadMixReadyArray[i]) { //get 2 same filename while download
                     downloadMixReadyArray[i] = true
+                    downloadMixComplete += 1
                 }
 
                 if(!file.exists() && i <= downloadMixComplete) {
@@ -3411,6 +3450,7 @@ class MainActivity : AppCompatActivity() {
             Log.d(mTag, "downloadMixComplete = $downloadMixComplete, downloadMixReadyArray = $downloadMixReadyArray")
             Log.d(mTag, "srcPath = $srcPath")
             Log.d(mTag, "destPath = $destPath")
+            Log.d(mTag, "downloadIdx = $downloadIdx")
             //file not exist, download it
             if (downloadIdx >= 0 ) {
                 //val srcPath = server_videos_folder
@@ -6731,6 +6771,8 @@ class MainActivity : AppCompatActivity() {
 
                     textViewShowInitSuccess!!.text = getString(R.string.ad_client_wait_for_server)
                     textViewShowInitSuccess!!.visibility = View.VISIBLE
+                    textViewShowState!!.text = "ACTION_TEST_IP_AND_PORT"
+                    textViewShowState!!.visibility = View.VISIBLE
 
                     alertDialogBuilder.dismiss()
                 } else {
