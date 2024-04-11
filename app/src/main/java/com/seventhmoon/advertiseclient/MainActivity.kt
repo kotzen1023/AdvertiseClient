@@ -2749,7 +2749,7 @@ class MainActivity : AppCompatActivity() {
                         if (!receivePingSuccess) {
                             textViewShowInitSuccess!!.visibility = View.VISIBLE
                             textViewShowInitSuccess!!.text = getString(R.string.ad_client_connect_server_success_no_setting)
-                            textViewShowState!!.visibility = View.VISIBLE
+                            //textViewShowState!!.visibility = View.VISIBLE
                             receivePingSuccess = true
                         }
 
@@ -2781,7 +2781,7 @@ class MainActivity : AppCompatActivity() {
                         if (!receivePingSuccess) {
                             textViewShowInitSuccess!!.visibility = View.VISIBLE
                             textViewShowInitSuccess!!.text = getString(R.string.ad_client_connect_server_success_no_setting)
-                            textViewShowState!!.visibility = View.VISIBLE
+                            //textViewShowState!!.visibility = View.VISIBLE
                             receivePingSuccess = true
                         }
                         //orientationChanged = false
@@ -3241,6 +3241,7 @@ class MainActivity : AppCompatActivity() {
 
                 if (file.exists() && !downloadImageReadyArray[i]) { //get 2 same filename while download
                     downloadImageReadyArray[i] = true
+                    downloadImageComplete += 1
                 }
 
                 if(!file.exists() && i <= downloadImageComplete) {
@@ -3329,6 +3330,7 @@ class MainActivity : AppCompatActivity() {
 
                 if (file.exists() && !downloadVideoReadyArray[i]) { //get 2 same filename while download
                     downloadVideoReadyArray[i] = true
+                    downloadVideoComplete += 1
                 }
 
                 if(!file.exists() && i <= downloadVideoComplete) {
@@ -6772,7 +6774,7 @@ class MainActivity : AppCompatActivity() {
                     textViewShowInitSuccess!!.text = getString(R.string.ad_client_wait_for_server)
                     textViewShowInitSuccess!!.visibility = View.VISIBLE
                     textViewShowState!!.text = "ACTION_TEST_IP_AND_PORT"
-                    textViewShowState!!.visibility = View.VISIBLE
+                    //textViewShowState!!.visibility = View.VISIBLE
 
                     alertDialogBuilder.dismiss()
                 } else {
