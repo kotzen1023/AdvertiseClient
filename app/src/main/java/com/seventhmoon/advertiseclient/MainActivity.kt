@@ -1524,6 +1524,7 @@ class MainActivity : AppCompatActivity() {
                         Log.d(mTag, "ACTION_START_PLAY_AD")
                         textViewShowInitSuccess!!.text = getString(R.string.start_play_ad)
                         textViewShowState!!.text = "ACTION_START_PLAY_AD"
+                        checkUrlAndLocalFiles()
                         //start to play
                         if (infoRenew) {
                             Log.d(mTag, "start to play!")
@@ -3570,6 +3571,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+
     private fun checkDownloadImagesOnlyOne(): Boolean {
         var ret = false
 
@@ -3654,6 +3656,178 @@ class MainActivity : AppCompatActivity() {
         }
 
         return ret
+    }
+
+    fun checkUrlAndLocalFiles() {
+        Log.d(mTag, "=== checkUrlAndLocalFiles start ===")
+
+        if (adSettingList.size > 0) {
+            val bannerDirectory = File(dest_banner_folder)
+            val imageDirectory = File(dest_images_folder)
+            val videoDirectory = File(dest_videos_folder)
+            val bannerFiles = bannerDirectory.listFiles()
+            val imageFiles = imageDirectory.listFiles()
+            val videoFiles = videoDirectory.listFiles()
+
+            Log.d(mTag, "bannerFiles -> $bannerFiles")
+            Log.d(mTag, "imageFiles -> $imageFiles")
+            Log.d(mTag, "videoFiles -> $videoFiles")
+
+            Thread {
+                try {
+                    //banner
+                    if (bannerDirectory.isDirectory && bannerFiles != null) {
+                        for (i in bannerFiles.indices) {
+                            var match = false
+                            val srcPath = "$server_banner_folder/${bannerFiles[i].name}"
+                            val fileUrl = URL(srcPath)
+                            val fileUrlLength = fileUrl.openConnection().contentLength
+                            val destPath = "$dest_banner_folder${bannerFiles[i].name}"
+                            val destFile = File(destPath)
+
+                            Log.d(mTag, "srcPath = $srcPath")
+                            Log.d(mTag, "destPath = $destPath")
+
+                            if (fileUrlLength.toLong() == destFile.length()) {
+                                Log.e(mTag, "match!")
+                                match = true
+                            }
+                            if (!match) { //not found in bannerList, delete it!
+                                val deletePath = "$dest_banner_folder${bannerFiles[i].name}"
+                                val deleteFile = File(deletePath)
+                                val deleteUri  = Uri.fromFile(deleteFile)
+                                Log.d(mTag, "deleteUri = $deleteUri")
+                                try {
+                                    if (deleteFile.exists()) {
+                                        deleteFile.delete()
+                                        Log.d(mTag, "Delete $deletePath")
+                                    }
+
+                                } catch (e: java.lang.Exception) {
+                                    e.printStackTrace()
+                                }
+                            }
+                        }
+                    }
+
+                    /*
+                    //images
+                    if (imageDirectory.isDirectory && imageFiles != null) {
+
+                        for (i in imageFiles.indices) {
+                            var found = false
+
+                            if (adSettingList.size > 0) {
+                                for (j in adSettingList.indices) {
+                                    //images
+                                    if (adSettingList[j].plan_images.isNotEmpty()) {
+                                        val imagesArray = adSettingList[j].plan_images.split(",")
+                                        for (k in imagesArray.indices) {
+                                            if (imageFiles[i].name == imagesArray[k]) {
+                                                found = true
+                                                break
+                                            }
+                                        }
+                                    }
+                                    //mix
+                                    if (adSettingList[j].plan_mix.isNotEmpty()) {
+                                        val mixArray = adSettingList[j].plan_mix.split(",")
+                                        for (k in mixArray.indices) {
+                                            if (imageFiles[i].name == mixArray[k]) {
+                                                found = true
+                                                break
+                                            }
+                                        }
+                                    }
+
+                                    if (found) {
+                                        break
+                                    }
+                                }
+                            }
+
+                            if (!found) { //not found in imageList and mixList, delete it!
+                                val deletePath = "$dest_images_folder${imageFiles[i].name}"
+                                val deleteFile = File(deletePath)
+                                val deleteUri  = Uri.fromFile(deleteFile)
+                                Log.d(mTag, "deleteUri = $deleteUri")
+                                try {
+                                    if (deleteFile.exists()) {
+                                        deleteFile.delete()
+                                        //val cr = contentResolver
+                                        //cr.delete(deleteUri, null, null)
+                                        Log.d(mTag, "Delete $deletePath")
+                                    }
+
+                                } catch (e: java.lang.Exception) {
+                                    e.printStackTrace()
+                                }
+                            }
+                        }
+                    }
+                    //videos
+                    if (videoDirectory.isDirectory && videoFiles != null) {
+
+                        for (i in videoFiles.indices) {
+                            var found = false
+
+                            if (adSettingList.size > 0) {
+                                for (j in adSettingList.indices) {
+                                    //videos
+                                    if (adSettingList[j].plan_videos.isNotEmpty()) {
+                                        val videosArray = adSettingList[j].plan_videos.split(",")
+                                        for (k in videosArray.indices) {
+                                            if (videoFiles[i].name == videosArray[k]) {
+                                                found = true
+                                                break
+                                            }
+                                        }
+                                    }
+                                    //mix
+                                    if (adSettingList[j].plan_mix.isNotEmpty()) {
+                                        val mixArray = adSettingList[j].plan_mix.split(",")
+                                        for (k in mixArray.indices) {
+                                            if (videoFiles[i].name == mixArray[k]) {
+                                                found = true
+                                                break
+                                            }
+                                        }
+                                    }
+
+                                    if (found) {
+                                        break
+                                    }
+                                }
+                            }
+
+                            if (!found) { //not found in videoList and mixList, delete it!
+                                val deletePath = "$dest_videos_folder${videoFiles[i].name}"
+                                val deleteFile = File(deletePath)
+                                val deleteUri  = Uri.fromFile(deleteFile)
+                                Log.d(mTag, "deleteUri = $deleteUri")
+                                try {
+                                    if (deleteFile.exists()) {
+                                        deleteFile.delete()
+                                        //val cr = contentResolver
+                                        //cr.delete(deleteUri, null, null)
+                                        Log.d(mTag, "Delete $deletePath")
+                                    }
+
+                                } catch (e: java.lang.Exception) {
+                                    e.printStackTrace()
+                                }
+                            }
+                        }
+                    }*/
+                } catch (e: IOException) {
+                    Log.e(mTag, "e = $e")
+                }
+            }.start()
+
+        } else {
+            Log.e(mTag , "adSettingList.size == 0")
+        }
+        Log.d(mTag, "=== checkUrlAndLocalFiles end ===")
     }
 
     fun checkBannerExists() {
