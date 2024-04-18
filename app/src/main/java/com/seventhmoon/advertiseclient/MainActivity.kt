@@ -234,7 +234,9 @@ class MainActivity : AppCompatActivity() {
     )
 
     private val httpPrefix = "http://"
-    private val defaultIpAddress = "35.194.240.47"
+    private val testDefaultAddress = "35.194.240.47"
+    private val benzKtvAddress = "34.66.27.68"
+    private val defaultIpAddress = benzKtvAddress
 
     private val handler = object : Handler(Looper.getMainLooper()) {
 
@@ -1397,7 +1399,7 @@ class MainActivity : AppCompatActivity() {
 
                             //then play ad
                             val playAdIntent = Intent()
-                            playAdIntent.action = Constants.ACTION.ACTION_START_PLAY_AD
+                            playAdIntent.action = Constants.ACTION.ACTION_CHECK_FILES_INCOMPLETE_ACTION
                             this@MainActivity.sendBroadcast(playAdIntent)
                         }
 
@@ -1428,7 +1430,7 @@ class MainActivity : AppCompatActivity() {
                             downloadMix()
                         } else {
                             val playAdIntent = Intent()
-                            playAdIntent.action = Constants.ACTION.ACTION_START_PLAY_AD
+                            playAdIntent.action = Constants.ACTION.ACTION_CHECK_FILES_INCOMPLETE_ACTION
                             this@MainActivity.sendBroadcast(playAdIntent)
                         }
 
@@ -1486,7 +1488,7 @@ class MainActivity : AppCompatActivity() {
 
                         //then play ad
                         val playAdIntent = Intent()
-                        playAdIntent.action = Constants.ACTION.ACTION_START_PLAY_AD
+                        playAdIntent.action = Constants.ACTION.ACTION_CHECK_FILES_INCOMPLETE_ACTION
                         this@MainActivity.sendBroadcast(playAdIntent)
 
                     }  else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_MIX_EMPTY, ignoreCase = true)) {
@@ -1515,6 +1517,20 @@ class MainActivity : AppCompatActivity() {
                                 }
                             }
                         }
+
+                        val startAdIntent = Intent()
+                        startAdIntent.action = Constants.ACTION.ACTION_CHECK_FILES_INCOMPLETE_ACTION
+                        this@MainActivity.sendBroadcast(startAdIntent)
+
+                    } else if (intent.action!!.equals(Constants.ACTION.ACTION_CHECK_FILES_INCOMPLETE_ACTION, ignoreCase = true)) {
+                        Log.d(mTag, "ACTION_CHECK_FILES_INCOMPLETE_ACTION")
+
+                        textViewShowState!!.text = "ACTION_CHECK_FILES_INCOMPLETE_ACTION"
+                        checkUrlAndLocalFiles()
+
+                    } else if (intent.action!!.equals(Constants.ACTION.ACTION_CHECK_FILES_INCOMPLETE_COMPLETE, ignoreCase = true)) {
+                        Log.d(mTag, "ACTION_CHECK_FILES_INCOMPLETE_COMPLETE")
+
                         //start play ad
                         val startAdIntent = Intent()
                         startAdIntent.action = Constants.ACTION.ACTION_START_PLAY_AD
@@ -1524,7 +1540,7 @@ class MainActivity : AppCompatActivity() {
                         Log.d(mTag, "ACTION_START_PLAY_AD")
                         textViewShowInitSuccess!!.text = getString(R.string.start_play_ad)
                         textViewShowState!!.text = "ACTION_START_PLAY_AD"
-                        checkUrlAndLocalFiles()
+                        //checkUrlAndLocalFiles()
                         //start to play
                         if (infoRenew) {
                             Log.d(mTag, "start to play!")
@@ -2342,7 +2358,7 @@ class MainActivity : AppCompatActivity() {
                         Log.d(mTag, "ACTION_GET_CURRENT_PLAY_CONTENT_COMPLETE")
 
                         val playAdIntent = Intent()
-                        playAdIntent.action = Constants.ACTION.ACTION_START_PLAY_AD
+                        playAdIntent.action = Constants.ACTION.ACTION_CHECK_FILES_INCOMPLETE_ACTION
                         this@MainActivity.sendBroadcast(playAdIntent)
                     }
                 }
@@ -2433,6 +2449,9 @@ class MainActivity : AppCompatActivity() {
             //get current play content
             filter.addAction(Constants.ACTION.ACTION_GET_CURRENT_PLAY_CONTENT_START)
             filter.addAction(Constants.ACTION.ACTION_GET_CURRENT_PLAY_CONTENT_COMPLETE)
+
+            filter.addAction(Constants.ACTION.ACTION_CHECK_FILES_INCOMPLETE_ACTION)
+            filter.addAction(Constants.ACTION.ACTION_CHECK_FILES_INCOMPLETE_COMPLETE)
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 this@MainActivity.registerReceiver(mReceiver, filter, RECEIVER_EXPORTED)
@@ -2675,10 +2694,7 @@ class MainActivity : AppCompatActivity() {
                         if (!getFirstPingResponse) {
                             getFirstPingResponse = true
                             infoRenew = true
-                            /*
-                            val playAdIntent = Intent()
-                            playAdIntent.action = Constants.ACTION.ACTION_START_PLAY_AD
-                            this@MainActivity.sendBroadcast(playAdIntent)*/
+
                             val getPlayContentIntent = Intent()
                             getPlayContentIntent.action = Constants.ACTION.ACTION_GET_CURRENT_PLAY_CONTENT_START
                             this@MainActivity.sendBroadcast(getPlayContentIntent)
@@ -3674,154 +3690,148 @@ class MainActivity : AppCompatActivity() {
             Log.d(mTag, "videoFiles -> $videoFiles")
 
             Thread {
-                try {
-                    //banner
-                    if (bannerDirectory.isDirectory && bannerFiles != null) {
-                        for (i in bannerFiles.indices) {
-                            var match = false
-                            val srcPath = "$server_banner_folder/${bannerFiles[i].name}"
-                            val fileUrl = URL(srcPath)
-                            val fileUrlLength = fileUrl.openConnection().contentLength
-                            val destPath = "$dest_banner_folder${bannerFiles[i].name}"
-                            val destFile = File(destPath)
+                //banner
+                if (bannerDirectory.isDirectory && bannerFiles != null) {
+                    for (i in bannerFiles.indices) {
+                        var match = false
+                        val srcPath = "$server_banner_folder/${bannerFiles[i].name}"
+                        val destPath = "$dest_banner_folder${bannerFiles[i].name}"
 
-                            Log.d(mTag, "srcPath = $srcPath")
-                            Log.d(mTag, "destPath = $destPath")
+                        Log.d(mTag, "srcPath = $srcPath")
+                        Log.d(mTag, "destPath = $destPath")
+
+                        var fileUrlLength = 0
+
+                        try {
+                            val fileUrl = URL(srcPath)
+                            fileUrlLength = fileUrl.openConnection().contentLength
+                            val destFile = File(destPath)
 
                             if (fileUrlLength.toLong() == destFile.length()) {
                                 Log.e(mTag, "match!")
                                 match = true
                             }
-                            if (!match) { //not found in bannerList, delete it!
-                                val deletePath = "$dest_banner_folder${bannerFiles[i].name}"
-                                val deleteFile = File(deletePath)
-                                val deleteUri  = Uri.fromFile(deleteFile)
-                                Log.d(mTag, "deleteUri = $deleteUri")
-                                try {
-                                    if (deleteFile.exists()) {
-                                        deleteFile.delete()
-                                        Log.d(mTag, "Delete $deletePath")
-                                    }
+                        } catch (e: IOException) {
+                            Log.e(mTag, "e = $e")
+                        }
 
-                                } catch (e: java.lang.Exception) {
-                                    e.printStackTrace()
+                        if (!match && fileUrlLength > 0) { //file size not match, delete it!
+                            val deletePath = "$dest_banner_folder${bannerFiles[i].name}"
+                            val deleteFile = File(deletePath)
+                            val deleteUri  = Uri.fromFile(deleteFile)
+                            Log.d(mTag, "deleteUri = $deleteUri")
+                            try {
+                                if (deleteFile.exists()) {
+                                    deleteFile.delete()
+                                    Log.d(mTag, "Delete $deletePath")
                                 }
+
+                            } catch (e: java.lang.Exception) {
+                                e.printStackTrace()
                             }
                         }
                     }
-
-                    /*
-                    //images
-                    if (imageDirectory.isDirectory && imageFiles != null) {
-
-                        for (i in imageFiles.indices) {
-                            var found = false
-
-                            if (adSettingList.size > 0) {
-                                for (j in adSettingList.indices) {
-                                    //images
-                                    if (adSettingList[j].plan_images.isNotEmpty()) {
-                                        val imagesArray = adSettingList[j].plan_images.split(",")
-                                        for (k in imagesArray.indices) {
-                                            if (imageFiles[i].name == imagesArray[k]) {
-                                                found = true
-                                                break
-                                            }
-                                        }
-                                    }
-                                    //mix
-                                    if (adSettingList[j].plan_mix.isNotEmpty()) {
-                                        val mixArray = adSettingList[j].plan_mix.split(",")
-                                        for (k in mixArray.indices) {
-                                            if (imageFiles[i].name == mixArray[k]) {
-                                                found = true
-                                                break
-                                            }
-                                        }
-                                    }
-
-                                    if (found) {
-                                        break
-                                    }
-                                }
-                            }
-
-                            if (!found) { //not found in imageList and mixList, delete it!
-                                val deletePath = "$dest_images_folder${imageFiles[i].name}"
-                                val deleteFile = File(deletePath)
-                                val deleteUri  = Uri.fromFile(deleteFile)
-                                Log.d(mTag, "deleteUri = $deleteUri")
-                                try {
-                                    if (deleteFile.exists()) {
-                                        deleteFile.delete()
-                                        //val cr = contentResolver
-                                        //cr.delete(deleteUri, null, null)
-                                        Log.d(mTag, "Delete $deletePath")
-                                    }
-
-                                } catch (e: java.lang.Exception) {
-                                    e.printStackTrace()
-                                }
-                            }
-                        }
-                    }
-                    //videos
-                    if (videoDirectory.isDirectory && videoFiles != null) {
-
-                        for (i in videoFiles.indices) {
-                            var found = false
-
-                            if (adSettingList.size > 0) {
-                                for (j in adSettingList.indices) {
-                                    //videos
-                                    if (adSettingList[j].plan_videos.isNotEmpty()) {
-                                        val videosArray = adSettingList[j].plan_videos.split(",")
-                                        for (k in videosArray.indices) {
-                                            if (videoFiles[i].name == videosArray[k]) {
-                                                found = true
-                                                break
-                                            }
-                                        }
-                                    }
-                                    //mix
-                                    if (adSettingList[j].plan_mix.isNotEmpty()) {
-                                        val mixArray = adSettingList[j].plan_mix.split(",")
-                                        for (k in mixArray.indices) {
-                                            if (videoFiles[i].name == mixArray[k]) {
-                                                found = true
-                                                break
-                                            }
-                                        }
-                                    }
-
-                                    if (found) {
-                                        break
-                                    }
-                                }
-                            }
-
-                            if (!found) { //not found in videoList and mixList, delete it!
-                                val deletePath = "$dest_videos_folder${videoFiles[i].name}"
-                                val deleteFile = File(deletePath)
-                                val deleteUri  = Uri.fromFile(deleteFile)
-                                Log.d(mTag, "deleteUri = $deleteUri")
-                                try {
-                                    if (deleteFile.exists()) {
-                                        deleteFile.delete()
-                                        //val cr = contentResolver
-                                        //cr.delete(deleteUri, null, null)
-                                        Log.d(mTag, "Delete $deletePath")
-                                    }
-
-                                } catch (e: java.lang.Exception) {
-                                    e.printStackTrace()
-                                }
-                            }
-                        }
-                    }*/
-                } catch (e: IOException) {
-                    Log.e(mTag, "e = $e")
                 }
+
+
+                //images
+                if (imageDirectory.isDirectory && imageFiles != null) {
+
+                    for (i in imageFiles.indices) {
+                        var match = false
+                        val srcPath = "$server_images_folder/${imageFiles[i].name}"
+                        val destPath = "$dest_images_folder${imageFiles[i].name}"
+
+                        Log.d(mTag, "srcPath = $srcPath")
+                        Log.d(mTag, "destPath = $destPath")
+
+                        var fileUrlLength = 0
+
+                        try {
+                            val fileUrl = URL(srcPath)
+                            fileUrlLength = fileUrl.openConnection().contentLength
+                            val destFile = File(destPath)
+
+                            if (fileUrlLength.toLong() == destFile.length()) {
+                                Log.e(mTag, "match!")
+                                match = true
+                            }
+                        } catch (e: IOException) {
+                            Log.e(mTag, "e = $e")
+                        }
+
+
+
+                        if (!match && fileUrlLength > 0) { //file size not match, delete it!
+                            val deletePath = "$dest_images_folder${imageFiles[i].name}"
+                            val deleteFile = File(deletePath)
+                            val deleteUri  = Uri.fromFile(deleteFile)
+                            Log.d(mTag, "deleteUri = $deleteUri")
+                            try {
+                                if (deleteFile.exists()) {
+                                    deleteFile.delete()
+                                    //val cr = contentResolver
+                                    //cr.delete(deleteUri, null, null)
+                                    Log.d(mTag, "Delete $deletePath")
+                                }
+
+                            } catch (e: java.lang.Exception) {
+                                e.printStackTrace()
+                            }
+                        }
+                    }
+                }
+
+                //videos
+                if (videoDirectory.isDirectory && videoFiles != null) {
+
+                    for (i in videoFiles.indices) {
+                        var match = false
+                        val srcPath = "$server_videos_folder/${videoFiles[i].name}"
+                        val destPath = "$dest_videos_folder${videoFiles[i].name}"
+
+                        Log.d(mTag, "srcPath = $srcPath")
+                        Log.d(mTag, "destPath = $destPath")
+
+                        var fileUrlLength = 0
+
+                        try {
+                            val fileUrl = URL(srcPath)
+                            fileUrlLength = fileUrl.openConnection().contentLength
+                            val destFile = File(destPath)
+
+                            if (fileUrlLength.toLong() == destFile.length()) {
+                                Log.e(mTag, "match!")
+                                match = true
+                            }
+                        } catch (e: IOException) {
+                            Log.e(mTag, "e = $e")
+                        }
+
+                        if (!match && fileUrlLength > 0) { //file size not match, delete it!
+                            val deletePath = "$dest_videos_folder${videoFiles[i].name}"
+                            val deleteFile = File(deletePath)
+                            val deleteUri  = Uri.fromFile(deleteFile)
+                            Log.d(mTag, "deleteUri = $deleteUri")
+                            try {
+                                if (deleteFile.exists()) {
+                                    deleteFile.delete()
+                                    //val cr = contentResolver
+                                    //cr.delete(deleteUri, null, null)
+                                    Log.d(mTag, "Delete $deletePath")
+                                }
+
+                            } catch (e: java.lang.Exception) {
+                                e.printStackTrace()
+                            }
+                        }
+                    }
+                }
+
+                val completeIntent = Intent()
+                completeIntent.action =
+                    Constants.ACTION.ACTION_CHECK_FILES_INCOMPLETE_COMPLETE
+                this@MainActivity.sendBroadcast(completeIntent)
             }.start()
 
         } else {

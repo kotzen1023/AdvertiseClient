@@ -82,6 +82,10 @@ class Constants {
 
             const val ACTION_GET_CURRENT_PLAY_CONTENT_START: String = "com.seventhmoon.advertiseclient.GetCurrentPlayContentStart"
             const val ACTION_GET_CURRENT_PLAY_CONTENT_COMPLETE: String = "com.seventhmoon.advertiseclient.GetCurrentPlayContentComplete"
+
+            const val ACTION_CHECK_FILES_INCOMPLETE_ACTION: String = "com.seventhmoon.advertiseclient.CheckFilesIncomplete"
+            const val ACTION_CHECK_FILES_INCOMPLETE_COMPLETE: String = "com.seventhmoon.advertiseclient.CheckFilesIncompleteComplete"
+
         }
     }
 }
