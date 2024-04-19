@@ -236,7 +236,7 @@ class MainActivity : AppCompatActivity() {
     private val httpPrefix = "http://"
     private val testDefaultAddress = "35.194.240.47"
     private val benzKtvAddress = "34.66.27.68"
-    private val defaultIpAddress = benzKtvAddress
+    private val defaultIpAddress = testDefaultAddress
 
     private val handler = object : Handler(Looper.getMainLooper()) {
 
@@ -6076,7 +6076,11 @@ class MainActivity : AppCompatActivity() {
                                 if (file.exists()) {
                                     imageViewTop!!.setImageURI(Uri.fromFile(file))
 
+                                } else {
+                                    imageViewTop!!.setImageResource(R.drawable.baseline_image_search_24)
                                 }
+                            } else {
+                                imageViewTop!!.setImageResource(R.drawable.baseline_image_24)
                             }
 
                         } else {
@@ -6092,7 +6096,11 @@ class MainActivity : AppCompatActivity() {
                                 val file = File(srcPath)
                                 if (file.exists()) {
                                     imageViewCenter!!.setImageURI(Uri.fromFile(file))
+                                } else {
+                                    imageViewCenter!!.setImageResource(R.drawable.baseline_image_search_24)
                                 }
+                            } else {
+                                imageViewCenter!!.setImageResource(R.drawable.baseline_image_24)
                             }
                         } else {
                             Log.d(mTag, "layoutCenter not banner")
@@ -6107,7 +6115,11 @@ class MainActivity : AppCompatActivity() {
                                 val file = File(srcPath)
                                 if (file.exists()) {
                                     imageViewBottom!!.setImageURI(Uri.fromFile(file))
+                                } else {
+                                    imageViewBottom!!.setImageResource(R.drawable.baseline_image_search_24)
                                 }
+                            } else {
+                                imageViewBottom!!.setImageResource(R.drawable.baseline_image_24)
                             }
                         } else {
                             Log.d(mTag, "layoutBottom not banner")
