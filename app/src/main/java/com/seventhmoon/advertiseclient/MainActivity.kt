@@ -76,6 +76,7 @@ import com.seventhmoon.advertiseclient.persistence.DefaultPlayMixData
 import com.seventhmoon.advertiseclient.persistence.DefaultPlayMixDataDB
 import com.seventhmoon.advertiseclient.persistence.DefaultPlayVideosData
 import com.seventhmoon.advertiseclient.persistence.DefaultPlayVideosDataDB
+import com.squareup.picasso.Picasso
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.Response
@@ -84,7 +85,9 @@ import org.json.JSONObject
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
+import java.net.HttpURLConnection
 import java.net.URL
+import java.net.URLConnection
 import java.net.URLEncoder
 import java.text.SimpleDateFormat
 import java.util.Collections
@@ -234,8 +237,10 @@ class MainActivity : AppCompatActivity() {
     )
 
     private val httpPrefix = "http://"
+    private val internalDefaultAddress = "192.168.1.253"
     private val testDefaultAddress = "35.194.240.47"
     private val benzKtvAddress = "34.66.27.68"
+    private val kHouseDefaultAddress = "35.202.218.122"
     private val defaultIpAddress = testDefaultAddress
 
     private val handler = object : Handler(Looper.getMainLooper()) {
@@ -361,7 +366,7 @@ class MainActivity : AppCompatActivity() {
 
         
 
-        handleUncaughtException()
+        //handleUncaughtException()
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             checkAndRequestPermissions()
@@ -1661,14 +1666,24 @@ class MainActivity : AppCompatActivity() {
                                     imageViewTop!!.startAnimation(animMoveToRight)
                                     imageViewTop!!.visibility = View.GONE
                                     imageViewTop2!!.visibility = View.VISIBLE
-                                    imageViewTop2!!.setImageURI(Uri.fromFile(file))
+                                    //imageViewTop2!!.setImageURI(Uri.fromFile(file))
+                                    Picasso.get()
+                                        .load(Uri.fromFile(file))
+                                        .resize(layoutTopWidth, layoutTopHeight)
+                                        .onlyScaleDown()
+                                        .into(imageViewTop2)
                                     imageViewTop2!!.startAnimation(animMoveFromLeft)
 
                                 } else { //imageViewTop2 is visible
                                     imageViewTop2!!.startAnimation(animMoveToRight)
                                     imageViewTop2!!.visibility = View.GONE
                                     imageViewTop!!.visibility = View.VISIBLE
-                                    imageViewTop!!.setImageURI(Uri.fromFile(file))
+                                    //imageViewTop!!.setImageURI(Uri.fromFile(file))
+                                    Picasso.get()
+                                        .load(Uri.fromFile(file))
+                                        .resize(layoutTopWidth, layoutTopHeight)
+                                        .onlyScaleDown()
+                                        .into(imageViewTop)
                                     imageViewTop!!.startAnimation(animMoveFromLeft)
 
                                 }
@@ -1810,14 +1825,24 @@ class MainActivity : AppCompatActivity() {
                                     imageViewCenter!!.startAnimation(animMoveToRight)
                                     imageViewCenter!!.visibility = View.GONE
                                     imageViewCenter2!!.visibility = View.VISIBLE
-                                    imageViewCenter2!!.setImageURI(Uri.fromFile(file))
+                                    //imageViewCenter2!!.setImageURI(Uri.fromFile(file))
+                                    Picasso.get()
+                                        .load(Uri.fromFile(file))
+                                        .resize(layoutCenterWidth, layoutCenterHeight)
+                                        .onlyScaleDown()
+                                        .into(imageViewCenter2)
                                     imageViewCenter2!!.startAnimation(animMoveFromLeft)
 
                                 } else { //imageViewTop2 is visible
                                     imageViewCenter2!!.startAnimation(animMoveToRight)
                                     imageViewCenter2!!.visibility = View.GONE
                                     imageViewCenter!!.visibility = View.VISIBLE
-                                    imageViewCenter!!.setImageURI(Uri.fromFile(file))
+                                    //imageViewCenter!!.setImageURI(Uri.fromFile(file))
+                                    Picasso.get()
+                                        .load(Uri.fromFile(file))
+                                        .resize(layoutCenterWidth, layoutCenterHeight)
+                                        .onlyScaleDown()
+                                        .into(imageViewCenter)
                                     imageViewCenter!!.startAnimation(animMoveFromLeft)
 
                                 }
@@ -1960,14 +1985,24 @@ class MainActivity : AppCompatActivity() {
                                     imageViewBottom!!.startAnimation(animMoveToRight)
                                     imageViewBottom!!.visibility = View.GONE
                                     imageViewBottom2!!.visibility = View.VISIBLE
-                                    imageViewBottom2!!.setImageURI(Uri.fromFile(file))
+                                    //imageViewBottom2!!.setImageURI(Uri.fromFile(file))
+                                    Picasso.get()
+                                        .load(Uri.fromFile(file))
+                                        .resize(layoutBottomWidth, layoutBottomHeight)
+                                        .onlyScaleDown()
+                                        .into(imageViewBottom2)
                                     imageViewBottom2!!.startAnimation(animMoveFromLeft)
 
                                 } else { //imageViewTop2 is visible
                                     imageViewBottom2!!.startAnimation(animMoveToRight)
                                     imageViewBottom2!!.visibility = View.GONE
                                     imageViewBottom!!.visibility = View.VISIBLE
-                                    imageViewBottom!!.setImageURI(Uri.fromFile(file))
+                                    //imageViewBottom!!.setImageURI(Uri.fromFile(file))
+                                    Picasso.get()
+                                        .load(Uri.fromFile(file))
+                                        .resize(layoutBottomWidth, layoutBottomHeight)
+                                        .onlyScaleDown()
+                                        .into(imageViewBottom)
                                     imageViewBottom!!.startAnimation(animMoveFromLeft)
 
                                 }
@@ -3674,6 +3709,35 @@ class MainActivity : AppCompatActivity() {
         return ret
     }
 
+    fun getUrlFileLength(url: String): Long {
+        return try {
+            val urlConnection = URL(url).openConnection() as HttpURLConnection
+            urlConnection.requestMethod = "HEAD"
+            urlConnection.getHeaderField("content-length")?.toLongOrNull()?.coerceAtLeast(-1L)
+                ?: -1L
+        } catch (ignored: Exception) {
+            -1L
+        }
+    }
+
+    private fun getFileSize(url: URL): Int {
+        var conn: URLConnection? = null
+        return try {
+            conn = url.openConnection()
+            if (conn is HttpURLConnection) {
+                conn.requestMethod = "HEAD"
+            }
+            conn.getInputStream()
+            conn.contentLength
+        } catch (e: IOException) {
+            throw RuntimeException(e)
+        } finally {
+            if (conn is HttpURLConnection) {
+                conn.disconnect()
+            }
+        }
+    }
+
     fun checkUrlAndLocalFiles() {
         Log.d(mTag, "=== checkUrlAndLocalFiles start ===")
 
@@ -3694,7 +3758,7 @@ class MainActivity : AppCompatActivity() {
                 if (bannerDirectory.isDirectory && bannerFiles != null) {
                     for (i in bannerFiles.indices) {
                         var match = false
-                        val srcPath = "$server_banner_folder/${bannerFiles[i].name}"
+                        val srcPath = "$server_banner_folder/${URLEncoder.encode(bannerFiles[i].name, "UTF-8")}"
                         val destPath = "$dest_banner_folder${bannerFiles[i].name}"
 
                         Log.d(mTag, "srcPath = $srcPath")
@@ -3704,9 +3768,11 @@ class MainActivity : AppCompatActivity() {
 
                         try {
                             val fileUrl = URL(srcPath)
-                            fileUrlLength = fileUrl.openConnection().contentLength
+                            //fileUrlLength = fileUrl.openConnection().contentLength
+                            fileUrlLength = getFileSize(fileUrl)
+                            Log.e(mTag, "fileUrlLength = $fileUrlLength")
                             val destFile = File(destPath)
-
+                            Log.e(mTag,"destFile = ${destFile.length()}")
                             if (fileUrlLength.toLong() == destFile.length()) {
                                 Log.e(mTag, "match!")
                                 match = true
@@ -3739,7 +3805,7 @@ class MainActivity : AppCompatActivity() {
 
                     for (i in imageFiles.indices) {
                         var match = false
-                        val srcPath = "$server_images_folder/${imageFiles[i].name}"
+                        val srcPath = "$server_images_folder/${URLEncoder.encode(imageFiles[i].name, "UTF-8")}"
                         val destPath = "$dest_images_folder${imageFiles[i].name}"
 
                         Log.d(mTag, "srcPath = $srcPath")
@@ -3749,8 +3815,12 @@ class MainActivity : AppCompatActivity() {
 
                         try {
                             val fileUrl = URL(srcPath)
-                            fileUrlLength = fileUrl.openConnection().contentLength
+                            //fileUrlLength = fileUrl.openConnection().contentLength
+
+                            fileUrlLength = getFileSize(fileUrl)
+                            Log.e(mTag, "fileUrlLength = $fileUrlLength")
                             val destFile = File(destPath)
+                            Log.e(mTag,"destFile = ${destFile.length()}")
 
                             if (fileUrlLength.toLong() == destFile.length()) {
                                 Log.e(mTag, "match!")
@@ -3787,7 +3857,7 @@ class MainActivity : AppCompatActivity() {
 
                     for (i in videoFiles.indices) {
                         var match = false
-                        val srcPath = "$server_videos_folder/${videoFiles[i].name}"
+                        val srcPath = "$server_videos_folder/${URLEncoder.encode(videoFiles[i].name, "UTF-8")}"
                         val destPath = "$dest_videos_folder${videoFiles[i].name}"
 
                         Log.d(mTag, "srcPath = $srcPath")
@@ -3797,8 +3867,11 @@ class MainActivity : AppCompatActivity() {
 
                         try {
                             val fileUrl = URL(srcPath)
-                            fileUrlLength = fileUrl.openConnection().contentLength
+                            //fileUrlLength = fileUrl.openConnection().contentLength
+                            fileUrlLength = getFileSize(fileUrl)
+                            Log.e(mTag, "fileUrlLength = $fileUrlLength")
                             val destFile = File(destPath)
+                            Log.e(mTag,"destFile = ${destFile.length()}")
 
                             if (fileUrlLength.toLong() == destFile.length()) {
                                 Log.e(mTag, "match!")
@@ -6074,8 +6147,12 @@ class MainActivity : AppCompatActivity() {
                                 val srcPath = "$dest_banner_folder/${bannerList[0]}"
                                 val file = File(srcPath)
                                 if (file.exists()) {
-                                    imageViewTop!!.setImageURI(Uri.fromFile(file))
-
+                                    //imageViewTop!!.setImageURI(Uri.fromFile(file))
+                                    Picasso.get()
+                                        .load(Uri.fromFile(file))
+                                        .resize(layoutTopWidth, layoutTopHeight)
+                                        .onlyScaleDown()
+                                        .into(imageViewTop)
                                 } else {
                                     imageViewTop!!.setImageResource(R.drawable.baseline_image_search_24)
                                 }
@@ -6095,7 +6172,12 @@ class MainActivity : AppCompatActivity() {
                                 val srcPath = "$dest_banner_folder/${bannerList[0]}"
                                 val file = File(srcPath)
                                 if (file.exists()) {
-                                    imageViewCenter!!.setImageURI(Uri.fromFile(file))
+                                    //imageViewCenter!!.setImageURI(Uri.fromFile(file))
+                                    Picasso.get()
+                                        .load(Uri.fromFile(file))
+                                        .resize(layoutCenterWidth, layoutCenterHeight)
+                                        .onlyScaleDown()
+                                        .into(imageViewCenter)
                                 } else {
                                     imageViewCenter!!.setImageResource(R.drawable.baseline_image_search_24)
                                 }
@@ -6114,7 +6196,12 @@ class MainActivity : AppCompatActivity() {
                                 val srcPath = "$dest_banner_folder/${bannerList[0]}"
                                 val file = File(srcPath)
                                 if (file.exists()) {
-                                    imageViewBottom!!.setImageURI(Uri.fromFile(file))
+                                    //imageViewBottom!!.setImageURI(Uri.fromFile(file))
+                                    Picasso.get()
+                                        .load(Uri.fromFile(file))
+                                        .resize(layoutBottomWidth, layoutBottomHeight)
+                                        .onlyScaleDown()
+                                        .into(imageViewBottom)
                                 } else {
                                     imageViewBottom!!.setImageResource(R.drawable.baseline_image_search_24)
                                 }
@@ -6159,7 +6246,12 @@ class MainActivity : AppCompatActivity() {
                                 val srcPath = "$dest_images_folder/${imageList[currentImageIndexTop]}"
                                 val file = File(srcPath)
                                 if (file.exists()) {
-                                    imageViewTop!!.setImageURI(Uri.fromFile(file))
+
+                                    Picasso.get()
+                                        .load(Uri.fromFile(file))
+                                        .resize(layoutTopWidth, layoutTopHeight)
+                                        .onlyScaleDown()
+                                        .into(imageViewTop)
                                     imageViewTop!!.startAnimation(animMoveFromLeft)
                                 }
                             }
@@ -6192,7 +6284,12 @@ class MainActivity : AppCompatActivity() {
                                 val srcPath = "$dest_images_folder/${imageList[currentImageIndexCenter]}"
                                 val file = File(srcPath)
                                 if (file.exists()) {
-                                    imageViewCenter!!.setImageURI(Uri.fromFile(file))
+                                    Picasso.get()
+                                        .load(Uri.fromFile(file))
+                                        .resize(layoutCenterWidth, layoutCenterHeight)
+                                        .onlyScaleDown()
+                                        .into(imageViewCenter)
+                                    //imageViewCenter!!.setImageURI(Uri.fromFile(file))
                                     imageViewCenter!!.startAnimation(animMoveFromLeft)
                                 }
                             }
@@ -6224,7 +6321,12 @@ class MainActivity : AppCompatActivity() {
                                 val srcPath = "$dest_images_folder/${imageList[currentImageIndexBottom]}"
                                 val file = File(srcPath)
                                 if (file.exists()) {
-                                    imageViewBottom!!.setImageURI(Uri.fromFile(file))
+                                    Picasso.get()
+                                        .load(Uri.fromFile(file))
+                                        .resize(layoutBottomWidth, layoutBottomHeight)
+                                        .onlyScaleDown()
+                                        .into(imageViewBottom)
+                                    //imageViewBottom!!.setImageURI(Uri.fromFile(file))
                                     imageViewBottom!!.startAnimation(animMoveFromLeft)
                                 }
                             }
@@ -6268,15 +6370,26 @@ class MainActivity : AppCompatActivity() {
                                                 if (imageViewTop!!.visibility == View.VISIBLE) {
                                                     imageViewTop!!.startAnimation(animMoveToRight)
                                                     imageViewTop!!.visibility = View.GONE
-                                                    imageViewTop2!!.setImageURI(Uri.fromFile(file))
+                                                    //imageViewTop2!!.setImageURI(Uri.fromFile(file))
+                                                    Picasso.get()
+                                                        .load(Uri.fromFile(file))
+                                                        .resize(layoutTopWidth, layoutTopHeight)
+                                                        .onlyScaleDown()
+                                                        .into(imageViewTop2)
                                                     imageViewTop2!!.visibility = View.VISIBLE
                                                     //Picasso.with(this@MainActivity).load(imageUrlTop).into(imageViewTop2)
                                                     imageViewTop2!!.startAnimation(animMoveFromLeft)
                                                 } else {
                                                     imageViewTop2!!.startAnimation(animMoveToRight)
                                                     imageViewTop2!!.visibility = View.GONE
-                                                    imageViewTop!!.setImageURI(Uri.fromFile(file))
+                                                    //imageViewTop!!.setImageURI(Uri.fromFile(file))
+                                                    Picasso.get()
+                                                        .load(Uri.fromFile(file))
+                                                        .resize(layoutTopWidth, layoutTopHeight)
+                                                        .onlyScaleDown()
+                                                        .into(imageViewTop)
                                                     imageViewTop!!.visibility = View.VISIBLE
+
                                                     //Picasso.with(this@MainActivity).load(imageUrlTop).into(imageViewTop)
                                                     imageViewTop!!.startAnimation(animMoveFromLeft)
                                                 }
@@ -6306,14 +6419,24 @@ class MainActivity : AppCompatActivity() {
                                                 if (imageViewCenter!!.visibility == View.VISIBLE) {
                                                     imageViewCenter!!.startAnimation(animMoveToLeft)
                                                     imageViewCenter!!.visibility = View.GONE
-                                                    imageViewCenter2!!.setImageURI(Uri.fromFile(file))
+                                                    //imageViewCenter2!!.setImageURI(Uri.fromFile(file))
+                                                    Picasso.get()
+                                                        .load(Uri.fromFile(file))
+                                                        .resize(layoutCenterWidth, layoutCenterHeight)
+                                                        .onlyScaleDown()
+                                                        .into(imageViewCenter2)
                                                     imageViewCenter2!!.visibility = View.VISIBLE
                                                     //Picasso.with(this@MainActivity).load(imageUrlCenter).into(imageViewCenter2)
                                                     imageViewCenter2!!.startAnimation(animMoveFromRight)
                                                 } else { //imageViewCenter!!.visibility == View.GONE
                                                     imageViewCenter2!!.startAnimation(animMoveToLeft)
                                                     imageViewCenter2!!.visibility = View.GONE
-                                                    imageViewCenter!!.setImageURI(Uri.fromFile(file))
+                                                    //imageViewCenter!!.setImageURI(Uri.fromFile(file))
+                                                    Picasso.get()
+                                                        .load(Uri.fromFile(file))
+                                                        .resize(layoutCenterWidth, layoutCenterHeight)
+                                                        .onlyScaleDown()
+                                                        .into(imageViewCenter)
                                                     imageViewCenter!!.visibility = View.VISIBLE
                                                     //Picasso.with(this@MainActivity).load(imageUrlCenter).into(imageViewCenter)
                                                     imageViewCenter!!.startAnimation(animMoveFromRight)
@@ -6344,14 +6467,24 @@ class MainActivity : AppCompatActivity() {
                                                 if (imageViewBottom!!.visibility == View.VISIBLE) {
                                                     imageViewBottom!!.startAnimation(animMoveToRight)
                                                     imageViewBottom!!.visibility = View.GONE
-                                                    imageViewBottom2!!.setImageURI(Uri.fromFile(file))
+                                                    //imageViewBottom2!!.setImageURI(Uri.fromFile(file))
+                                                    Picasso.get()
+                                                        .load(Uri.fromFile(file))
+                                                        .resize(layoutBottomWidth, layoutBottomHeight)
+                                                        .onlyScaleDown()
+                                                        .into(imageViewBottom2)
                                                     imageViewBottom2!!.visibility = View.VISIBLE
                                                     //Picasso.with(this@MainActivity).load(imageUrlBottom).into(imageViewBottom2)
                                                     imageViewBottom2!!.startAnimation(animMoveFromLeft)
                                                 } else {
                                                     imageViewBottom2!!.startAnimation(animMoveToRight)
                                                     imageViewBottom2!!.visibility = View.GONE
-                                                    imageViewBottom!!.setImageURI(Uri.fromFile(file))
+                                                    //imageViewBottom!!.setImageURI(Uri.fromFile(file))
+                                                    Picasso.get()
+                                                        .load(Uri.fromFile(file))
+                                                        .resize(layoutBottomWidth, layoutBottomHeight)
+                                                        .onlyScaleDown()
+                                                        .into(imageViewBottom)
                                                     imageViewBottom!!.visibility = View.VISIBLE
                                                     //Picasso.with(this@MainActivity).load(imageUrlBottom).into(imageViewBottom)
                                                     imageViewBottom!!.startAnimation(animMoveFromLeft)
