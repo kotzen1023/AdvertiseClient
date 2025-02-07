@@ -86,6 +86,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.net.HttpURLConnection
+import java.net.NetworkInterface
 import java.net.URL
 import java.net.URLConnection
 import java.net.URLEncoder
@@ -241,7 +242,7 @@ class MainActivity : AppCompatActivity() {
     private val testDefaultAddress = "35.194.240.47"
     private val benzKtvAddress = "34.66.27.68"
     private val kHouseDefaultAddress = "35.202.218.122"
-    private val defaultIpAddress = testDefaultAddress
+    private val defaultIpAddress = kHouseDefaultAddress
 
     private val handler = object : Handler(Looper.getMainLooper()) {
 
@@ -345,6 +346,7 @@ class MainActivity : AppCompatActivity() {
     private var layoutBottomHeight = 0
 
     private val defaultBackGroundColor = "#000000"
+    private var pingError = false
 
     @SuppressLint("HardwareIds")
     @RequiresApi(Build.VERSION_CODES.R)
@@ -364,7 +366,7 @@ class MainActivity : AppCompatActivity() {
 
         //mContext = applicationContext
 
-        
+
 
         //handleUncaughtException()
 
@@ -2597,106 +2599,6 @@ class MainActivity : AppCompatActivity() {
 
 
                         if (layoutList.size > 0) {
-                            /*if (plan4StartTime in 1..currentTimestamp && layoutList[0].plan4_id != 0) { //plan4
-                                currentPlanId = layoutList[0].plan4_id
-                                currentPlanUse = 4
-                                Log.d(mTag, "plan4, id = ${layoutList[0].plan4_id}")
-
-                            } else if (plan3StartTime in 1..currentTimestamp && layoutList[0].plan3_id != 0) { //plan3
-                                currentPlanId = layoutList[0].plan3_id
-                                currentPlanUse = 3
-                                Log.d(mTag, "plan3, id = ${layoutList[0].plan3_id}")
-
-                            } else if (plan2StartTime in 1..currentTimestamp && layoutList[0].plan2_id != 0) { //plan2
-                                currentPlanId = layoutList[0].plan2_id
-                                currentPlanUse = 2
-                                Log.d(mTag, "plan2, id = ${layoutList[0].plan2_id}")
-
-                            } //else if (planStartTime in 1..currentTimestamp) { //plan1
-                            else { //plan1
-                                if (layoutList[0].plan_id > 0) {
-                                    currentPlanId = layoutList[0].plan_id
-                                    currentPlanUse = 1
-                                    Log.d(mTag, "plan1, id = ${layoutList[0].plan_id}")
-                                }
-                            }*/
-                            /*if (planStartTime >= plan2StartTime) { //planStartTime
-                                if (plan3StartTime >= plan4StartTime) { //plan3StartTime
-                                    if (planStartTime >= plan3StartTime) { //planStartTime
-                                        if (currentTimestamp > planStartTime) { //use planStartTime
-                                            if (layoutList[0].plan_id > 0) {
-                                                currentPlanId = layoutList[0].plan_id
-                                                currentPlanUse = 1
-                                                Log.d(mTag, "plan1, id = ${layoutList[0].plan_id}")
-                                            }
-                                        }
-                                    } else { //plan3StartTime
-                                        if (currentTimestamp > plan3StartTime) { //use plan3StartTime
-                                            if (layoutList[0].plan3_id > 0) {
-                                                currentPlanId = layoutList[0].plan3_id
-                                                currentPlanUse = 3
-                                                Log.d(mTag, "plan3, id = ${layoutList[0].plan3_id}")
-                                            }
-                                        }
-                                    }
-                                } else { //plan4StartTime
-                                    if (planStartTime >= plan4StartTime) { //planStartTime
-                                        if (currentTimestamp > planStartTime) { //use planStartTime
-                                            if (layoutList[0].plan_id > 0) {
-                                                currentPlanId = layoutList[0].plan_id
-                                                currentPlanUse = 1
-                                                Log.d(mTag, "plan1, id = ${layoutList[0].plan_id}")
-                                            }
-                                        }
-                                    } else { //plan4StartTime
-                                        if (currentTimestamp > plan4StartTime) { //use plan4StartTime
-                                            if (layoutList[0].plan4_id > 0) {
-                                                currentPlanId = layoutList[0].plan4_id
-                                                currentPlanUse = 4
-                                                Log.d(mTag, "plan4, id = ${layoutList[0].plan4_id}")
-                                            }
-                                        }
-                                    }
-                                }
-                            } else { //plan2StartTime
-                                if (plan3StartTime >= plan4StartTime) { //plan3StartTime
-                                    if (plan2StartTime >= plan3StartTime) { //plan2StartTime
-                                        if (currentTimestamp > plan2StartTime) { //use plan2StartTime
-                                            if (layoutList[0].plan2_id > 0) {
-                                                currentPlanId = layoutList[0].plan2_id
-                                                currentPlanUse = 2
-                                                Log.d(mTag, "plan2, id = ${layoutList[0].plan2_id}")
-                                            }
-                                        }
-                                    } else { //plan3StartTime
-                                        if (currentTimestamp > plan3StartTime) { //use plan3StartTime
-                                            if (layoutList[0].plan3_id > 0) {
-                                                currentPlanId = layoutList[0].plan3_id
-                                                currentPlanUse = 3
-                                                Log.d(mTag, "plan3, id = ${layoutList[0].plan3_id}")
-                                            }
-                                        }
-                                    }
-                                } else { //plan4StartTime
-                                    if (plan2StartTime >= plan4StartTime) { //planStartTime
-                                        if (currentTimestamp > plan2StartTime) { //use planStartTime
-                                            if (layoutList[0].plan2_id > 0) {
-                                                currentPlanId = layoutList[0].plan2_id
-                                                currentPlanUse = 2
-                                                Log.d(mTag, "plan2, id = ${layoutList[0].plan2_id}")
-                                            }
-                                        }
-                                    } else { //plan4StartTime
-                                        if (currentTimestamp > plan4StartTime) { //use plan4StartTime
-                                            if (layoutList[0].plan4_id > 0) {
-                                                currentPlanId = layoutList[0].plan4_id
-                                                currentPlanUse = 4
-                                                Log.d(mTag, "plan4, id = ${layoutList[0].plan4_id}")
-                                            }
-                                        }
-                                    }
-                                }
-                            }*/
                             Log.e(mTag, "2->")
                             getPlanUse(currentTimestamp)
 
@@ -2746,6 +2648,7 @@ class MainActivity : AppCompatActivity() {
         @Throws(IOException::class)
         override fun onResponse(call: Call, response: Response) {
             Log.d(mTag, "onResponse : "+response.body.toString())
+            pingError = false
             //val res = ReceiveTransform.restoreToJsonStr(response.body!!.string())
             val json = JSONObject(response.body!!.string())
             runOnUiThread {
@@ -3185,8 +3088,12 @@ class MainActivity : AppCompatActivity() {
 
     internal var netErrRunnable: Runnable = Runnable {
         Log.e(mTag, "->Network Error")
+
+        pingError = true
+
         if (isFirstNetworkError) {
             isFirstNetworkError = false
+
             if (adSettingList.size >= 1) {
                 Log.d(mTag, "currentAdSettingIdx = $currentAdSettingIdx")
                 Log.d(mTag, "playMarqueeList.size = ${playMarqueeList.size}")
@@ -3195,6 +3102,8 @@ class MainActivity : AppCompatActivity() {
                 playAd()
             }
         }
+
+
     }
 
     fun downloadBanner() {
@@ -3226,6 +3135,9 @@ class MainActivity : AppCompatActivity() {
                 val srcPath = server_banner_folder
                 val destPath = "$dest_banner_folder${bannerList[downloadIdx]}"
                 Log.d(mTag, "start download file : ${bannerList[downloadIdx]} to $dest_banner_folder")
+                val downloadStr = "download ${bannerList[downloadIdx]}"
+                textViewShowInitSuccess!!.text = downloadStr
+                textViewProgress!!.visibility = View.VISIBLE
                 Thread {
                     try {
                         val totalSize = download(srcPath, destPath, bannerList[downloadIdx]) { progress, length ->
@@ -3314,6 +3226,9 @@ class MainActivity : AppCompatActivity() {
                 val srcPath = server_images_folder
                 val destPath = "$dest_images_folder${imageList[downloadIdx]}"
                 Log.d(mTag, "start download file : ${imageList[downloadIdx]} to $dest_images_folder")
+                val downloadStr = "download ${imageList[downloadIdx]}"
+                textViewShowInitSuccess!!.text = downloadStr
+                textViewProgress!!.visibility = View.VISIBLE
                 Thread {
                     try {
                         val totalSize = download(srcPath, destPath, imageList[downloadIdx]) { progress, length ->
@@ -3730,7 +3645,7 @@ class MainActivity : AppCompatActivity() {
             conn.getInputStream()
             conn.contentLength
         } catch (e: IOException) {
-            throw RuntimeException(e)
+            Log.e(mTag, "e = $e")
         } finally {
             if (conn is HttpURLConnection) {
                 conn.disconnect()
@@ -3741,175 +3656,178 @@ class MainActivity : AppCompatActivity() {
     fun checkUrlAndLocalFiles() {
         Log.d(mTag, "=== checkUrlAndLocalFiles start ===")
 
-        if (adSettingList.size > 0) {
-            val bannerDirectory = File(dest_banner_folder)
-            val imageDirectory = File(dest_images_folder)
-            val videoDirectory = File(dest_videos_folder)
-            val bannerFiles = bannerDirectory.listFiles()
-            val imageFiles = imageDirectory.listFiles()
-            val videoFiles = videoDirectory.listFiles()
+        if (!pingError) {
+            if (adSettingList.size > 0) {
+                val bannerDirectory = File(dest_banner_folder)
+                val imageDirectory = File(dest_images_folder)
+                val videoDirectory = File(dest_videos_folder)
+                val bannerFiles = bannerDirectory.listFiles()
+                val imageFiles = imageDirectory.listFiles()
+                val videoFiles = videoDirectory.listFiles()
 
-            Log.d(mTag, "bannerFiles -> $bannerFiles")
-            Log.d(mTag, "imageFiles -> $imageFiles")
-            Log.d(mTag, "videoFiles -> $videoFiles")
+                Log.d(mTag, "bannerFiles -> $bannerFiles")
+                Log.d(mTag, "imageFiles -> $imageFiles")
+                Log.d(mTag, "videoFiles -> $videoFiles")
 
-            Thread {
-                //banner
-                if (bannerDirectory.isDirectory && bannerFiles != null) {
-                    for (i in bannerFiles.indices) {
-                        var match = false
-                        val srcPath = "$server_banner_folder/${URLEncoder.encode(bannerFiles[i].name, "UTF-8")}"
-                        val destPath = "$dest_banner_folder${bannerFiles[i].name}"
+                Thread {
+                    //banner
+                    if (bannerDirectory.isDirectory && bannerFiles != null) {
+                        for (i in bannerFiles.indices) {
+                            var match = false
+                            val srcPath = "$server_banner_folder/${URLEncoder.encode(bannerFiles[i].name, "UTF-8")}"
+                            val destPath = "$dest_banner_folder${bannerFiles[i].name}"
 
-                        Log.d(mTag, "srcPath = $srcPath")
-                        Log.d(mTag, "destPath = $destPath")
+                            Log.d(mTag, "srcPath = $srcPath")
+                            Log.d(mTag, "destPath = $destPath")
 
-                        var fileUrlLength = 0
+                            var fileUrlLength = 0
 
-                        try {
-                            val fileUrl = URL(srcPath)
-                            //fileUrlLength = fileUrl.openConnection().contentLength
-                            fileUrlLength = getFileSize(fileUrl)
-                            Log.e(mTag, "fileUrlLength = $fileUrlLength")
-                            val destFile = File(destPath)
-                            Log.e(mTag,"destFile = ${destFile.length()}")
-                            if (fileUrlLength.toLong() == destFile.length()) {
-                                Log.e(mTag, "match!")
-                                match = true
-                            }
-                        } catch (e: IOException) {
-                            Log.e(mTag, "e = $e")
-                        }
-
-                        if (!match && fileUrlLength > 0) { //file size not match, delete it!
-                            val deletePath = "$dest_banner_folder${bannerFiles[i].name}"
-                            val deleteFile = File(deletePath)
-                            val deleteUri  = Uri.fromFile(deleteFile)
-                            Log.d(mTag, "deleteUri = $deleteUri")
                             try {
-                                if (deleteFile.exists()) {
-                                    deleteFile.delete()
-                                    Log.d(mTag, "Delete $deletePath")
+                                val fileUrl = URL(srcPath)
+                                //fileUrlLength = fileUrl.openConnection().contentLength
+                                fileUrlLength = getFileSize(fileUrl)
+                                Log.e(mTag, "fileUrlLength = $fileUrlLength")
+                                val destFile = File(destPath)
+                                Log.e(mTag,"destFile = ${destFile.length()}")
+                                if (fileUrlLength.toLong() == destFile.length()) {
+                                    Log.e(mTag, "match!")
+                                    match = true
                                 }
 
-                            } catch (e: java.lang.Exception) {
-                                e.printStackTrace()
+                                if (!match && fileUrlLength > 0) { //file size not match, delete it!
+                                    val deletePath = "$dest_banner_folder${bannerFiles[i].name}"
+                                    val deleteFile = File(deletePath)
+                                    val deleteUri  = Uri.fromFile(deleteFile)
+                                    Log.d(mTag, "deleteUri = $deleteUri")
+                                    try {
+                                        if (deleteFile.exists()) {
+                                            deleteFile.delete()
+                                            Log.d(mTag, "Delete $deletePath")
+                                        }
+
+                                    } catch (e: java.lang.Exception) {
+                                        e.printStackTrace()
+                                    }
+                                }
+                            } catch (e: IOException) {
+                                Log.e(mTag, "e = $e")
                             }
                         }
                     }
-                }
 
+                    //images
+                    if (imageDirectory.isDirectory && imageFiles != null) {
 
-                //images
-                if (imageDirectory.isDirectory && imageFiles != null) {
+                        for (i in imageFiles.indices) {
+                            var match = false
+                            val srcPath = "$server_images_folder/${URLEncoder.encode(imageFiles[i].name, "UTF-8")}"
+                            val destPath = "$dest_images_folder${imageFiles[i].name}"
 
-                    for (i in imageFiles.indices) {
-                        var match = false
-                        val srcPath = "$server_images_folder/${URLEncoder.encode(imageFiles[i].name, "UTF-8")}"
-                        val destPath = "$dest_images_folder${imageFiles[i].name}"
+                            Log.d(mTag, "srcPath = $srcPath")
+                            Log.d(mTag, "destPath = $destPath")
 
-                        Log.d(mTag, "srcPath = $srcPath")
-                        Log.d(mTag, "destPath = $destPath")
+                            var fileUrlLength = 0
 
-                        var fileUrlLength = 0
-
-                        try {
-                            val fileUrl = URL(srcPath)
-                            //fileUrlLength = fileUrl.openConnection().contentLength
-
-                            fileUrlLength = getFileSize(fileUrl)
-                            Log.e(mTag, "fileUrlLength = $fileUrlLength")
-                            val destFile = File(destPath)
-                            Log.e(mTag,"destFile = ${destFile.length()}")
-
-                            if (fileUrlLength.toLong() == destFile.length()) {
-                                Log.e(mTag, "match!")
-                                match = true
-                            }
-                        } catch (e: IOException) {
-                            Log.e(mTag, "e = $e")
-                        }
-
-
-
-                        if (!match && fileUrlLength > 0) { //file size not match, delete it!
-                            val deletePath = "$dest_images_folder${imageFiles[i].name}"
-                            val deleteFile = File(deletePath)
-                            val deleteUri  = Uri.fromFile(deleteFile)
-                            Log.d(mTag, "deleteUri = $deleteUri")
                             try {
-                                if (deleteFile.exists()) {
-                                    deleteFile.delete()
-                                    //val cr = contentResolver
-                                    //cr.delete(deleteUri, null, null)
-                                    Log.d(mTag, "Delete $deletePath")
+                                val fileUrl = URL(srcPath)
+                                //fileUrlLength = fileUrl.openConnection().contentLength
+
+                                fileUrlLength = getFileSize(fileUrl)
+                                Log.e(mTag, "fileUrlLength = $fileUrlLength")
+                                val destFile = File(destPath)
+                                Log.e(mTag,"destFile = ${destFile.length()}")
+
+                                if (fileUrlLength.toLong() == destFile.length()) {
+                                    Log.e(mTag, "match!")
+                                    match = true
                                 }
 
-                            } catch (e: java.lang.Exception) {
-                                e.printStackTrace()
+                                if (!match && fileUrlLength > 0) { //file size not match, delete it!
+                                    val deletePath = "$dest_images_folder${imageFiles[i].name}"
+                                    val deleteFile = File(deletePath)
+                                    val deleteUri  = Uri.fromFile(deleteFile)
+                                    Log.d(mTag, "deleteUri = $deleteUri")
+                                    try {
+                                        if (deleteFile.exists()) {
+                                            deleteFile.delete()
+                                            //val cr = contentResolver
+                                            //cr.delete(deleteUri, null, null)
+                                            Log.d(mTag, "Delete $deletePath")
+                                        }
+
+                                    } catch (e: java.lang.Exception) {
+                                        e.printStackTrace()
+                                    }
+                                }
+                            } catch (e: IOException) {
+                                Log.e(mTag, "e = $e")
                             }
                         }
                     }
-                }
 
-                //videos
-                if (videoDirectory.isDirectory && videoFiles != null) {
+                    //videos
+                    if (videoDirectory.isDirectory && videoFiles != null) {
 
-                    for (i in videoFiles.indices) {
-                        var match = false
-                        val srcPath = "$server_videos_folder/${URLEncoder.encode(videoFiles[i].name, "UTF-8")}"
-                        val destPath = "$dest_videos_folder${videoFiles[i].name}"
+                        for (i in videoFiles.indices) {
+                            var match = false
+                            val srcPath = "$server_videos_folder/${URLEncoder.encode(videoFiles[i].name, "UTF-8")}"
+                            val destPath = "$dest_videos_folder${videoFiles[i].name}"
 
-                        Log.d(mTag, "srcPath = $srcPath")
-                        Log.d(mTag, "destPath = $destPath")
+                            Log.d(mTag, "srcPath = $srcPath")
+                            Log.d(mTag, "destPath = $destPath")
 
-                        var fileUrlLength = 0
+                            var fileUrlLength = 0
 
-                        try {
-                            val fileUrl = URL(srcPath)
-                            //fileUrlLength = fileUrl.openConnection().contentLength
-                            fileUrlLength = getFileSize(fileUrl)
-                            Log.e(mTag, "fileUrlLength = $fileUrlLength")
-                            val destFile = File(destPath)
-                            Log.e(mTag,"destFile = ${destFile.length()}")
-
-                            if (fileUrlLength.toLong() == destFile.length()) {
-                                Log.e(mTag, "match!")
-                                match = true
-                            }
-                        } catch (e: IOException) {
-                            Log.e(mTag, "e = $e")
-                        }
-
-                        if (!match && fileUrlLength > 0) { //file size not match, delete it!
-                            val deletePath = "$dest_videos_folder${videoFiles[i].name}"
-                            val deleteFile = File(deletePath)
-                            val deleteUri  = Uri.fromFile(deleteFile)
-                            Log.d(mTag, "deleteUri = $deleteUri")
                             try {
-                                if (deleteFile.exists()) {
-                                    deleteFile.delete()
-                                    //val cr = contentResolver
-                                    //cr.delete(deleteUri, null, null)
-                                    Log.d(mTag, "Delete $deletePath")
+                                val fileUrl = URL(srcPath)
+                                //fileUrlLength = fileUrl.openConnection().contentLength
+                                fileUrlLength = getFileSize(fileUrl)
+                                Log.e(mTag, "fileUrlLength = $fileUrlLength")
+                                val destFile = File(destPath)
+                                Log.e(mTag,"destFile = ${destFile.length()}")
+
+                                if (fileUrlLength.toLong() == destFile.length()) {
+                                    Log.e(mTag, "match!")
+                                    match = true
                                 }
 
-                            } catch (e: java.lang.Exception) {
-                                e.printStackTrace()
+                                if (!match && fileUrlLength > 0) { //file size not match, delete it!
+                                    val deletePath = "$dest_videos_folder${videoFiles[i].name}"
+                                    val deleteFile = File(deletePath)
+                                    val deleteUri  = Uri.fromFile(deleteFile)
+                                    Log.d(mTag, "deleteUri = $deleteUri")
+                                    try {
+                                        if (deleteFile.exists()) {
+                                            deleteFile.delete()
+                                            //val cr = contentResolver
+                                            //cr.delete(deleteUri, null, null)
+                                            Log.d(mTag, "Delete $deletePath")
+                                        }
+
+                                    } catch (e: java.lang.Exception) {
+                                        e.printStackTrace()
+                                    }
+                                }
+                            } catch (e: IOException) {
+                                Log.e(mTag, "e = $e")
                             }
                         }
                     }
-                }
 
-                val completeIntent = Intent()
-                completeIntent.action =
-                    Constants.ACTION.ACTION_CHECK_FILES_INCOMPLETE_COMPLETE
-                this@MainActivity.sendBroadcast(completeIntent)
-            }.start()
+                    val completeIntent = Intent()
+                    completeIntent.action =
+                        Constants.ACTION.ACTION_CHECK_FILES_INCOMPLETE_COMPLETE
+                    this@MainActivity.sendBroadcast(completeIntent)
+                }.start()
 
+            } else {
+                Log.e(mTag , "adSettingList.size == 0")
+            }
         } else {
-            Log.e(mTag , "adSettingList.size == 0")
+            Log.e(mTag, "pingError = $pingError, wont check files")
         }
+
+
         Log.d(mTag, "=== checkUrlAndLocalFiles end ===")
     }
 
@@ -6668,6 +6586,75 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun getPlanUse(currentTimestamp: Long) {
+
+        val longArray : ArrayList<Long> = ArrayList()
+
+        //must have set the plan
+        if (layoutList[0].plan_id > 0) {
+            longArray.add(planStartTime)
+        }
+        if (layoutList[0].plan2_id > 0 && plan2StartTimeString != "--:--") {
+            longArray.add(plan2StartTime)
+        }
+        if (layoutList[0].plan3_id > 0 && plan3StartTimeString != "--:--") {
+            longArray.add(plan3StartTime)
+        }
+        if (layoutList[0].plan4_id > 0 && plan4StartTimeString != "--:--") {
+            longArray.add(plan4StartTime)
+        }
+
+        Log.e(mTag,"longArray before = $longArray")
+
+        if (longArray.size > 1) {
+            Collections.sort(longArray)
+        }
+
+        Log.e(mTag,"longArray after = $longArray")
+
+        var idx = -1
+        for (i in longArray.indices) {
+            if (currentTimestamp >= longArray[i]) {
+                //currentPlanId = layoutList[0].plan_id
+                //currentPlanUse = 1
+                idx = i
+            } else {
+                break
+            }
+        }
+
+        if (idx == -1) { //use the last one
+            idx = longArray.size - 1
+        }
+
+        if (idx >= 0) {
+            when(longArray[idx]) {
+                planStartTime -> {
+                    currentPlanId = layoutList[0].plan_id
+                    currentPlanUse = 1
+                    Log.d(mTag, "plan1, id = ${layoutList[0].plan_id}")
+                }
+                plan2StartTime -> {
+                    currentPlanId = layoutList[0].plan2_id
+                    currentPlanUse = 2
+                    Log.d(mTag, "plan2, id = ${layoutList[0].plan2_id}")
+                }
+                plan3StartTime -> {
+                    currentPlanId = layoutList[0].plan3_id
+                    currentPlanUse = 3
+                    Log.d(mTag, "plan3, id = ${layoutList[0].plan3_id}")
+                }
+                plan4StartTime -> {
+                    currentPlanId = layoutList[0].plan4_id
+                    currentPlanUse = 4
+                    Log.d(mTag, "plan4, id = ${layoutList[0].plan4_id}")
+                }
+            }
+        }
+
+
+    }
+
     private fun checkAndRequestPermissions() {
         var readPermission: Int = -1
         var writePermission: Int = -1
@@ -7254,72 +7241,33 @@ class MainActivity : AppCompatActivity() {
         return ret
     }
 
-    private fun getPlanUse(currentTimestamp: Long) {
-
-        val longArray : ArrayList<Long> = ArrayList()
-
-        //must have set the plan
-        if (layoutList[0].plan_id > 0) {
-            longArray.add(planStartTime)
-        }
-        if (layoutList[0].plan2_id > 0 && plan2StartTimeString != "--:--") {
-            longArray.add(plan2StartTime)
-        }
-        if (layoutList[0].plan3_id > 0 && plan3StartTimeString != "--:--") {
-            longArray.add(plan3StartTime)
-        }
-        if (layoutList[0].plan4_id > 0 && plan4StartTimeString != "--:--") {
-            longArray.add(plan4StartTime)
-        }
-
-        Log.e(mTag,"longArray before = $longArray")
-
-        if (longArray.size > 1) {
-            Collections.sort(longArray)
-        }
-
-        Log.e(mTag,"longArray after = $longArray")
-
-        var idx = -1
-        for (i in longArray.indices) {
-            if (currentTimestamp >= longArray[i]) {
-                //currentPlanId = layoutList[0].plan_id
-                //currentPlanUse = 1
-                idx = i
-            } else {
-                break
-            }
-        }
-
-        if (idx == -1) { //use the last one
-            idx = longArray.size - 1
-        }
-
-        if (idx >= 0) {
-            when(longArray[idx]) {
-                planStartTime -> {
-                    currentPlanId = layoutList[0].plan_id
-                    currentPlanUse = 1
-                    Log.d(mTag, "plan1, id = ${layoutList[0].plan_id}")
-                }
-                plan2StartTime -> {
-                    currentPlanId = layoutList[0].plan2_id
-                    currentPlanUse = 2
-                    Log.d(mTag, "plan2, id = ${layoutList[0].plan2_id}")
-                }
-                plan3StartTime -> {
-                    currentPlanId = layoutList[0].plan3_id
-                    currentPlanUse = 3
-                    Log.d(mTag, "plan3, id = ${layoutList[0].plan3_id}")
-                }
-                plan4StartTime -> {
-                    currentPlanId = layoutList[0].plan4_id
-                    currentPlanUse = 4
-                    Log.d(mTag, "plan4, id = ${layoutList[0].plan4_id}")
+    private fun getIPAddress(useIPv4 : Boolean): String {
+        try {
+            val interfaces = Collections.list(NetworkInterface.getNetworkInterfaces())
+            for (intf in interfaces) {
+                val addrs = Collections.list(intf.inetAddresses);
+                for (addr in addrs) {
+                    if (!addr.isLoopbackAddress) {
+                        val sAddr = addr.hostAddress;
+                        val isIPv4: Boolean = sAddr.indexOf(':')<0
+                        if (useIPv4) {
+                            if (isIPv4)
+                                return sAddr;
+                        } else {
+                            if (!isIPv4) {
+                                val delim = sAddr.indexOf('%') // drop ip6 zone suffix
+                                if (delim < 0) {
+                                    return sAddr.toUpperCase()
+                                }
+                                else {
+                                    return sAddr.substring(0, delim).toUpperCase()
+                                }
+                            }
+                        }
+                    }
                 }
             }
-        }
-
-
+        } catch (e: java.lang.Exception) { }
+        return ""
     }
 }
