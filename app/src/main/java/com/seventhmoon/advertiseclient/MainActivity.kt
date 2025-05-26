@@ -238,7 +238,7 @@ class MainActivity : AppCompatActivity() {
     )
 
     private val httpPrefix = "http://"
-    private val internalDefaultAddress = "192.168.1.253"
+    private val internalDefaultAddress = "192.168.0.253"
     private val testDefaultAddress = "35.194.240.47"
     private val benzKtvAddress = "34.66.27.68"
     private val kHouseDefaultAddress = "35.202.218.122"
@@ -347,6 +347,8 @@ class MainActivity : AppCompatActivity() {
 
     private val defaultBackGroundColor = "#000000"
     private var pingError = false
+
+    var operationTime: Int = 0
 
     @SuppressLint("HardwareIds")
     @RequiresApi(Build.VERSION_CODES.R)
@@ -2522,6 +2524,7 @@ class MainActivity : AppCompatActivity() {
         try {
             jsonObject.put("deviceID", deviceID)
             jsonObject.put("deviceName", deviceName)
+            jsonObject.put("operationTime", operationTime)
             if (currentOrientation == 1) {
                 jsonObject.put("screenWidth", screenWidth)
                 jsonObject.put("screenHeight", screenHeight)
@@ -2551,13 +2554,34 @@ class MainActivity : AppCompatActivity() {
             countDownTimerPingWeb = object : CountDownTimer(pingWebInterval, pingWebInterval) {
                 override fun onTick(millisUntilFinished: Long) {
                     Log.d(mTag, "$pingWebInterval ms passed...")
+
                 }
 
                 override fun onFinish() { //结束后的操作
+                    operationTime = operationTime + 60
+
+                    val jsonFObject = JSONObject()
+                    try {
+                        jsonFObject.put("deviceID", deviceID)
+                        jsonFObject.put("deviceName", deviceName)
+                        jsonFObject.put("operationTime", operationTime)
+                        if (currentOrientation == 1) {
+                            jsonFObject.put("screenWidth", screenWidth)
+                            jsonFObject.put("screenHeight", screenHeight)
+                        } else if (currentOrientation == 2) {
+                            jsonFObject.put("screenWidth", screenHeight)
+                            jsonFObject.put("screenHeight", screenWidth)
+                        }
+                        jsonFObject.put("orientation", currentOrientation)
+                        jsonFObject.put("androidVersion", Build.VERSION.RELEASE)
+                    } catch (e: JSONException) {
+                        e.printStackTrace()
+                    }
+
                     countDownTimerPingWebRunning = false
                     pingCount += 1
                     Log.d(mTag, "pingCount = $pingCount, pingWebInterval = $pingWebInterval")
-                    ApiFunc().getServerPingResponse(jsonObject, getPingCallback)
+                    ApiFunc().getServerPingResponse(jsonFObject, getPingCallback)
                     this.start()
                     countDownTimerPingWebRunning = true
 
@@ -2745,6 +2769,10 @@ class MainActivity : AppCompatActivity() {
                         val successIntent = Intent()
                         successIntent.action = Constants.ACTION.ACTION_PING_WEB_SUCCESS
                         this@MainActivity.sendBroadcast(successIntent)
+                    } else if (json["result"] == 2) {
+                        Log.d(mTag, "->reboot")
+
+                        rebootDevice()
                     } else if (json["result"] == -1) {
                         Log.d(mTag, "->no deviceID")
                     }
@@ -3684,8 +3712,12 @@ class MainActivity : AppCompatActivity() {
 
                             try {
                                 val fileUrl = URL(srcPath)
-                                //fileUrlLength = fileUrl.openConnection().contentLength
-                                fileUrlLength = getFileSize(fileUrl)
+
+                                val urlConnection: URLConnection = fileUrl.openConnection()
+                                urlConnection.setRequestProperty("Accept-Encoding", "identity");
+                                urlConnection.connect()
+                                //fileUrlLength = getFileSize(fileUrl)
+                                fileUrlLength = urlConnection.getContentLength()
                                 Log.e(mTag, "fileUrlLength = $fileUrlLength")
                                 val destFile = File(destPath)
                                 Log.e(mTag,"destFile = ${destFile.length()}")
@@ -5682,6 +5714,7 @@ class MainActivity : AppCompatActivity() {
                         videoViewBottom!!.setMediaController(mediaControllerBottom)
 
                         videoViewBottom!!.setOnTouchListener(OnTouchListener { v, event -> // do nothing here......
+
                             true
                         })
 
@@ -6563,6 +6596,7 @@ class MainActivity : AppCompatActivity() {
 
                         //bottom
                         if (layoutBottom == 5) {
+                            Log.e(mTag, "mixBottomRunning = $mixBottomRunning")
                             if (!mixBottomRunning) {
                                 mixBottomRunning = true
                                 val mixPlayIntent = Intent()
@@ -7213,8 +7247,9 @@ class MainActivity : AppCompatActivity() {
         // android 5.1.1,
         Log.e(mTag, "== rebootDevice ==")
         try {
-            Runtime.getRuntime().exec(arrayOf("/system/bin/su", "-c", "reboot now"))
-
+            //Runtime.getRuntime().exec(arrayOf("/system/bin/su", "-c", "reboot now"))
+            val process = Runtime.getRuntime().exec(arrayOf("reboot"))
+            process.waitFor()
         } catch (e: IOException) {
             Log.e(mTag, "first: $e")
             try {
