@@ -241,8 +241,9 @@ class MainActivity : AppCompatActivity() {
     private val internalDefaultAddress = "192.168.0.253"
     private val testDefaultAddress = "35.194.240.47"
     private val benzKtvAddress = "34.66.27.68"
+    private val benzKtvTlAddress = "34.16.39.39"
     private val kHouseDefaultAddress = "35.202.218.122"
-    private val defaultIpAddress = kHouseDefaultAddress
+    private val defaultIpAddress = benzKtvTlAddress
 
     private val handler = object : Handler(Looper.getMainLooper()) {
 
@@ -425,12 +426,10 @@ class MainActivity : AppCompatActivity() {
             if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.M)
             {
                 windowManager.defaultDisplay.getMetrics(displayMetrics)
-
                 screenHeight = displayMetrics.heightPixels
                 screenWidth = displayMetrics.widthPixels
             } else if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M && Build.VERSION.SDK_INT <= Build.VERSION_CODES.Q) {
                 this@MainActivity.display!!.getRealMetrics(displayMetrics)
-
                 screenHeight = displayMetrics.heightPixels
                 screenWidth = displayMetrics.widthPixels
             } else { //Android 11
@@ -442,8 +441,6 @@ class MainActivity : AppCompatActivity() {
             screenWidth = saveScreenWidth.toInt()
             screenHeight = saveScreenHeight.toInt()
         }
-
-
 
         currentOrientation = this.resources.configuration.orientation
         Log.d(mTag, "currentOrientation = $currentOrientation")
@@ -471,7 +468,7 @@ class MainActivity : AppCompatActivity() {
         defaultLayoutPlayList = defaultPlayLayoutDataDB!!.defaultPlayLayoutDataDao().getAll() as ArrayList<DefaultPlayLayoutData>
         Log.d(mTag, "defaultLayoutPlayList = ${defaultLayoutPlayList!!.size}")
 
-        if (defaultLayoutPlayList!!.size > 0) {
+        if (defaultLayoutPlayList!!.isNotEmpty()) {
             layoutList.clear()
             val receiveLayout = RecvLayout()
             receiveLayout.layout_id = defaultLayoutPlayList!![0].getLayout_id()
@@ -547,7 +544,7 @@ class MainActivity : AppCompatActivity() {
         defaultAdSettingPlayList = defaultPlayAdSettingDataDB!!.defaultPlayAdSettingDataDao().getAll() as ArrayList<DefaultPlayAdSettingData>
         Log.d(mTag, "defaultAdSettingPlayList = ${defaultAdSettingPlayList!!.size}")
 
-        if (defaultAdSettingPlayList!!.size > 0) {
+        if (defaultAdSettingPlayList!!.isNotEmpty()) {
             adSettingList.clear()
             for (i in defaultAdSettingPlayList!!.indices) {
                 val adSetting = RecvAdSetting()
@@ -590,7 +587,7 @@ class MainActivity : AppCompatActivity() {
         defaultMarqueePlayList = defaultPlayMarqueeDataDB!!.defaultPlayMarqueeDataDao().getAll() as ArrayList<DefaultPlayMarqueeData>
         Log.d(mTag, "defaultMarqueePlayList = ${defaultMarqueePlayList!!.size}")
 
-        if (defaultMarqueePlayList!!.size > 0) {
+        if (defaultMarqueePlayList!!.isNotEmpty()) {
             playMarqueeList.clear()
             marqueeList.clear()
 
@@ -612,7 +609,7 @@ class MainActivity : AppCompatActivity() {
         defaultBannerPlayList = defaultPlayBannerDataDB!!.defaultPlayBannerDataDao().getAll() as ArrayList<DefaultPlayBannerData>
         Log.d(mTag, "defaultBannerPlayList = ${defaultBannerPlayList!!.size}")
 
-        if (defaultBannerPlayList!!.size > 0) {
+        if (defaultBannerPlayList!!.isNotEmpty()) {
             bannerList.clear()
             downloadBannerReadyArray.clear()
             for (i in defaultBannerPlayList!!.indices) {
@@ -638,7 +635,7 @@ class MainActivity : AppCompatActivity() {
         defaultImagesPlayList = defaultPlayImagesDataDB!!.defaultPlayImagesDataDao().getAll() as ArrayList<DefaultPlayImagesData>
         Log.d(mTag, "defaultImagesPlayList = ${defaultImagesPlayList!!.size}")
 
-        if (defaultImagesPlayList!!.size > 0) {
+        if (defaultImagesPlayList!!.isNotEmpty()) {
             imageList.clear()
             downloadImageReadyArray.clear()
             for (i in defaultImagesPlayList!!.indices) {
@@ -664,7 +661,7 @@ class MainActivity : AppCompatActivity() {
         defaultVideosPlayList = defaultPlayVideosDataDB!!.defaultPlayVideosDataDao().getAll() as ArrayList<DefaultPlayVideosData>
         Log.d(mTag, "defaultVideosPlayList = ${defaultVideosPlayList!!.size}")
 
-        if (defaultVideosPlayList!!.size > 0) {
+        if (defaultVideosPlayList!!.isNotEmpty()) {
             videoList.clear()
             downloadVideoReadyArray.clear()
             for (i in defaultVideosPlayList!!.indices) {
@@ -692,7 +689,7 @@ class MainActivity : AppCompatActivity() {
         defaultMixPlayList = defaultPlayMixDataDB!!.defaultPlayMixDataDao().getAll() as ArrayList<DefaultPlayMixData>
         Log.d(mTag, "defaultMixPlayList = ${defaultMixPlayList!!.size}")
 
-        if (defaultMixPlayList!!.size > 0) {
+        if (defaultMixPlayList!!.isNotEmpty()) {
             mixList.clear()
             downloadMixReadyArray.clear()
             for (i in defaultMixPlayList!!.indices) {
@@ -722,7 +719,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         //get current plan id, index
-        if (layoutList.size > 0) {
+        if (layoutList.isNotEmpty()) {
             planStartTime = getTimeStampFromString(layoutList[0].plan_start_time)
             plan2StartTime = getTimeStampFromString(layoutList[0].plan2_start_time)
             plan3StartTime = getTimeStampFromString(layoutList[0].plan3_start_time)
@@ -854,32 +851,33 @@ class MainActivity : AppCompatActivity() {
         }
 
 
-        if (layoutList.size == 1 && adSettingList.size >= 1 &&
-            (playMarqueeList.size > 0 ||
-                    bannerList.size > 0 ||
-                    imageList.size > 0 ||
-                    videoList.size > 0 ) ||
-                    mixList.size > 0) {
+        if (layoutList.size == 1 && adSettingList.isNotEmpty() &&
+            (playMarqueeList.isNotEmpty() ||
+                    bannerList.isNotEmpty() ||
+                    imageList.isNotEmpty() ||
+                    videoList.isNotEmpty()) ||
+            mixList.isNotEmpty()
+        ) {
 
             //because marquee download is unnecessary, start with image
             //downloadImageComplete = 0
             clearAllNotInAllList()
-            if (bannerList.size > 0) {
+            if (bannerList.isNotEmpty()) {
                 checkBannerExists()
                 //clearBannersNotInBannerList()
             }
 
-            if (imageList.size > 0) {
+            if (imageList.isNotEmpty()) {
                 checkImagesExists()
                 //clearImagesNotInImageList()
             }
 
-            if (videoList.size > 0) {
+            if (videoList.isNotEmpty()) {
                 checkVideosExists()
                 //clearVideosNotInVideoList()
             }
 
-            if (mixList.size > 0) {
+            if (mixList.isNotEmpty()) {
                 checkMixExists()
                 //clearMixNotInMixList()
             }
@@ -976,7 +974,7 @@ class MainActivity : AppCompatActivity() {
 
                         textViewShowInitSuccess!!.text = getString(R.string.get_ad_setting_failed_retry)
                         textViewShowState!!.text = "ACTION_GET_AD_SETTING_FAILED"
-                        if (layoutList.size > 0) {
+                        if (layoutList.isNotEmpty()) {
                             getAdSetting(
                                 layoutList[0].plan_id,
                                 layoutList[0].plan2_id,
@@ -989,7 +987,7 @@ class MainActivity : AppCompatActivity() {
                         Log.d(mTag, "ACTION_GET_AD_SETTING_SUCCESS")
                         textViewShowInitSuccess!!.text = getString(R.string.get_layout_success)
                         textViewShowState!!.text = "ACTION_GET_AD_SETTING_SUCCESS"
-                        if (adSettingList.size > 0) {
+                        if (adSettingList.isNotEmpty()) {
 
                             val getMarqueeIntent = Intent()
                             getMarqueeIntent.action = Constants.ACTION.ACTION_GET_MARQUEE_START
@@ -1037,7 +1035,7 @@ class MainActivity : AppCompatActivity() {
                         defaultMarqueePlayList!!.clear()
                         defaultPlayMarqueeDataDB!!.defaultPlayMarqueeDataDao().clearTable()
                         //add all marquee
-                        if (marqueeList.size > 0) {
+                        if (marqueeList.isNotEmpty()) {
                             for (i in marqueeList.indices) {
                                 val defaultPlayMarqueeData = DefaultPlayMarqueeData(
                                     marqueeList[i].marqueeId, marqueeList[i].name, marqueeList[i].content)
@@ -1048,7 +1046,7 @@ class MainActivity : AppCompatActivity() {
                         }
 
                         //then find match marquee
-                        if (adSettingList.size > 0) {
+                        if (adSettingList.isNotEmpty()) {
                             //var playIdx = -1
                             for (i in adSettingList.indices) {
                                 if (currentPlanId == adSettingList[i].plan_id) {
@@ -1167,7 +1165,7 @@ class MainActivity : AppCompatActivity() {
                         Log.d(mTag, "ACTION_GET_BANNER_COMPLETE")
                         textViewShowInitSuccess!!.text = getString(R.string.get_banner_complete)
                         textViewShowState!!.text = "ACTION_GET_BANNER_COMPLETE"
-                        if (bannerList.size > 0) {
+                        if (bannerList.isNotEmpty()) {
                             //clear before add
                             defaultPlayBannerDataDB!!.defaultPlayBannerDataDao().clearTable()
                             for (i in bannerList.indices) {
@@ -1254,7 +1252,7 @@ class MainActivity : AppCompatActivity() {
                         Log.d(mTag, "ACTION_GET_IMAGES_COMPLETE")
                         textViewShowInitSuccess!!.text = getString(R.string.get_image_complete)
                         textViewShowState!!.text = "ACTION_GET_IMAGES_COMPLETE"
-                        if (imageList.size > 0) {
+                        if (imageList.isNotEmpty()) {
                             //clear before add
                             defaultPlayImagesDataDB!!.defaultPlayImagesDataDao().clearTable()
                             for (i in imageList.indices) {
@@ -1356,7 +1354,7 @@ class MainActivity : AppCompatActivity() {
                         textViewShowInitSuccess!!.text = getString(R.string.get_video_complete)
                         textViewShowState!!.text = "ACTION_GET_VIDEOS_COMPLETE"
                         if (downloadVideoComplete == videoList.size) {
-                            if (videoList.size > 0) {
+                            if (videoList.isNotEmpty()) {
 
                                 //clear before add
                                 defaultPlayVideosDataDB!!.defaultPlayVideosDataDao().clearTable()
@@ -1452,7 +1450,7 @@ class MainActivity : AppCompatActivity() {
                         textViewShowState!!.text = "ACTION_GET_MIX_COMPLETE"
                         if (downloadMixComplete == mixList.size) {
                             //textViewShowInitSuccess!!.text = "1..."
-                            if (mixList.size > 0) {
+                            if (mixList.isNotEmpty()) {
 
                                 //clear before add
                                 defaultPlayMixDataDB!!.defaultPlayMixDataDao().clearTable()
@@ -1469,12 +1467,12 @@ class MainActivity : AppCompatActivity() {
                             val currentTimestamp = getCurrentTimeStamp()
                             Log.d(mTag, "currentTimestamp = $currentTimestamp")
                             //textViewShowInitSuccess!!.text = "3..."
-                            if (layoutList.size > 0) {
+                            if (layoutList.isNotEmpty()) {
                                 getPlanUse(currentTimestamp)
 
                                 //get current plan idx
                                 if (currentPlanId > 0) {
-                                    if (adSettingList.size > 0) {
+                                    if (adSettingList.isNotEmpty()) {
                                         //get current plan idx
                                         for (i in adSettingList.indices) {
                                             if (currentPlanId == adSettingList[i].plan_id) {
@@ -1508,12 +1506,12 @@ class MainActivity : AppCompatActivity() {
                         val currentTimestamp = getCurrentTimeStamp()
                         Log.d(mTag, "currentTimestamp = $currentTimestamp")
 
-                        if (layoutList.size > 0) {
+                        if (layoutList.isNotEmpty()) {
                             getPlanUse(currentTimestamp)
 
                             //get current plan idx
                             if (currentPlanId > 0) {
-                                if (adSettingList.size > 0) {
+                                if (adSettingList.isNotEmpty()) {
                                     //get current plan idx
                                     for (i in adSettingList.indices) {
                                         if (currentPlanId == adSettingList[i].plan_id) {
@@ -1561,7 +1559,7 @@ class MainActivity : AppCompatActivity() {
                         Log.e(mTag, "mixList.size = ${mixList.size}")
 
                         if (layoutTop == 5) { //mix only
-                            if (mixList.size > 0 && checkDownloadMixAll()) { //at least one image or video can play
+                            if (mixList.isNotEmpty() && checkDownloadMixAll()) { //at least one image or video can play
 
                                 if (mixMode == 1) { //random
                                     var nextTop: Int
@@ -1605,7 +1603,7 @@ class MainActivity : AppCompatActivity() {
                         Log.d(mTag, "ACTION_MIX_TOP_PLAY_FINISH")
 
                         if (layoutTop == 5) { //mix only
-                            if (mixList.size > 0 && checkDownloadMixAll()) { //at least one image or video can play
+                            if (mixList.isNotEmpty() && checkDownloadMixAll()) { //at least one image or video can play
                                 Log.e(mTag, "mixList.size > 0")
                                 if (mixMode == 1) { //random
                                     var nextTop: Int
@@ -1700,7 +1698,7 @@ class MainActivity : AppCompatActivity() {
                                 }
                                 override fun onFinish() { //结束的操作
                                     Log.d(mTag, "countDownTimerImage finish")
-                                    if (mixList.size > 0 && checkDownloadMixAll()) {
+                                    if (mixList.isNotEmpty() && checkDownloadMixAll()) {
                                         countDownTimerMixImageTopRunning = false
 
                                         val mixPlayFinishIntent = Intent()
@@ -1720,7 +1718,7 @@ class MainActivity : AppCompatActivity() {
                         Log.e(mTag, "mixList.size = ${mixList.size}")
 
                         if (layoutCenter == 5) { //mix only
-                            if (mixList.size > 0 && checkDownloadMixAll()) { //at least one image or video can play
+                            if (mixList.isNotEmpty() && checkDownloadMixAll()) { //at least one image or video can play
 
                                 if (mixMode == 1) { //random
                                     var nextCenter: Int
@@ -1764,7 +1762,7 @@ class MainActivity : AppCompatActivity() {
                         Log.d(mTag, "ACTION_MIX_CENTER_PLAY_FINISH")
 
                         if (layoutCenter == 5) { //mix only
-                            if (mixList.size > 0 && checkDownloadMixAll()) { //at least one image or video can play
+                            if (mixList.isNotEmpty() && checkDownloadMixAll()) { //at least one image or video can play
                                 Log.e(mTag, "mixList.size > 0")
                                 if (mixMode == 1) { //random
                                     var nextCenter: Int
@@ -1859,7 +1857,7 @@ class MainActivity : AppCompatActivity() {
                                 }
                                 override fun onFinish() { //结束的操作
                                     Log.d(mTag, "countDownTimerImageCenter finish")
-                                    if (mixList.size > 0 && checkDownloadMixAll()) {
+                                    if (mixList.isNotEmpty() && checkDownloadMixAll()) {
                                         countDownTimerMixImageCenterRunning = false
 
                                         val mixPlayFinishIntent = Intent()
@@ -1880,7 +1878,7 @@ class MainActivity : AppCompatActivity() {
                         Log.e(mTag, "mixList.size = ${mixList.size}")
 
                         if (layoutBottom == 5) { //mix only
-                            if (mixList.size > 0 && checkDownloadMixAll()) { //at least one image or video can play
+                            if (mixList.isNotEmpty() && checkDownloadMixAll()) { //at least one image or video can play
 
                                 if (mixMode == 1) { //random
                                     var nextBottom: Int
@@ -1924,7 +1922,7 @@ class MainActivity : AppCompatActivity() {
                         Log.d(mTag, "ACTION_MIX_BOTTOM_PLAY_FINISH")
                         //messageViewBottom!!.text = "ACTION_MIX_BOTTOM_PLAY_FINISH"
                         if (layoutBottom == 5) { //mix only
-                            if (mixList.size > 0 && checkDownloadMixAll()) { //at least one image or video can play
+                            if (mixList.isNotEmpty() && checkDownloadMixAll()) { //at least one image or video can play
                                 Log.e(mTag, "mixList.size > 0")
                                 if (mixMode == 1) { //random
                                     var nextBottom: Int
@@ -2019,7 +2017,7 @@ class MainActivity : AppCompatActivity() {
                                 }
                                 override fun onFinish() { //结束的操作
                                     Log.d(mTag, "countDownTimerImageBottom finish")
-                                    if (mixList.size > 0 && checkDownloadMixAll()) {
+                                    if (mixList.isNotEmpty() && checkDownloadMixAll()) {
                                         countDownTimerMixImageBottomRunning = false
 
                                         val mixPlayFinishIntent = Intent()
@@ -2039,7 +2037,7 @@ class MainActivity : AppCompatActivity() {
                         var filePath = ""
 
                         if (layoutTop == 3) { //video
-                            if (videoList.size > 0 && checkDownloadVideosAll()) {
+                            if (videoList.isNotEmpty() && checkDownloadVideosAll()) {
                                 sizeAndCheckDownload = true
                                 filePath = "$dest_videos_folder${videoList[currentVideoIndexTop]}"
                             }
@@ -2051,7 +2049,7 @@ class MainActivity : AppCompatActivity() {
                             videoViewTop!!.visibility = View.VISIBLE
                             videoViewLayoutTop!!.visibility = View.VISIBLE
 
-                            if (mixList.size > 0 && checkDownloadMixAll()) { //at least one video can play
+                            if (mixList.isNotEmpty() && checkDownloadMixAll()) { //at least one video can play
                                 sizeAndCheckDownload = true
                                 filePath = "$dest_videos_folder${mixList[currentMixIndexTop]}"
                             }
@@ -2077,7 +2075,7 @@ class MainActivity : AppCompatActivity() {
                         Log.d(mTag, "ACTION_TOP_VIDEO_PLAY_FINISH")
 
                         if (layoutTop == 3) { //video
-                            if (videoList.size > 0 && checkDownloadVideosAll()) {
+                            if (videoList.isNotEmpty() && checkDownloadVideosAll()) {
                                 //videoRunningBottom = false
                                 if (videosMode == 1) { //random
                                     var nextTop: Int
@@ -2117,7 +2115,7 @@ class MainActivity : AppCompatActivity() {
                         var filePath = ""
 
                         if (layoutCenter == 3) { //video
-                            if (videoList.size > 0 && checkDownloadVideosAll()) {
+                            if (videoList.isNotEmpty() && checkDownloadVideosAll()) {
                                 sizeAndCheckDownload = true
                                 filePath = "$dest_videos_folder${videoList[currentVideoIndexCenter]}"
                             }
@@ -2129,7 +2127,7 @@ class MainActivity : AppCompatActivity() {
                             videoViewCenter!!.visibility = View.VISIBLE
                             videoViewLayoutCenter!!.visibility = View.VISIBLE
 
-                            if (mixList.size > 0 && checkDownloadMixAll()) { //at least one video can play
+                            if (mixList.isNotEmpty() && checkDownloadMixAll()) { //at least one video can play
                                 sizeAndCheckDownload = true
                                 filePath = "$dest_videos_folder${mixList[currentMixIndexCenter]}"
                             }
@@ -2155,7 +2153,7 @@ class MainActivity : AppCompatActivity() {
                         Log.d(mTag, "ACTION_CENTER_VIDEO_PLAY_FINISH")
 
                         if (layoutCenter == 3) { //video
-                            if (videoList.size > 0 && checkDownloadVideosAll()) {
+                            if (videoList.isNotEmpty() && checkDownloadVideosAll()) {
                                 //videoRunningBottom = false
                                 if (videosMode == 1) { //random
                                     var nextCenter: Int
@@ -2195,7 +2193,7 @@ class MainActivity : AppCompatActivity() {
                         var filePath = ""
 
                         if (layoutBottom == 3) { //video
-                            if (videoList.size > 0 && checkDownloadVideosAll()) {
+                            if (videoList.isNotEmpty() && checkDownloadVideosAll()) {
                                 sizeAndCheckDownload = true
                                 filePath = "$dest_videos_folder${videoList[currentVideoIndexBottom]}"
                             }
@@ -2207,7 +2205,7 @@ class MainActivity : AppCompatActivity() {
                             videoViewBottom!!.visibility = View.VISIBLE
                             videoViewLayoutBottom!!.visibility = View.VISIBLE
 
-                            if (mixList.size > 0 && checkDownloadMixAll()) { //at least one video can play
+                            if (mixList.isNotEmpty() && checkDownloadMixAll()) { //at least one video can play
                                 sizeAndCheckDownload = true
                                 filePath = "$dest_videos_folder${mixList[currentMixIndexBottom]}"
                             }
@@ -2234,7 +2232,7 @@ class MainActivity : AppCompatActivity() {
                         Log.d(mTag, "ACTION_BOTTOM_VIDEO_PLAY_FINISH")
                         //messageViewBottom!!.text = "ACTION_BOTTOM_VIDEO_PLAY_FINISH"
                         if (layoutBottom == 3) { //video
-                            if (videoList.size > 0 && checkDownloadVideosAll()) {
+                            if (videoList.isNotEmpty() && checkDownloadVideosAll()) {
                                 //videoRunningBottom = false
                                 if (videosMode == 1) { //random
                                     var nextBottom: Int
@@ -2270,7 +2268,7 @@ class MainActivity : AppCompatActivity() {
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_CURRENT_PLAY_CONTENT_START, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_CURRENT_PLAY_CONTENT_START")
 
-                        if (adSettingList.size > 0) {
+                        if (adSettingList.isNotEmpty()) {
                             //var playIdx = -1
                             for (i in adSettingList.indices) {
                                 if (currentPlanId == adSettingList[i].plan_id) {
@@ -2605,10 +2603,10 @@ class MainActivity : AppCompatActivity() {
                 try {
                     Log.e(mTag, "getPingCallback failed -> check plan change")
 
-                    if (adSettingList.size > 0) {
+                    if (adSettingList.isNotEmpty()) {
                         val currentTimestamp = getCurrentTimeStamp()
                         Log.d(mTag, "currentTimestamp = $currentTimestamp")
-                        if (layoutList.size > 0) {
+                        if (layoutList.isNotEmpty()) {
                             planStartTime = getTimeStampFromString(layoutList[0].plan_start_time)
                             plan2StartTime = getTimeStampFromString(layoutList[0].plan2_start_time)
                             plan3StartTime = getTimeStampFromString(layoutList[0].plan3_start_time)
@@ -2622,7 +2620,7 @@ class MainActivity : AppCompatActivity() {
 
 
 
-                        if (layoutList.size > 0) {
+                        if (layoutList.isNotEmpty()) {
                             Log.e(mTag, "2->")
                             getPlanUse(currentTimestamp)
 
@@ -2630,7 +2628,7 @@ class MainActivity : AppCompatActivity() {
 
                             //get current plan idx
                             if (currentPlanId > 0) {
-                                if (adSettingList.size > 0) {
+                                if (adSettingList.isNotEmpty()) {
                                     //get current plan idx
                                     for (i in adSettingList.indices) {
                                         if (currentPlanId == adSettingList[i].plan_id) {
@@ -2665,6 +2663,7 @@ class MainActivity : AppCompatActivity() {
                     }
                 } catch (ex: Exception) {
                     Log.e(mTag, "check plan change error")
+                    ex.printStackTrace()
                 }
             }
         }
@@ -2680,7 +2679,7 @@ class MainActivity : AppCompatActivity() {
                     Log.d(mTag, "getPingCallback json = $json")
                     val currentTimestamp = getCurrentTimeStamp()
                     Log.d(mTag, "currentTimestamp = $currentTimestamp")
-                    if (layoutList.size > 0) {
+                    if (layoutList.isNotEmpty()) {
                         planStartTime = getTimeStampFromString(layoutList[0].plan_start_time)
                         plan2StartTime = getTimeStampFromString(layoutList[0].plan2_start_time)
                         plan3StartTime = getTimeStampFromString(layoutList[0].plan3_start_time)
@@ -2692,7 +2691,7 @@ class MainActivity : AppCompatActivity() {
                     Log.d(mTag, "plan3StartTime = $plan3StartTime")
                     Log.d(mTag, "plan4StartTime = $plan4StartTime")
 
-                    if (layoutList.size > 0) {
+                    if (layoutList.isNotEmpty()) {
 
                         Log.e(mTag, "3->")
                         getPlanUse(currentTimestamp)
@@ -2701,7 +2700,7 @@ class MainActivity : AppCompatActivity() {
 
                         //get current plan idx
                         if (currentPlanId > 0) {
-                            if (adSettingList.size > 0) {
+                            if (adSettingList.isNotEmpty()) {
                                 //get current plan idx
                                 for (i in adSettingList.indices) {
                                     if (currentPlanId == adSettingList[i].plan_id) {
@@ -2783,6 +2782,8 @@ class MainActivity : AppCompatActivity() {
                     val failedIntent = Intent()
                     failedIntent.action = Constants.ACTION.ACTION_PING_WEB_FAILED
                     this@MainActivity.sendBroadcast(failedIntent)
+
+                    ex.printStackTrace()
                 }
             }
 
@@ -2828,7 +2829,7 @@ class MainActivity : AppCompatActivity() {
 
 
 
-                    if (layoutList.size > 0) {
+                    if (layoutList.isNotEmpty()) {
                         val defaultPlayLayoutData = DefaultPlayLayoutData(layoutList[0].layout_id, layoutList[0].screenWidth,
                             layoutList[0].screenHeight, layoutList[0].orientation,
                             layoutList[0].border,
@@ -2849,7 +2850,7 @@ class MainActivity : AppCompatActivity() {
                             layoutList[0].plan4_layout_top_weight, layoutList[0].plan4_layout_center_weight,
                             layoutList[0].plan4_layout_bottom_weight, layoutList[0].plan4_layout_tri_weight)
 
-                        if (defaultLayoutPlayList!!.size == 0) {
+                        if (defaultLayoutPlayList!!.isEmpty()) {
                             defaultPlayLayoutDataDB!!.defaultPlayLayoutDataDao().insert(defaultPlayLayoutData)
                         } else {
                             defaultPlayLayoutDataDB!!.defaultPlayLayoutDataDao().update(defaultPlayLayoutData)
@@ -2944,6 +2945,8 @@ class MainActivity : AppCompatActivity() {
                     val failedIntent = Intent()
                     failedIntent.action = Constants.ACTION.ACTION_GET_LAYOUT_FAILED
                     this@MainActivity.sendBroadcast(failedIntent)
+
+                    ex.printStackTrace()
                 }
             }
 
@@ -2992,7 +2995,7 @@ class MainActivity : AppCompatActivity() {
                     //clear before add
                     defaultPlayAdSettingDataDB!!.defaultPlayAdSettingDataDao().clearTable()
 
-                    if (adSettingList.size > 0) {
+                    if (adSettingList.isNotEmpty()) {
 
                         for (i in adSettingList.indices) {
                             val defaultPlayAdSettingData = DefaultPlayAdSettingData(
@@ -3045,6 +3048,8 @@ class MainActivity : AppCompatActivity() {
                     val failedIntent = Intent()
                     failedIntent.action = Constants.ACTION.ACTION_GET_AD_SETTING_FAILED
                     this@MainActivity.sendBroadcast(failedIntent)
+
+                    ex.printStackTrace()
                 }
             }
 
@@ -3092,7 +3097,7 @@ class MainActivity : AppCompatActivity() {
                         //Log.d(mTag, "advertiseList[$i] = ${advertiseList.get(i).ad_path}")
                     //}
 
-                    if (marqueeList.size > 0) {
+                    if (marqueeList.isNotEmpty()) {
                         val successIntent = Intent()
                         successIntent.action = Constants.ACTION.ACTION_GET_MARQUEE_SUCCESS
                         this@MainActivity.sendBroadcast(successIntent)
@@ -3108,6 +3113,8 @@ class MainActivity : AppCompatActivity() {
                     val failedIntent = Intent()
                     failedIntent.action = Constants.ACTION.ACTION_GET_MARQUEE_FAILED
                     this@MainActivity.sendBroadcast(failedIntent)
+
+                    ex.printStackTrace()
                 }
             }
 
@@ -3122,7 +3129,7 @@ class MainActivity : AppCompatActivity() {
         if (isFirstNetworkError) {
             isFirstNetworkError = false
 
-            if (adSettingList.size >= 1) {
+            if (adSettingList.isNotEmpty()) {
                 Log.d(mTag, "currentAdSettingIdx = $currentAdSettingIdx")
                 Log.d(mTag, "playMarqueeList.size = ${playMarqueeList.size}")
                 Log.d(mTag, "imageList.size = ${imageList.size}")
@@ -3137,7 +3144,7 @@ class MainActivity : AppCompatActivity() {
     fun downloadBanner() {
         Log.d(mTag, "=== downloadBanner start ===")
 
-        if (bannerList.size > 0) {
+        if (bannerList.isNotEmpty()) {
             var downloadIdx = -1
             for (i in bannerList.indices) {
                 val srcPath = server_banner_folder
@@ -3221,7 +3228,7 @@ class MainActivity : AppCompatActivity() {
     fun downloadImages() {
         Log.d(mTag, "=== downloadImages start ===")
 
-        if (imageList.size > 0) {
+        if (imageList.isNotEmpty()) {
             var downloadIdx = -1
             for (i in imageList.indices) {
                 val srcPath = server_images_folder
@@ -3312,7 +3319,7 @@ class MainActivity : AppCompatActivity() {
     fun downloadVideos() {
         Log.d(mTag, "downloadVideos")
 
-        if (videoList.size > 0) {
+        if (videoList.isNotEmpty()) {
             var downloadIdx = -1
             for (i in videoList.indices) {
                 val srcPath = server_videos_folder
@@ -3409,7 +3416,7 @@ class MainActivity : AppCompatActivity() {
     fun downloadMix() {
         Log.d(mTag, "downloadMix")
 
-        if (mixList.size > 0) {
+        if (mixList.isNotEmpty()) {
             var downloadIdx = -1
             var srcPath = ""
             var destPath = ""
@@ -3685,7 +3692,7 @@ class MainActivity : AppCompatActivity() {
         Log.d(mTag, "=== checkUrlAndLocalFiles start ===")
 
         if (!pingError) {
-            if (adSettingList.size > 0) {
+            if (adSettingList.isNotEmpty()) {
                 val bannerDirectory = File(dest_banner_folder)
                 val imageDirectory = File(dest_images_folder)
                 val videoDirectory = File(dest_videos_folder)
@@ -3714,7 +3721,7 @@ class MainActivity : AppCompatActivity() {
                                 val fileUrl = URL(srcPath)
 
                                 val urlConnection: URLConnection = fileUrl.openConnection()
-                                urlConnection.setRequestProperty("Accept-Encoding", "identity");
+                                urlConnection.setRequestProperty("Accept-Encoding", "identity")
                                 urlConnection.connect()
                                 //fileUrlLength = getFileSize(fileUrl)
                                 fileUrlLength = urlConnection.getContentLength()
@@ -3866,7 +3873,7 @@ class MainActivity : AppCompatActivity() {
     fun checkBannerExists() {
         Log.e(mTag, "=== checkBannerExists start, bannerList.size = ${bannerList.size}")
         downloadBannerComplete = 0
-        if (bannerList.size > 0) {
+        if (bannerList.isNotEmpty()) {
             for (i in bannerList.indices) {
                 val srcPath = server_banner_folder
                 val destPath = "$dest_banner_folder${bannerList[i]}"
@@ -3889,7 +3896,7 @@ class MainActivity : AppCompatActivity() {
     fun checkImagesExists() {
         Log.e(mTag, "=== checkImagesExists start ===")
         downloadImageComplete = 0
-        if (imageList.size > 0) {
+        if (imageList.isNotEmpty()) {
             for (i in imageList.indices) {
                 val srcPath = server_images_folder
                 val destPath = "$dest_images_folder${imageList[i]}"
@@ -3911,7 +3918,7 @@ class MainActivity : AppCompatActivity() {
     fun checkVideosExists() {
         Log.e(mTag, "=== checkVideosExists start ===")
         downloadVideoComplete = 0
-        if (videoList.size > 0) {
+        if (videoList.isNotEmpty()) {
             for (i in videoList.indices) {
                 val srcPath = server_videos_folder
                 val destPath = "$dest_videos_folder${videoList[i]}"
@@ -3933,7 +3940,7 @@ class MainActivity : AppCompatActivity() {
     fun checkMixExists() {
         Log.e(mTag, "=== checkMixExists start ===")
         downloadMixComplete = 0
-        if (mixList.size > 0) {
+        if (mixList.isNotEmpty()) {
             for (i in mixList.indices) {
                 //var srcPath = ""
                 //var destPath = ""
@@ -3967,7 +3974,7 @@ class MainActivity : AppCompatActivity() {
     fun clearBannersNotInBannerList() {
         Log.d(mTag, "=== clearBannersNotInBannerList start ===")
 
-        if (adSettingList.size > 0) {
+        if (adSettingList.isNotEmpty()) {
 
             val directory = File(dest_banner_folder)
             val files = directory.listFiles()
@@ -4015,7 +4022,7 @@ class MainActivity : AppCompatActivity() {
 
     fun clearImagesNotInImageList() {
         Log.d(mTag, "=== clearImagesNotInImageList start ===")
-        if (adSettingList.size > 0) {
+        if (adSettingList.isNotEmpty()) {
 
             val directory = File(dest_images_folder)
             val files = directory.listFiles()
@@ -4064,7 +4071,7 @@ class MainActivity : AppCompatActivity() {
     fun clearVideosNotInVideoList() {
         Log.d(mTag, "=== clearVideosNotInVideoList start ===")
 
-        if (adSettingList.size > 0) {
+        if (adSettingList.isNotEmpty()) {
             val directory = File(dest_videos_folder)
             val files = directory.listFiles()
 
@@ -4115,7 +4122,7 @@ class MainActivity : AppCompatActivity() {
     fun clearMixNotInMixList() {
         Log.d(mTag, "=== clearMixNotInMixList start ===")
 
-        if (adSettingList.size > 0) {
+        if (adSettingList.isNotEmpty()) {
             val imageDirectory = File(dest_images_folder)
             val videoDirectory = File(dest_videos_folder)
             val imageFiles = imageDirectory.listFiles()
@@ -4131,7 +4138,7 @@ class MainActivity : AppCompatActivity() {
                 for (i in imageFiles.indices) {
                     var found = false
 
-                    if (adSettingList.size > 0) {
+                    if (adSettingList.isNotEmpty()) {
                         for (j in adSettingList.indices) {
                             //images
                             if (adSettingList[j].plan_images.isNotEmpty()) {
@@ -4185,7 +4192,7 @@ class MainActivity : AppCompatActivity() {
                 for (i in videoFiles.indices) {
                     var found = false
 
-                    if (adSettingList.size > 0) {
+                    if (adSettingList.isNotEmpty()) {
                         for (j in adSettingList.indices) {
                             //videos
                             if (adSettingList[j].plan_videos.isNotEmpty()) {
@@ -4242,7 +4249,7 @@ class MainActivity : AppCompatActivity() {
     fun clearAllNotInAllList() {
         Log.d(mTag, "=== clearAllNotInAllList start ===")
 
-        if (adSettingList.size > 0) {
+        if (adSettingList.isNotEmpty()) {
             val bannerDirectory = File(dest_banner_folder)
             val imageDirectory = File(dest_images_folder)
             val videoDirectory = File(dest_videos_folder)
@@ -4297,7 +4304,7 @@ class MainActivity : AppCompatActivity() {
                 for (i in imageFiles.indices) {
                     var found = false
 
-                    if (adSettingList.size > 0) {
+                    if (adSettingList.isNotEmpty()) {
                         for (j in adSettingList.indices) {
                             //images
                             if (adSettingList[j].plan_images.isNotEmpty()) {
@@ -4351,7 +4358,7 @@ class MainActivity : AppCompatActivity() {
                 for (i in videoFiles.indices) {
                     var found = false
 
-                    if (adSettingList.size > 0) {
+                    if (adSettingList.isNotEmpty()) {
                         for (j in adSettingList.indices) {
                             //videos
                             if (adSettingList[j].plan_videos.isNotEmpty()) {
@@ -4445,7 +4452,7 @@ class MainActivity : AppCompatActivity() {
         //clear layout
         rootView!!.removeAllViews()
         rootView!!.setBackgroundColor(Color.BLACK)
-        //rootView!!.setBackgroundResource(R.drawable.customborder)
+
 
         //init play index
         currentTextIndexTop = -1
@@ -4462,9 +4469,9 @@ class MainActivity : AppCompatActivity() {
         //currentMixIndexBottom = -1
 
         //init layout
-        if (layoutList.size > 0 ) {
+        if (layoutList.isNotEmpty()) {
             if (layoutList.size == 1) { //only one layout
-                if (adSettingList.size > 0) { // must have adSetting
+                if (adSettingList.isNotEmpty()) { // must have adSetting
                     val orientation = layoutList[0].orientation
                     layoutTop = 0
                     layoutCenter = 0
@@ -5963,7 +5970,7 @@ class MainActivity : AppCompatActivity() {
 
                         //init top start
                         if (layoutTop == 1) {
-                            if (playMarqueeList.size > 0) {
+                            if (playMarqueeList.isNotEmpty()) {
                                 if (marqueeMode == 1) { //random
                                     var nextTop: Int
                                     do {
@@ -5981,7 +5988,7 @@ class MainActivity : AppCompatActivity() {
                         }
                         //init center start
                         if (layoutCenter == 1) {
-                            if (playMarqueeList.size > 0) {
+                            if (playMarqueeList.isNotEmpty()) {
                                 if (marqueeMode == 1) { //random
                                     var nextCenter: Int
                                     do {
@@ -5998,7 +6005,7 @@ class MainActivity : AppCompatActivity() {
                         }
                         //init bottom start
                         if (layoutBottom == 1) {
-                            if (playMarqueeList.size > 0) {
+                            if (playMarqueeList.isNotEmpty()) {
                                 if (marqueeMode == 1) { //random
                                     var nextBottom: Int
                                     do {
@@ -6016,7 +6023,7 @@ class MainActivity : AppCompatActivity() {
                         }
 
                         //if playMarqueeList.size > 0, it would play in loop
-                        if (playMarqueeList.size > 0) {
+                        if (playMarqueeList.isNotEmpty()) {
                             countDownTimerMarqueeRunning = true
                             countDownTimerMarquee = object : CountDownTimer(marqueePlayInterval.toLong(), marqueePlayInterval.toLong()) {
                                 override fun onTick(millisUntilFinished: Long) {
@@ -6091,7 +6098,7 @@ class MainActivity : AppCompatActivity() {
                     // banner
                     if (layoutTop == 4 || layoutCenter == 4 || layoutBottom == 4) {
                         if (layoutTop == 4) {
-                            if (bannerList.size > 0 && checkDownloadBannerAll()) { //at least one image cant play
+                            if (bannerList.isNotEmpty() && checkDownloadBannerAll()) { //at least one image cant play
                                 //top
                                 imageViewTop!!.visibility = View.VISIBLE
                                 //Picasso.with(this@MainActivity).load(imageUrlTop).into(imageViewTop)
@@ -6116,7 +6123,7 @@ class MainActivity : AppCompatActivity() {
                         }
 
                         if (layoutCenter == 4) {
-                            if (bannerList.size > 0 && checkDownloadBannerAll()) {
+                            if (bannerList.isNotEmpty() && checkDownloadBannerAll()) {
                                 //center
                                 imageViewCenter!!.visibility = View.VISIBLE
                                 //Picasso.with(this@MainActivity).load(imageUrlCenter).into(imageViewCenter)
@@ -6140,7 +6147,7 @@ class MainActivity : AppCompatActivity() {
                         }
                         //init bottom start
                         if (layoutBottom == 4) {
-                            if (bannerList.size > 0 && checkDownloadBannerAll()) {
+                            if (bannerList.isNotEmpty() && checkDownloadBannerAll()) {
                                 //bottom
                                 imageViewBottom!!.visibility = View.VISIBLE
                                 //Picasso.with(this@MainActivity).load(imageUrlBottom).into(imageViewBottom)
@@ -6175,7 +6182,7 @@ class MainActivity : AppCompatActivity() {
 
                         //init image start
                         if (layoutTop == 2) {
-                            if (imageList.size > 0 && checkDownloadImagesAll()) { //at least one image cant play
+                            if (imageList.isNotEmpty() && checkDownloadImagesAll()) { //at least one image cant play
                                 if (imagesMode == 1) { //random
                                     var nextTop: Int
                                     do {
@@ -6214,7 +6221,7 @@ class MainActivity : AppCompatActivity() {
                         }
                         //init center start
                         if (layoutCenter == 2) {
-                            if (imageList.size > 0 && checkDownloadImagesAll()) {
+                            if (imageList.isNotEmpty() && checkDownloadImagesAll()) {
                                 if (imagesMode == 1) { //random
                                     var nextCenter: Int
                                     do {
@@ -6251,7 +6258,7 @@ class MainActivity : AppCompatActivity() {
                         }
                         //init bottom start
                         if (layoutBottom == 2) {
-                            if (imageList.size > 0 && checkDownloadImagesAll()) {
+                            if (imageList.isNotEmpty() && checkDownloadImagesAll()) {
                                 if (imagesMode == 1) { //random
                                     var nextBottom: Int
                                     do {
@@ -6288,7 +6295,7 @@ class MainActivity : AppCompatActivity() {
                         }
 
                         //if imageList.size > 0, then play in loop
-                        if (imageList.size > 0 && checkDownloadImagesAll()) {
+                        if (imageList.isNotEmpty() && checkDownloadImagesAll()) {
                             countDownTimerImageRunning = true
                             countDownTimerImage = object : CountDownTimer(imagesPlayInterval.toLong(), imagesPlayInterval.toLong()) {
                                 override fun onTick(millisUntilFinished: Long) {
@@ -6296,7 +6303,7 @@ class MainActivity : AppCompatActivity() {
                                 }
                                 override fun onFinish() { //结束后的操作
                                     Log.d(mTag, "countDownTimerImage finish")
-                                    if (imageList.size > 0 && checkDownloadImagesAll()) {
+                                    if (imageList.isNotEmpty() && checkDownloadImagesAll()) {
                                         countDownTimerImageRunning = false
                                         if (layoutTop == 2) {
                                             if (imagesMode == 1) { //random
@@ -6462,7 +6469,7 @@ class MainActivity : AppCompatActivity() {
                         Log.d(mTag, "video play time")
 
                         //top
-                        if (layoutCenter == 3) {
+                        if (layoutTop == 3) {
                             if (!videoRunningTop) {
                                 if (videosMode == 1) { //random
 
@@ -6531,7 +6538,7 @@ class MainActivity : AppCompatActivity() {
                         //bottom
                         if (layoutBottom == 3) {
                             if (!videoRunningBottom) {
-                                if (videoList.size > 0 && checkDownloadVideosAll()) {
+                                if (videoList.isNotEmpty() && checkDownloadVideosAll()) {
                                     if (videosMode == 1) { //random
                                         var nextBottom: Int
                                         do {
@@ -6641,7 +6648,7 @@ class MainActivity : AppCompatActivity() {
         Log.e(mTag,"longArray before = $longArray")
 
         if (longArray.size > 1) {
-            Collections.sort(longArray)
+            longArray.sort()
         }
 
         Log.e(mTag,"longArray after = $longArray")
@@ -7279,30 +7286,31 @@ class MainActivity : AppCompatActivity() {
     private fun getIPAddress(useIPv4 : Boolean): String {
         try {
             val interfaces = Collections.list(NetworkInterface.getNetworkInterfaces())
-            for (intf in interfaces) {
-                val addrs = Collections.list(intf.inetAddresses);
-                for (addr in addrs) {
-                    if (!addr.isLoopbackAddress) {
-                        val sAddr = addr.hostAddress;
-                        val isIPv4: Boolean = sAddr.indexOf(':')<0
+            for (iFace in interfaces) {
+                val addresses = Collections.list(iFace.inetAddresses)
+                for (address in addresses) {
+                    if (!address.isLoopbackAddress) {
+                        val sAddress = address.hostAddress
+                        val isIPv4: Boolean = sAddress?.indexOf(':')!! <0
                         if (useIPv4) {
                             if (isIPv4)
-                                return sAddr;
+                                return sAddress
                         } else {
                             if (!isIPv4) {
-                                val delim = sAddr.indexOf('%') // drop ip6 zone suffix
-                                if (delim < 0) {
-                                    return sAddr.toUpperCase()
-                                }
-                                else {
-                                    return sAddr.substring(0, delim).toUpperCase()
+                                val delim = sAddress.indexOf('%') // drop ip6 zone suffix
+                                return if (delim < 0) {
+                                    sAddress.uppercase(Locale.getDefault())
+                                } else {
+                                    sAddress.substring(0, delim).uppercase(Locale.getDefault())
                                 }
                             }
                         }
                     }
                 }
             }
-        } catch (e: java.lang.Exception) { }
+        } catch (e: java.lang.Exception) {
+            e.printStackTrace()
+        }
         return ""
     }
 }
