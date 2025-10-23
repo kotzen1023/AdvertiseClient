@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace 'com.seventhmoon.advertiseclient'
-    compileSdk 34
+    compileSdk 36
 
     defaultConfig {
         applicationId "com.seventhmoon.advertiseclient"
@@ -38,8 +38,8 @@ dependencies {
     implementation "androidx.appcompat:appcompat:$appcompat"
     implementation "com.google.android.material:material:$material"
     implementation "androidx.constraintlayout:constraintlayout:$constraintlayout"
-    implementation 'androidx.test:monitor:1.6.1'
-    implementation 'androidx.media3:media3-ui:1.1.1'
+    implementation 'androidx.test:monitor:1.8.0'
+    implementation 'androidx.media3:media3-ui:1.8.0'
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation "androidx.test.ext:junit:$ext_junit"
     androidTestImplementation "androidx.test.espresso:espresso-core:$espresso_core"

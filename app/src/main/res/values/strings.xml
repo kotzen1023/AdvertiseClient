@@ -48,5 +48,10 @@
     <string name="get_mix_empty">Get mix empty</string>
     <string name="get_mix_complete">Get mix complete</string>
 
+    <string name="layout_banner_setting_no">Layout was set as banner, but no image in setting</string>
+    <string name="layout_image_setting_no">Layout was set as image, but no image in setting</string>
+    <string name="layout_video_setting_no">Layout was set as video, but no video in setting</string>
+    <string name="layout_mix_setting_no">Layout was set as video, but no videos or images in setting</string>
+
     <string name="start_play_ad">Start play Ad</string>
 </resources>

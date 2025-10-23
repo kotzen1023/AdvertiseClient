@@ -21,6 +21,9 @@ class RecvLayout {
     var layout4_center = 0
     var layout4_bottom = 0
     var layoutOrientation = 0
+    var layoutOrientation2 = 0
+    var layoutOrientation3 = 0
+    var layoutOrientation4 = 0
     var plan_id = 0
     var plan2_id = 0
     var plan3_id = 0
@@ -46,5 +49,16 @@ class RecvLayout {
     var plan4_layout_center_weight = 0
     var plan4_layout_bottom_weight = 0
     var plan4_layout_tri_weight = 0
-
+    var plan2_end_time = ""
+    var plan3_end_time = ""
+    var plan4_end_time = ""
+    var plan2_start_date = ""
+    var plan3_start_date = ""
+    var plan4_start_date = ""
+    var plan2_end_date = ""
+    var plan3_end_date = ""
+    var plan4_end_date = ""
+    var plan2_days_of_week = 0
+    var plan3_days_of_week = 0
+    var plan4_days_of_week = 0
 }
