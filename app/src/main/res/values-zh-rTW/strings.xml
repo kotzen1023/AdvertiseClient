@@ -49,6 +49,7 @@
     <string name="get_mix_empty">混合播放內容為空</string>
     <string name="get_mix_complete">取得混合播放內容完成</string>
 
+    <string name="layout_marquee_setting_no">佈局為文字跑馬燈但設定內無文字跑馬燈</string>
     <string name="layout_banner_setting_no">佈局為橫幅但設定內無圖片</string>
     <string name="layout_image_setting_no">佈局為圖片但設定內無圖片</string>
     <string name="layout_video_setting_no">佈局為影片但設定內無影片</string>

@@ -733,7 +733,7 @@ class MainActivity : AppCompatActivity() {
                             defaultMarqueePlayList = defaultPlayMarqueeDataDB!!.defaultPlayMarqueeDataDao().getAll() as ArrayList<DefaultPlayMarqueeData>
                             Log.d(mTag, "defaultMarqueePlayList.size = ${defaultMarqueePlayList!!.size}")
                         }*/
-                        saveDefaultDataMarqueePlayList()
+
 
                         //then find match marquee
                         if (adSettingList.isNotEmpty()) {
@@ -744,6 +744,7 @@ class MainActivity : AppCompatActivity() {
                                     break
                                 }
                             }
+                            Log.d(mTag, "currentAdSettingIdx = $currentAdSettingIdx")
                             //Log.d(mTag, "plan_marquee = ${adSettingList[0].plan_marquee}")
                             Log.d(mTag, "plan_marquee = ${adSettingList[currentAdSettingIdx].plan_marquee}")
 
@@ -767,7 +768,12 @@ class MainActivity : AppCompatActivity() {
                                     }
                                 }
                                 Log.d(mTag, "playMarqueeList = $playMarqueeList")
+                            } else {
+                                marqueeList.clear()
+                                playMarqueeList.clear()
                             }
+
+                            saveDefaultDataMarqueePlayList()
 
                             //then get banner
                             val getBannerIntent = Intent()
@@ -1346,6 +1352,13 @@ class MainActivity : AppCompatActivity() {
                                     mixPlayIntent.action = Constants.ACTION.ACTION_MIX_TOP_PLAY_IMAGE_START
                                 }
                                 this@MainActivity.sendBroadcast(mixPlayIntent)
+                            } else {
+                                imageViewTop!!.visibility = View.GONE
+                                imageViewTop2!!.visibility = View.GONE
+                                videoViewLayoutTop!!.visibility = View.GONE
+                                textViewErrorTop!!.visibility = View.VISIBLE
+                                textViewErrorTop!!.text = getString(R.string.layout_mix_setting_no)
+                                mixTopRunning = false
                             }
                         } else {
                             mixTopRunning = false
@@ -1420,6 +1433,8 @@ class MainActivity : AppCompatActivity() {
                                     }
                                 } //onFinish
                             }.start()
+                        } else {
+                            mixTopRunning = false
                         }
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_MIX_TOP_PLAY_VIDEO_START, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_MIX_TOP_PLAY_VIDEO_START")
@@ -1505,9 +1520,16 @@ class MainActivity : AppCompatActivity() {
                                     mixPlayIntent.action = Constants.ACTION.ACTION_MIX_CENTER_PLAY_IMAGE_START
                                 }
                                 this@MainActivity.sendBroadcast(mixPlayIntent)
+                            } else {
+                                imageViewCenter!!.visibility = View.GONE
+                                imageViewCenter2!!.visibility = View.GONE
+                                videoViewLayoutCenter!!.visibility = View.GONE
+                                textViewErrorCenter!!.visibility = View.VISIBLE
+                                textViewErrorCenter!!.text = getString(R.string.layout_mix_setting_no)
+                                mixCenterRunning = false
                             }
                         } else {
-                            mixTopRunning = false
+                            mixCenterRunning = false
                         }
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_MIX_CENTER_PLAY_IMAGE_START, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_MIX_CENTER_PLAY_IMAGE_START")
@@ -1579,6 +1601,8 @@ class MainActivity : AppCompatActivity() {
                                     }
                                 } //onFinish
                             }.start()
+                        } else {
+                            mixCenterRunning = false
                         }
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_MIX_CENTER_PLAY_VIDEO_START, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_MIX_CENTER_PLAY_VIDEO_START")
@@ -1586,7 +1610,7 @@ class MainActivity : AppCompatActivity() {
                     } //bottom
                     else if (intent.action!!.equals(Constants.ACTION.ACTION_MIX_BOTTOM_PLAY_START, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_MIX_BOTTOM_PLAY_START")
-                        //messageViewBottom!!.text = "ACTION_MIX_BOTTOM_PLAY_START"
+
                         currentMixIndexBottom = -1
                         Log.e(mTag, "mixList.size = ${mixList.size}")
 
@@ -1633,7 +1657,6 @@ class MainActivity : AppCompatActivity() {
 
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_MIX_BOTTOM_PLAY_FINISH, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_MIX_BOTTOM_PLAY_FINISH")
-                        //messageViewBottom!!.text = "ACTION_MIX_BOTTOM_PLAY_FINISH"
                         if (layoutBottom == 5) { //mix only
                             if (mixList.isNotEmpty() && checkDownloadMixAll()) { //at least one image or video can play
                                 Log.e(mTag, "mixList.size > 0")
@@ -1665,13 +1688,19 @@ class MainActivity : AppCompatActivity() {
                                     mixPlayIntent.action = Constants.ACTION.ACTION_MIX_BOTTOM_PLAY_IMAGE_START
                                 }
                                 this@MainActivity.sendBroadcast(mixPlayIntent)
+                            } else {
+                                imageViewBottom!!.visibility = View.GONE
+                                imageViewBottom2!!.visibility = View.GONE
+                                videoViewLayoutBottom!!.visibility = View.GONE
+                                textViewErrorBottom!!.visibility = View.VISIBLE
+                                textViewErrorBottom!!.text = getString(R.string.layout_mix_setting_no)
+                                mixBottomRunning = false
                             }
                         } else {
-                            mixTopRunning = false
+                            mixBottomRunning = false
                         }
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_MIX_BOTTOM_PLAY_IMAGE_START, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_MIX_BOTTOM_PLAY_IMAGE_START")
-                        //messageViewBottom!!.text = "ACTION_MIX_BOTTOM_PLAY_IMAGE_START"
                         var mixImagesPlayInterval = 7000
                         when(mixImageInterval) {
                             0 -> {
@@ -1739,6 +1768,8 @@ class MainActivity : AppCompatActivity() {
                                     }
                                 } //onFinish
                             }.start()
+                        } else {
+                            mixBottomRunning = false
                         }
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_MIX_BOTTOM_PLAY_VIDEO_START, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_MIX_BOTTOM_PLAY_VIDEO_START")
@@ -1943,7 +1974,6 @@ class MainActivity : AppCompatActivity() {
 
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_BOTTOM_VIDEO_PLAY_FINISH, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_BOTTOM_VIDEO_PLAY_FINISH")
-                        //messageViewBottom!!.text = "ACTION_BOTTOM_VIDEO_PLAY_FINISH"
                         if (layoutBottom == 3) { //video
                             if (videoList.isNotEmpty() && checkDownloadVideosAll()) {
                                 //videoRunningBottom = false
@@ -2600,8 +2630,6 @@ class MainActivity : AppCompatActivity() {
                         plan3StartTimeString = layoutList[0].plan3_start_time
                         plan4StartTimeString = layoutList[0].plan4_start_time
 
-
-
                         plan2EndTimeString = layoutList[0].plan2_end_time
                         plan3EndTimeString = layoutList[0].plan3_end_time
                         plan4EndTimeString = layoutList[0].plan4_end_time
@@ -2610,6 +2638,18 @@ class MainActivity : AppCompatActivity() {
                         plan2StartTime = getTimeStampFromString(layoutList[0].plan2_start_time)
                         plan3StartTime = getTimeStampFromString(layoutList[0].plan3_start_time)
                         plan4StartTime = getTimeStampFromString(layoutList[0].plan4_start_time)
+
+                        plan2_start_date = layoutList[0].plan2_start_date
+                        plan3_start_date = layoutList[0].plan3_start_date
+                        plan4_start_date = layoutList[0].plan4_start_date
+
+                        plan2_end_date = layoutList[0].plan2_end_date
+                        plan3_end_date = layoutList[0].plan3_end_date
+                        plan4_end_date = layoutList[0].plan4_end_date
+
+                        plan2_days_of_week = layoutList[0].plan2_days_of_week
+                        plan3_days_of_week = layoutList[0].plan3_days_of_week
+                        plan4_days_of_week = layoutList[0].plan4_days_of_week
                         /*
                         plan2EndTime = getTimeStampFromString(layoutList[0].plan2_end_time)
                         plan3EndTime = getTimeStampFromString(layoutList[0].plan3_end_time)
@@ -4195,7 +4235,7 @@ class MainActivity : AppCompatActivity() {
     @SuppressLint("SourceLockedOrientationActivity")
     fun playAd() {
         Log.d(mTag, "playAd Start")
-        //checkUrlAndLocalFiles()
+        checkUrlAndLocalFiles()
         infoRenew = false
 
         //if marquee loop is running, stop it
@@ -4226,6 +4266,18 @@ class MainActivity : AppCompatActivity() {
             videoViewBottom!!.seekTo(0)
 
             //videoViewBottom!!.visibility = View.INVISIBLE
+        }
+
+        if (mixTopRunning) {
+            mixTopRunning = false
+        }
+
+        if (mixCenterRunning) {
+            mixCenterRunning = false
+        }
+
+        if (mixBottomRunning) {
+            mixBottomRunning = false
         }
 
         //clear layout
@@ -4421,112 +4473,51 @@ class MainActivity : AppCompatActivity() {
                         1 -> { //horizontal
                             mainLinearLayout!!.orientation = LinearLayout.HORIZONTAL
                             Log.d(mTag, "mainLinearLayout: HORIZONTAL")
-                            if (currentOrientation == 1) { // portrait
-                                mainLayoutWeight = layoutList[0].screenWidth
+                            mainLayoutWeight = layoutList[0].screenWidth
 
-                                layoutTopWidth = layoutTopWeight
-                                layoutCenterWidth = layoutCenterWeight
-                                layoutBottomWidth = layoutCenterWeight
+                            layoutTopWidth = layoutTopWeight
+                            layoutCenterWidth = layoutCenterWeight
+                            layoutBottomWidth = layoutCenterWeight
 
-                                layoutTopHeight = layoutList[0].screenHeight
-                                layoutCenterHeight = layoutList[0].screenHeight
-                                layoutBottomHeight = layoutList[0].screenHeight
-                            } else { // landscape
-                                /*
-                                mainLayoutWeight = layoutList[0].screenHeight
-
-                                layoutTopWidth = layoutTopWeight
-                                layoutCenterWidth = layoutCenterWeight
-                                layoutBottomWidth = layoutBottomWeight
-
-                                layoutTopHeight = layoutList[0].screenWidth
-                                layoutCenterHeight = layoutList[0].screenWidth
-                                layoutBottomHeight = layoutList[0].screenWidth
-                                */
-                                mainLayoutWeight = layoutList[0].screenWidth
-
-                                layoutTopWidth = layoutTopWeight
-                                layoutCenterWidth = layoutCenterWeight
-                                layoutBottomWidth = layoutCenterWeight
-
-                                layoutTopHeight = layoutList[0].screenHeight
-                                layoutCenterHeight = layoutList[0].screenHeight
-                                layoutBottomHeight = layoutList[0].screenHeight
-                            }
+                            layoutTopHeight = layoutList[0].screenHeight
+                            layoutCenterHeight = layoutList[0].screenHeight
+                            layoutBottomHeight = layoutList[0].screenHeight
                         }
                         2 -> { //left triangle
                             mainLinearLayout!!.orientation = LinearLayout.HORIZONTAL
                             Log.d(mTag, "mainLinearLayout: HORIZONTAL")
-                            if (currentOrientation == 1) { // portrait
-                                mainLayoutWeight = layoutList[0].screenWidth
-                                layoutTriangleWeight = layoutList[0].screenWidth - layoutTopWeight
+                            mainLayoutWeight = layoutList[0].screenWidth
+                            layoutTriangleWeight = layoutList[0].screenWidth - layoutTopWeight
 
-                                layoutTopWidth = layoutTopWeight
-                                layoutCenterWidth = layoutTriangleWeight
-                                layoutBottomWidth = layoutTriangleWeight
+                            layoutTopWidth = layoutTopWeight
+                            layoutCenterWidth = layoutTriangleWeight
+                            layoutBottomWidth = layoutTriangleWeight
 
-                                layoutTopHeight = layoutList[0].screenHeight
-                                layoutCenterHeight = layoutCenterWeight
-                                layoutBottomHeight = layoutBottomWeight
-                            } else { // landscape
-                                /*
-                                mainLayoutWeight = layoutList[0].screenHeight
-                                layoutTriangleWeight = layoutList[0].screenHeight - layoutTopWeight
-
-                                layoutTopWidth = layoutTopWeight
-                                layoutCenterWidth = layoutTriangleWeight
-                                layoutBottomWidth = layoutTriangleWeight
-
-                                layoutTopHeight = layoutList[0].screenWidth
-                                layoutCenterHeight = layoutCenterWeight
-                                layoutBottomHeight = layoutBottomWeight
-
-                                 */
-                                mainLayoutWeight = layoutList[0].screenWidth
-                                layoutTriangleWeight = layoutList[0].screenWidth - layoutTopWeight
-
-                                layoutTopWidth = layoutTopWeight
-                                layoutCenterWidth = layoutTriangleWeight
-                                layoutBottomWidth = layoutTriangleWeight
-
-                                layoutTopHeight = layoutList[0].screenHeight
-                                layoutCenterHeight = layoutCenterWeight
-                                layoutBottomHeight = layoutBottomWeight
-                            }
+                            layoutTopHeight = layoutList[0].screenHeight
+                            layoutCenterHeight = layoutCenterWeight
+                            layoutBottomHeight = layoutBottomWeight
                         }
                         3 -> { //right triangle
+                            Log.e(mTag, "--> right triangle")
                             mainLinearLayout!!.orientation = LinearLayout.HORIZONTAL
                             Log.d(mTag, "mainLinearLayout: HORIZONTAL")
                             if (currentOrientation == 1) { // portrait
                                 mainLayoutWeight = layoutList[0].screenWidth
                                 layoutTriangleWeight = layoutList[0].screenWidth - layoutBottomWeight
 
-                                layoutTopWidth = mainLayoutWeight - layoutBottomWeight
-                                layoutCenterWidth = layoutTopWidth
+                                layoutTopWidth = layoutTriangleWeight
+                                layoutCenterWidth = layoutTriangleWeight
                                 layoutBottomWidth = layoutBottomWeight
 
                                 layoutTopHeight = layoutTopWeight
                                 layoutCenterHeight = layoutCenterWeight
                                 layoutBottomHeight = layoutList[0].screenHeight
                             } else { // landscape
-                                /*
-                                mainLayoutWeight = layoutList[0].screenHeight
-                                layoutTriangleWeight = layoutList[0].screenHeight - layoutBottomWeight
-
-                                layoutTopWidth = mainLayoutWeight - layoutBottomWeight
-                                layoutCenterWidth = layoutTopWidth
-                                layoutBottomWidth = layoutBottomWeight
-
-                                layoutTopHeight = layoutTopWeight
-                                layoutCenterHeight = layoutCenterWeight
-                                layoutBottomHeight = layoutList[0].screenWidth
-
-                                 */
                                 mainLayoutWeight = layoutList[0].screenWidth
                                 layoutTriangleWeight = layoutList[0].screenWidth - layoutBottomWeight
 
-                                layoutTopWidth = mainLayoutWeight - layoutBottomWeight
-                                layoutCenterWidth = layoutTopWidth
+                                layoutTopWidth = layoutTriangleWeight
+                                layoutCenterWidth = layoutTriangleWeight
                                 layoutBottomWidth = layoutBottomWeight
 
                                 layoutTopHeight = layoutTopWeight
@@ -4549,19 +4540,6 @@ class MainActivity : AppCompatActivity() {
                                 layoutCenterHeight = layoutTriangleWeight
                                 layoutBottomHeight = layoutTriangleWeight
                             } else { // landscape
-                                /*
-                                mainLayoutWeight = layoutList[0].screenWidth
-                                layoutTriangleWeight = layoutList[0].screenWidth - layoutTopWeight
-
-                                layoutTopWidth = layoutList[0].screenHeight
-                                layoutCenterWidth = layoutCenterWeight
-                                layoutBottomWidth = layoutBottomWeight
-
-                                layoutTopHeight = layoutTopWeight
-                                layoutCenterHeight = layoutTriangleWeight
-                                layoutBottomHeight = layoutTriangleWeight
-
-                                 */
                                 mainLayoutWeight = layoutList[0].screenHeight
                                 layoutTriangleWeight = layoutList[0].screenHeight - layoutTopWeight
 
@@ -4589,19 +4567,6 @@ class MainActivity : AppCompatActivity() {
                                 layoutCenterHeight = layoutTriangleWeight
                                 layoutBottomHeight = layoutBottomWeight
                             } else {  // landscape
-                                /*
-                                mainLayoutWeight = layoutList[0].screenWidth
-                                layoutTriangleWeight = layoutList[0].screenWidth - layoutBottomWeight
-
-                                layoutTopWidth =  layoutTopWeight
-                                layoutCenterWidth = layoutCenterWeight
-                                layoutBottomWidth = layoutList[0].screenHeight
-
-                                layoutTopHeight = layoutTriangleWeight
-                                layoutCenterHeight = layoutTriangleWeight
-                                layoutBottomHeight = layoutBottomWeight
-
-                                 */
                                 mainLayoutWeight = layoutList[0].screenHeight
                                 layoutTriangleWeight = layoutList[0].screenHeight - layoutBottomWeight
 
@@ -4617,37 +4582,15 @@ class MainActivity : AppCompatActivity() {
                         else -> { //vertical
                             mainLinearLayout!!.orientation = LinearLayout.VERTICAL
                             Log.d(mTag, "mainLinearLayout: VERTICAL")
-                            if (currentOrientation == 1) { // portrait
-                                //weightSum = screen Height
-                                mainLayoutWeight = layoutList[0].screenHeight
+                            mainLayoutWeight = layoutList[0].screenHeight
 
-                                layoutTopWidth = layoutList[0].screenWidth
-                                layoutCenterWidth = layoutList[0].screenWidth
-                                layoutBottomWidth = layoutList[0].screenWidth
+                            layoutTopWidth = layoutList[0].screenWidth
+                            layoutCenterWidth = layoutList[0].screenWidth
+                            layoutBottomWidth = layoutList[0].screenWidth
 
-                                layoutTopHeight = layoutTopWeight
-                                layoutCenterHeight = layoutCenterWeight
-                                layoutBottomHeight = layoutBottomWeight
-                            } else { // Horizontal
-                                /*mainLayoutWeight = layoutList[0].screenWidth
-
-                                layoutTopWidth = layoutTopWeight
-                                layoutCenterWidth = layoutCenterWeight
-                                layoutBottomWidth = layoutBottomWeight
-
-                                layoutTopHeight = layoutList[0].screenHeight
-                                layoutCenterHeight = layoutList[0].screenHeight
-                                layoutBottomHeight = layoutList[0].screenHeight*/
-                                mainLayoutWeight = layoutList[0].screenHeight
-
-                                layoutTopWidth = layoutList[0].screenWidth
-                                layoutCenterWidth = layoutList[0].screenWidth
-                                layoutBottomWidth = layoutList[0].screenWidth
-
-                                layoutTopHeight = layoutTopWeight
-                                layoutCenterHeight = layoutCenterWeight
-                                layoutBottomHeight = layoutBottomWeight
-                            }
+                            layoutTopHeight = layoutTopWeight
+                            layoutCenterHeight = layoutCenterWeight
+                            layoutBottomHeight = layoutBottomWeight
                         }
                     }
 
@@ -4663,7 +4606,7 @@ class MainActivity : AppCompatActivity() {
                         linearLayoutTriangle = LinearLayout(this@MainActivity)
                     }
                     linearLayoutTriangle!!.removeAllViews()
-                    linearLayoutTriangle!!.layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT)
+                    linearLayoutTriangle!!.layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT)
                     //linearLayoutTriangle!!.weightSum = 4.0F
                     if (layoutOrientation in 2..5) {
                         if (layoutOrientation == 2 || layoutOrientation == 3) { //left and right triangle
@@ -4904,10 +4847,10 @@ class MainActivity : AppCompatActivity() {
                         textViewErrorTop!!.textSize = 20.0f
                         //locate
                         textViewErrorTop!!.gravity = Gravity.CENTER
-                        textViewErrorTop!!.visibility = View.GONE
-
-                        linearLayoutTop!!.addView(textViewErrorTop)
                     }
+                    textViewErrorTop!!.visibility = View.GONE
+                    linearLayoutTop!!.addView(textViewErrorTop)
+
 
                     //LinearLayoutCenter
                     if (linearLayoutCenter == null) {
@@ -5133,10 +5076,10 @@ class MainActivity : AppCompatActivity() {
                         textViewErrorCenter!!.textSize = 20.0f
                         //locate
                         textViewErrorCenter!!.gravity = Gravity.CENTER
-                        textViewErrorCenter!!.visibility = View.GONE
-
-                        linearLayoutCenter!!.addView(textViewErrorCenter)
                     }
+                    textViewErrorCenter!!.visibility = View.GONE
+                    linearLayoutCenter!!.addView(textViewErrorCenter)
+
 
                     //LinearLayoutBottom
                     if (linearLayoutBottom == null) {
@@ -5366,10 +5309,10 @@ class MainActivity : AppCompatActivity() {
                         textViewErrorBottom!!.textSize = 20.0f
                         //locate
                         textViewErrorBottom!!.gravity = Gravity.CENTER
-                        textViewErrorBottom!!.visibility = View.GONE
-
-                        linearLayoutBottom!!.addView(textViewErrorBottom)
                     }
+                    textViewErrorBottom!!.visibility = View.GONE
+                    linearLayoutBottom!!.addView(textViewErrorBottom)
+
 
                     when(layoutOrientation) {
                         1 -> { //horizontal
@@ -5385,7 +5328,6 @@ class MainActivity : AppCompatActivity() {
                         }
                         2 -> { //left triangle
                             Log.d(mTag, "left triangle")
-                            Log.d(mTag, "linearLayoutTop add to mainLinearLayout")
                             if (layoutTop > 0) {
                                 mainLinearLayout!!.addView(linearLayoutTop)
                             }
@@ -5395,8 +5337,9 @@ class MainActivity : AppCompatActivity() {
                             if (layoutBottom > 0) {
                                 linearLayoutTriangle!!.addView(linearLayoutBottom)
                             }
-                            mainLinearLayout!!.addView(linearLayoutTriangle)
-                            Log.d(mTag, "linearLayoutTriangle add to mainLinearLayout")
+                            if (layoutCenter > 0 || layoutBottom > 0) {
+                                mainLinearLayout!!.addView(linearLayoutTriangle)
+                            }
                         }
                         3 -> { //right triangle
                             Log.d(mTag, "right triangle")
@@ -5406,13 +5349,15 @@ class MainActivity : AppCompatActivity() {
                             if (layoutCenter > 0) {
                                 linearLayoutTriangle!!.addView(linearLayoutCenter)
                             }
-                            if (layoutBottom > 0) {
+                            if (layoutTop > 0 || layoutCenter > 0) {
                                 mainLinearLayout!!.addView(linearLayoutTriangle)
                             }
-                            mainLinearLayout!!.addView(linearLayoutBottom)
+                            if (layoutBottom > 0) {
+                                Log.d(mTag, "linearLayoutBottom add to mainLinearLayout")
+                                mainLinearLayout!!.addView(linearLayoutBottom)
+                            }
                         }
                         4 -> { //top triangle
-                            Log.d(mTag, "top triangle")
                             if (layoutTop > 0) {
                                 mainLinearLayout!!.addView(linearLayoutTop)
                             }
@@ -5422,20 +5367,23 @@ class MainActivity : AppCompatActivity() {
                             if (layoutBottom > 0) {
                                 linearLayoutTriangle!!.addView(linearLayoutBottom)
                             }
-                            mainLinearLayout!!.addView(linearLayoutTriangle)
+                            if (layoutCenter > 0 || layoutBottom > 0) {
+                                mainLinearLayout!!.addView(linearLayoutTriangle)
+                            }
                         }
                         5 -> { //down triangle
-                            Log.d(mTag, "down triangle")
                             if (layoutTop > 0) {
                                 linearLayoutTriangle!!.addView(linearLayoutTop)
                             }
                             if (layoutCenter > 0) {
                                 linearLayoutTriangle!!.addView(linearLayoutCenter)
                             }
-                            if (layoutBottom > 0) {
+                            if (layoutTop > 0 || layoutCenter > 0) {
                                 mainLinearLayout!!.addView(linearLayoutTriangle)
                             }
-                            mainLinearLayout!!.addView(linearLayoutBottom)
+                            if (layoutBottom > 0) {
+                                mainLinearLayout!!.addView(linearLayoutBottom)
+                            }
                         }
                         else -> { //0 vertical
                             if (layoutTop > 0) {
@@ -5865,7 +5813,11 @@ class MainActivity : AppCompatActivity() {
                                 }
                                 textViewTop!!.text = playMarqueeList[currentTextIndexTop].content
                             } else {
-                                textViewTop!!.text = "請設定文字跑馬燈"
+                                //textViewTop!!.text = "請設定文字跑馬燈"
+                                textViewTop!!.visibility = View.GONE
+                                textViewErrorTop!!.visibility = View.VISIBLE
+                                textViewErrorTop!!.text = getString(R.string.layout_marquee_setting_no)
+
                             }
 
                         }
@@ -5883,7 +5835,10 @@ class MainActivity : AppCompatActivity() {
                                 }
                                 textViewCenter!!.text = playMarqueeList[currentTextIndexCenter].content
                             } else {
-                                textViewCenter!!.text = "請設定文字跑馬燈"
+                                //textViewCenter!!.text = "請設定文字跑馬燈"
+                                textViewCenter!!.visibility = View.GONE
+                                textViewErrorCenter!!.visibility = View.VISIBLE
+                                textViewErrorCenter!!.text = getString(R.string.layout_marquee_setting_no)
                             }
                         }
                         //init bottom start
@@ -5901,7 +5856,10 @@ class MainActivity : AppCompatActivity() {
 
                                 textViewBottom!!.text = playMarqueeList[currentTextIndexBottom].content
                             } else {
-                                textViewBottom!!.text = "請設定文字跑馬燈"
+                                //textViewBottom!!.text = "請設定文字跑馬燈"
+                                textViewBottom!!.visibility = View.GONE
+                                textViewErrorBottom!!.visibility = View.VISIBLE
+                                textViewErrorBottom!!.text = getString(R.string.layout_marquee_setting_no)
                             }
                         }
 
@@ -5929,7 +5887,10 @@ class MainActivity : AppCompatActivity() {
                                                 currentTextIndexTop = 0
                                             }
                                         }
-                                        textViewTop!!.text = playMarqueeList[currentTextIndexTop].content
+                                        if (playMarqueeList.isNotEmpty()) {
+                                            textViewTop!!.text =
+                                                playMarqueeList[currentTextIndexTop].content
+                                        }
                                     }
 
                                     if (layoutCenter == 1) {
@@ -5945,7 +5906,10 @@ class MainActivity : AppCompatActivity() {
                                                 currentTextIndexCenter = 0
                                             }
                                         }
-                                        textViewCenter!!.text = playMarqueeList[currentTextIndexCenter].content
+                                        if (playMarqueeList.isNotEmpty()) {
+                                            textViewCenter!!.text =
+                                                playMarqueeList[currentTextIndexCenter].content
+                                        }
                                     }
 
                                     if (layoutBottom == 1) {
@@ -5961,7 +5925,10 @@ class MainActivity : AppCompatActivity() {
                                                 currentTextIndexBottom = 0
                                             }
                                         }
-                                        textViewBottom!!.text = playMarqueeList[currentTextIndexBottom].content
+                                        if (playMarqueeList.isNotEmpty()) {
+                                            textViewBottom!!.text =
+                                                playMarqueeList[currentTextIndexBottom].content
+                                        }
                                     }
 
                                     this.start()
@@ -6000,7 +5967,9 @@ class MainActivity : AppCompatActivity() {
                             } else {
                                 //imageViewTop!!.setImageResource(R.drawable.baseline_image_24)
                                 imageViewTop!!.visibility = View.GONE
-                                imageViewTop2!!.visibility = View.GONE
+                                if (imageViewTop2 != null) {
+                                    imageViewTop2!!.visibility = View.GONE
+                                }
                                 textViewErrorTop!!.visibility = View.VISIBLE
                                 textViewErrorTop!!.text = getString(R.string.layout_banner_setting_no)
                             }
@@ -6029,7 +5998,9 @@ class MainActivity : AppCompatActivity() {
                             } else {
                                 //imageViewCenter!!.setImageResource(R.drawable.baseline_image_24)
                                 imageViewCenter!!.visibility = View.GONE
-                                imageViewCenter2!!.visibility = View.GONE
+                                if (imageViewCenter2 != null) {
+                                    imageViewCenter2!!.visibility = View.GONE
+                                }
                                 textViewErrorCenter!!.visibility = View.VISIBLE
                                 textViewErrorCenter!!.text = getString(R.string.layout_banner_setting_no)
                             }
@@ -6057,7 +6028,9 @@ class MainActivity : AppCompatActivity() {
                             } else {
                                 //imageViewBottom!!.setImageResource(R.drawable.baseline_image_24)
                                 imageViewBottom!!.visibility = View.GONE
-                                imageViewBottom2!!.visibility = View.GONE
+                                if (imageViewBottom2 != null) {
+                                    imageViewBottom2!!.visibility = View.GONE
+                                }
                                 textViewErrorBottom!!.visibility = View.VISIBLE
                                 textViewErrorBottom!!.text = getString(R.string.layout_banner_setting_no)
                             }
@@ -6439,6 +6412,7 @@ class MainActivity : AppCompatActivity() {
                                     mixPlayIntent.action = Constants.ACTION.ACTION_CENTER_VIDEO_PLAY_START
                                     this@MainActivity.sendBroadcast(mixPlayIntent)
                                 } else {
+                                    Log.e(mTag, "No video!!")
                                     videoViewLayoutCenter!!.visibility = View.GONE
                                     textViewErrorCenter!!.visibility = View.VISIBLE
                                     textViewErrorCenter!!.text = getString(R.string.layout_video_setting_no)
@@ -6514,6 +6488,7 @@ class MainActivity : AppCompatActivity() {
                                     videoViewLayoutTop!!.visibility = View.GONE
                                     textViewErrorTop!!.visibility = View.VISIBLE
                                     textViewErrorTop!!.text = getString(R.string.layout_mix_setting_no)
+                                    mixTopRunning = false
                                 }
                             }
                         } else {
@@ -6534,6 +6509,7 @@ class MainActivity : AppCompatActivity() {
                                     videoViewLayoutCenter!!.visibility = View.GONE
                                     textViewErrorCenter!!.visibility = View.VISIBLE
                                     textViewErrorCenter!!.text = getString(R.string.layout_mix_setting_no)
+                                    mixCenterRunning = false
                                 }
                             }
                         } else {
@@ -6556,6 +6532,7 @@ class MainActivity : AppCompatActivity() {
                                     videoViewLayoutBottom!!.visibility = View.GONE
                                     textViewErrorBottom!!.visibility = View.VISIBLE
                                     textViewErrorBottom!!.text = getString(R.string.layout_mix_setting_no)
+                                    mixBottomRunning = false
                                 }
                             }
                         } else {
@@ -6578,6 +6555,7 @@ class MainActivity : AppCompatActivity() {
     private fun getPlanUse(currentTimestamp: Long) {
         Log.d(mTag, "=== getPlanUse start ===")
 
+        //time interval mode
         if (plan2EndTimeString == "--:--" && plan3EndTimeString == "--:--" && plan4EndTimeString == "--:--" &&
             plan2_start_date == "" && plan3_start_date == "" && plan4_start_date == "" &&
             plan2_end_date == "" && plan3_end_date == "" && plan4_end_date == "" &&
@@ -6585,218 +6563,448 @@ class MainActivity : AppCompatActivity() {
             ) {
             Log.d(mTag, "daily mode => use only 4 start time settings")
 
-            planStartTime = getTimeStampFromString(layoutList[0].plan_start_time)
-            plan2StartTime = getTimeStampFromString(layoutList[0].plan2_start_time)
-            plan3StartTime = getTimeStampFromString(layoutList[0].plan3_start_time)
-            plan4StartTime = getTimeStampFromString(layoutList[0].plan4_start_time)
-
-            val longArray : ArrayList<Long> = ArrayList()
-
-            //must have set the plan
             if (layoutList[0].plan_id > 0) {
+                currentPlanId = layoutList[0].plan_id
+                currentPlanUse = 1
+
+                planStartTime = getTimeStampFromString(layoutList[0].plan_start_time)
+                plan2StartTime = getTimeStampFromString(layoutList[0].plan2_start_time)
+                plan3StartTime = getTimeStampFromString(layoutList[0].plan3_start_time)
+                plan4StartTime = getTimeStampFromString(layoutList[0].plan4_start_time)
+
+                val longArray : ArrayList<Long> = ArrayList()
+
+                //must have set the plan
                 longArray.add(planStartTime)
-            }
-            if (layoutList[0].plan2_id > 0 && plan2StartTimeString != "--:--") {
-                longArray.add(plan2StartTime)
-            }
-            if (layoutList[0].plan3_id > 0 && plan3StartTimeString != "--:--") {
-                longArray.add(plan3StartTime)
-            }
-            if (layoutList[0].plan4_id > 0 && plan4StartTimeString != "--:--") {
-                longArray.add(plan4StartTime)
-            }
 
-            Log.e(mTag,"longArray before = $longArray")
-
-            if (longArray.size > 1) {
-                longArray.sort()
-            }
-
-            Log.e(mTag,"longArray after = $longArray")
-
-            var idx = -1
-            for (i in longArray.indices) {
-                if (currentTimestamp >= longArray[i]) {
-
-                    idx = i
-                } else {
-                    break
+                if (layoutList[0].plan2_id > 0 && plan2StartTimeString != "--:--") {
+                    longArray.add(plan2StartTime)
                 }
-            }
+                if (layoutList[0].plan3_id > 0 && plan3StartTimeString != "--:--") {
+                    longArray.add(plan3StartTime)
+                }
+                if (layoutList[0].plan4_id > 0 && plan4StartTimeString != "--:--") {
+                    longArray.add(plan4StartTime)
+                }
 
-            if (idx == -1) { //use the last one
-                idx = longArray.size - 1
-            }
+                Log.e(mTag,"longArray before sort = $longArray")
 
-            if (idx >= 0) {
-                when(longArray[idx]) {
-                    planStartTime -> {
-                        currentPlanId = layoutList[0].plan_id
-                        currentPlanUse = 1
-                        Log.d(mTag, "plan1, id = ${layoutList[0].plan_id}")
+                if (longArray.size > 1) {
+                    longArray.sort()
+                }
+
+                Log.e(mTag,"longArray after sort = $longArray")
+
+                var idx = -1
+                for (i in longArray.indices) {
+                    if (currentTimestamp >= longArray[i]) {
+
+                        idx = i
+                    } else {
+                        break
                     }
-                    plan2StartTime -> {
-                        currentPlanId = layoutList[0].plan2_id
-                        currentPlanUse = 2
-                        Log.d(mTag, "plan2, id = ${layoutList[0].plan2_id}")
-                    }
-                    plan3StartTime -> {
-                        currentPlanId = layoutList[0].plan3_id
-                        currentPlanUse = 3
-                        Log.d(mTag, "plan3, id = ${layoutList[0].plan3_id}")
-                    }
-                    plan4StartTime -> {
-                        currentPlanId = layoutList[0].plan4_id
-                        currentPlanUse = 4
-                        Log.d(mTag, "plan4, id = ${layoutList[0].plan4_id}")
+                }
+
+                if (idx == -1) { //use the last one
+                    idx = longArray.size - 1
+                }
+
+                if (idx >= 0) {
+                    when(longArray[idx]) {
+                        planStartTime -> {
+                            currentPlanId = layoutList[0].plan_id
+                            currentPlanUse = 1
+                            Log.d(mTag, "plan1, id = ${layoutList[0].plan_id}")
+                        }
+                        plan2StartTime -> {
+                            currentPlanId = layoutList[0].plan2_id
+                            currentPlanUse = 2
+                            Log.d(mTag, "plan2, id = ${layoutList[0].plan2_id}")
+                        }
+                        plan3StartTime -> {
+                            currentPlanId = layoutList[0].plan3_id
+                            currentPlanUse = 3
+                            Log.d(mTag, "plan3, id = ${layoutList[0].plan3_id}")
+                        }
+                        plan4StartTime -> {
+                            currentPlanId = layoutList[0].plan4_id
+                            currentPlanUse = 4
+                            Log.d(mTag, "plan4, id = ${layoutList[0].plan4_id}")
+                        }
                     }
                 }
             }
         } else if (plan2_start_date == "" && plan3_start_date == "" && plan4_start_date == "" &&
             plan2_end_date == "" && plan3_end_date == "" && plan4_end_date == "" &&
-            plan2_days_of_week == 0 && plan3_days_of_week == 0 && plan4_days_of_week == 0) {
+            plan2_days_of_week == 0 && plan3_days_of_week == 0 && plan4_days_of_week == 0) { //default and 3 star-end time interval
 
             Log.e(mTag, "No date setting used, only start time and end time")
             Log.e(mTag, "use first setting plan id as default plan id")
             Log.e(mTag, "plan priority: 2 > 3 > 4 > default")
-            currentPlanId = layoutList[0].plan_id
-            currentPlanUse = 1
-            if (plan4StartTimeString != "--:--" && plan4EndTimeString != "--:--") {
-                Log.d(mTag, "plan4 uses start and end time")
+            if (layoutList[0].plan_id > 0) {
+                currentPlanId = layoutList[0].plan_id
+                currentPlanUse = 1
 
-                plan4StartTime = getTimeStampFromString(plan4StartTimeString)
-                plan4EndTime = getTimeStampFromString(plan4EndTimeString)
+                if (layoutList[0].plan4_id > 0) {
+                    Log.d(mTag, "check plan4")
+                    if (plan4StartTimeString != "--:--" && plan4EndTimeString != "--:--") {
+                        Log.d(mTag, "plan4 uses start and end time")
 
-                if (currentTimestamp >= plan2StartTime && currentTimestamp < plan4EndTime) {
-                    currentPlanId = layoutList[0].plan4_id
-                    currentPlanUse = 4
-                }
-            }
-            if (plan3StartTimeString != "--:--" && plan3EndTimeString != "--:--") {
-                Log.d(mTag, "plan3 uses start and end time")
+                        plan4StartTime = getTimeStampFromString(plan4StartTimeString)
+                        plan4EndTime = getTimeStampFromString(plan4EndTimeString)
 
-                plan3StartTime = getTimeStampFromString(plan3StartTimeString)
-                plan3EndTime = getTimeStampFromString(plan3EndTimeString)
-
-                if (currentTimestamp >= plan3StartTime && currentTimestamp < plan3EndTime) {
-                    currentPlanId = layoutList[0].plan3_id
-                    currentPlanUse = 3
-                }
-            }
-            if (plan2StartTimeString != "--:--" && plan2EndTimeString != "--:--") {
-                Log.d(mTag, "plan2 uses start and end time")
-
-                plan2StartTime = getTimeStampFromString(plan2StartTimeString)
-                plan2EndTime = getTimeStampFromString(plan2EndTimeString)
-
-                if (currentTimestamp >= plan2StartTime && currentTimestamp < plan2EndTime) {
-                    currentPlanId = layoutList[0].plan2_id
-                    currentPlanUse = 2
-                }
-            }
-        } else if (plan2_days_of_week == 0 && plan3_days_of_week == 0 && plan4_days_of_week == 0) {
-            Log.e(mTag, "No days of week used")
-            Log.e(mTag, "use first setting plan id as default plan id")
-            Log.e(mTag, "plan priority: 2 > 3 > 4 > default")
-            currentPlanId = layoutList[0].plan_id
-            currentPlanUse = 1
-            if (plan4_start_date != "" && plan4_end_date != "") {
-                Log.d(mTag, "plan4 use start and end date")
-                val startTimeStamp = getTimeStampFromStringStartDate(plan4_start_date, plan4StartTimeString)
-                var endTimeStamp = getTimeStampFromStringEndDate(plan4_end_date, plan4EndTimeString)
-                //endTimeStamp = endTimeStamp + 86399 // 1 day = 86400 seconds
-                if (currentTimestamp >= startTimeStamp && currentTimestamp < endTimeStamp) {
-                    currentPlanId = layoutList[0].plan4_id
-                    currentPlanUse = 4
-                }
-            }
-
-            if (plan3_start_date != "" && plan3_end_date != "") {
-                Log.d(mTag, "plan3 use start and end date")
-                val startTimeStamp = getTimeStampFromStringStartDate(plan3_start_date, plan3StartTimeString)
-                var endTimeStamp = getTimeStampFromStringEndDate(plan3_end_date, plan3EndTimeString)
-                //endTimeStamp = endTimeStamp + 86399 // 1 day = 86400 seconds
-                if (currentTimestamp >= startTimeStamp && currentTimestamp < endTimeStamp) {
-                    currentPlanId = layoutList[0].plan3_id
-                    currentPlanUse = 3
-                }
-            }
-
-            if (plan2_start_date != "" && plan2_end_date != "") {
-                Log.d(mTag, "plan2 use start and end date")
-                val startTimeStamp = getTimeStampFromStringStartDate(plan2_start_date, plan2StartTimeString)
-                var endTimeStamp = getTimeStampFromStringEndDate(plan2_end_date, plan2EndTimeString)
-                //endTimeStamp = endTimeStamp + 86399 // 1 day = 86400 seconds
-                if (currentTimestamp >= startTimeStamp && currentTimestamp < endTimeStamp) {
-                    currentPlanId = layoutList[0].plan2_id
-                    currentPlanUse = 2
-                }
-            }
-        } else { //use with weeks
-            Log.e(mTag, "Maybe use days of week")
-            Log.e(mTag, "currentTimestamp = $currentTimestamp")
-            currentPlanId = layoutList[0].plan_id
-            currentPlanUse = 1
-            if (plan4_start_date != "" && plan4_end_date != "") {
-                Log.e(mTag, "check plan4 ->")
-                val startTimeStamp = getTimeStampFromStringStartDate(plan4_start_date, plan4StartTimeString)
-                var endTimeStamp = getTimeStampFromStringEndDate(plan4_end_date, plan4EndTimeString)
-                //endTimeStamp = endTimeStamp + 86399 // 1 day = 86400 seconds
-                Log.e(mTag, "plan4 start timestamp = $startTimeStamp, end timestamp = $endTimeStamp")
-                if (currentTimestamp >= startTimeStamp && currentTimestamp < endTimeStamp) {
-                    //currentPlanId = layoutList[0].plan4_id
-                    //currentPlanUse = 4
-
-                    val match = getMatchDaysOfWeeks(currentTimestamp, plan4_days_of_week)
-                    if (match) {
-                        Log.e(mTag, "match plan4")
-                        currentPlanId = layoutList[0].plan4_id
-                        currentPlanUse = 4
+                        if (currentTimestamp >= plan2StartTime && currentTimestamp < plan4EndTime) {
+                            currentPlanId = layoutList[0].plan4_id
+                            currentPlanUse = 4
+                        }
                     }
                 }
-            }
+                if (layoutList[0].plan3_id > 0) {
+                    Log.d(mTag, "check plan3")
+                    if (plan3StartTimeString != "--:--" && plan3EndTimeString != "--:--") {
+                        Log.d(mTag, "plan3 uses start and end time")
 
-            if (plan3_start_date != "" && plan3_end_date != "") {
-                Log.e(mTag, "check plan3 ->")
-                val startTimeStamp = getTimeStampFromStringStartDate(plan3_start_date, plan3StartTimeString)
-                var endTimeStamp = getTimeStampFromStringEndDate(plan3_end_date, plan3EndTimeString)
-                //endTimeStamp = endTimeStamp + 86399 // 1 day = 86400 seconds
-                Log.e(mTag, "plan3 start timestamp = $startTimeStamp, end timestamp = $endTimeStamp")
-                if (currentTimestamp >= startTimeStamp && currentTimestamp < endTimeStamp) {
-                    //currentPlanId = layoutList[0].plan4_id
-                    //currentPlanUse = 4
+                        plan3StartTime = getTimeStampFromString(plan3StartTimeString)
+                        plan3EndTime = getTimeStampFromString(plan3EndTimeString)
 
-                    val match = getMatchDaysOfWeeks(currentTimestamp, plan3_days_of_week)
-                    if (match) {
-                        Log.e(mTag, "match plan3")
-                        currentPlanId = layoutList[0].plan3_id
-                        currentPlanUse = 3
+                        if (currentTimestamp >= plan3StartTime && currentTimestamp < plan3EndTime) {
+                            currentPlanId = layoutList[0].plan3_id
+                            currentPlanUse = 3
+                        }
                     }
                 }
-            }
+                if (layoutList[0].plan2_id > 0) {
+                    Log.d(mTag, "check plan2")
+                    if (plan2StartTimeString != "--:--" && plan2EndTimeString != "--:--") {
+                        Log.d(mTag, "plan2 uses start and end time")
 
-            if (plan2_start_date != "" && plan2_end_date != "") {
-                Log.e(mTag, "check plan2 ->")
-                val startTimeStamp = getTimeStampFromStringStartDate(plan2_start_date, plan2StartTimeString)
-                var endTimeStamp = getTimeStampFromStringEndDate(plan2_end_date, plan2EndTimeString)
-                //endTimeStamp = endTimeStamp + 86399 // 1 day = 86400 seconds
-                Log.e(mTag, "plan2 start timestamp = $startTimeStamp, end timestamp = $endTimeStamp")
-                Log.e(mTag, "plan2_days_of_week = $plan2_days_of_week")
-                if (currentTimestamp >= startTimeStamp && currentTimestamp < endTimeStamp) {
-                    //currentPlanId = layoutList[0].plan4_id
-                    //currentPlanUse = 4
+                        plan2StartTime = getTimeStampFromString(plan2StartTimeString)
+                        plan2EndTime = getTimeStampFromString(plan2EndTimeString)
 
-                    val match = getMatchDaysOfWeeks(currentTimestamp, plan2_days_of_week)
-                    if (match) {
-                        Log.e(mTag, "match plan2")
-                        currentPlanId = layoutList[0].plan2_id
-                        currentPlanUse = 2
+                        if (currentTimestamp >= plan2StartTime && currentTimestamp < plan2EndTime) {
+                            currentPlanId = layoutList[0].plan2_id
+                            currentPlanUse = 2
+                        }
                     }
                 }
+            } else { // no default ad setting
+                Log.e(mTag, "No default ad settings")
             }
+        } else {
+            if (plan2_days_of_week == 0 && plan3_days_of_week == 0 && plan4_days_of_week == 0) {
+                Log.e(mTag, "No days of week used")
+                Log.e(mTag, "use first setting plan id as default plan id")
+                Log.e(mTag, "plan priority: 2 > 3 > 4 > default")
+                if (layoutList[0].plan_id > 0) {
+                    currentPlanId = layoutList[0].plan_id
+                    currentPlanUse = 1
 
+                    if (layoutList[0].plan4_id > 0) {
+                        Log.d(mTag, "check plan4")
+                        if (plan4_start_date != "" && plan4_end_date != "") {
+                            Log.d(mTag, "plan4 use start and end date")
+                            //check match days
+                            val startDayTimeStamp =
+                                getTimeStampFromStringStartDate(plan4_start_date, "--:--")
+                            val endDayTimeStamp =
+                                getTimeStampFromStringEndDate(plan4_end_date, "--:--")
+                            if (currentTimestamp >= startDayTimeStamp && currentTimestamp < endDayTimeStamp) { //match days, then check time
+                                val todayStr = getTodayDateStr()
+                                val startTimeStamp =
+                                    getTimeStampFromStringStartDate(todayStr, plan2StartTimeString)
+                                val endTimeStamp =
+                                    getTimeStampFromStringEndDate(todayStr, plan2EndTimeString)
+
+                                if (currentTimestamp >= startTimeStamp && currentTimestamp < endTimeStamp) { //match time interval
+                                    currentPlanId = layoutList[0].plan4_id
+                                    currentPlanUse = 4
+                                }
+                            }
+                        } else { //use daily
+                            val todayStr = getTodayDateStr()
+                            val startTimeStamp =
+                                getTimeStampFromStringStartDate(todayStr, plan2StartTimeString)
+                            val endTimeStamp =
+                                getTimeStampFromStringEndDate(todayStr, plan2EndTimeString)
+
+                            if (currentTimestamp >= startTimeStamp && currentTimestamp < endTimeStamp) {
+                                currentPlanId = layoutList[0].plan4_id
+                                currentPlanUse = 4
+                            }
+                        }
+                    }
+
+                    if (layoutList[0].plan3_id > 0) {
+                        Log.d(mTag, "check plan3")
+                        if (plan3_start_date != "" && plan3_end_date != "") {
+                            Log.d(mTag, "plan3 use start and end date")
+                            val startDayTimeStamp =
+                                getTimeStampFromStringStartDate(plan3_start_date, "--:--")
+                            val endDayTimeStamp =
+                                getTimeStampFromStringEndDate(plan3_end_date, "--:--")
+                            //endTimeStamp = endTimeStamp + 86399 // 1 day = 86400 seconds
+                            if (currentTimestamp >= startDayTimeStamp && currentTimestamp < endDayTimeStamp) { //match days, then check time
+                                val todayStr = getTodayDateStr()
+                                val startTimeStamp =
+                                    getTimeStampFromStringStartDate(todayStr, plan3StartTimeString)
+                                val endTimeStamp =
+                                    getTimeStampFromStringEndDate(todayStr, plan3EndTimeString)
+                                if (currentTimestamp >= startTimeStamp && currentTimestamp < endTimeStamp) { //match time interval
+                                    currentPlanId = layoutList[0].plan3_id
+                                    currentPlanUse = 3
+                                }
+                            }
+                        } else { //use daily
+                            val todayStr = getTodayDateStr()
+                            val startTimeStamp =
+                                getTimeStampFromStringStartDate(todayStr, plan3StartTimeString)
+                            val endTimeStamp =
+                                getTimeStampFromStringEndDate(todayStr, plan3EndTimeString)
+                            if (currentTimestamp >= startTimeStamp && currentTimestamp < endTimeStamp) { //match time interval
+                                currentPlanId = layoutList[0].plan3_id
+                                currentPlanUse = 3
+                            }
+                        }
+                    }
+
+                    if (layoutList[0].plan2_id > 0) {
+                        Log.d(mTag, "check plan2")
+                        if (plan2_start_date != "" && plan2_end_date != "") {
+                            Log.d(mTag, "plan2 use start and end date")
+                            val startDayTimeStamp =
+                                getTimeStampFromStringStartDate(plan2_start_date, "--:--")
+                            var endDayTimeStamp =
+                                getTimeStampFromStringEndDate(plan2_end_date, "--:--")
+                            //endTimeStamp = endTimeStamp + 86399 // 1 day = 86400 seconds
+                            if (currentTimestamp >= startDayTimeStamp && currentTimestamp < endDayTimeStamp) { //match days, then check time
+                                val todayStr = getTodayDateStr()
+                                val startTimeStamp =
+                                    getTimeStampFromStringStartDate(todayStr, plan2StartTimeString)
+                                val endTimeStamp =
+                                    getTimeStampFromStringEndDate(todayStr, plan2EndTimeString)
+                                if (currentTimestamp >= startTimeStamp && currentTimestamp < endTimeStamp) { //match time interval
+                                    currentPlanId = layoutList[0].plan2_id
+                                    currentPlanUse = 2
+                                }
+                            }
+                        } else { //use daily
+                            val todayStr = getTodayDateStr()
+                            val startTimeStamp =
+                                getTimeStampFromStringStartDate(todayStr, plan2StartTimeString)
+                            val endTimeStamp =
+                                getTimeStampFromStringEndDate(todayStr, plan2EndTimeString)
+                            if (currentTimestamp >= startTimeStamp && currentTimestamp < endTimeStamp) { //match time interval
+                                currentPlanId = layoutList[0].plan2_id
+                                currentPlanUse = 2
+                            }
+                        }
+                    }
+                } else {
+                    Log.e(mTag, "No default ad settings")
+                }
+
+            } else { //use with weeks
+                Log.e(mTag, "Maybe use days of week")
+                Log.e(mTag, "currentTimestamp = $currentTimestamp")
+                if (layoutList[0].plan_id > 0) {
+                    currentPlanId = layoutList[0].plan_id
+                    currentPlanUse = 1
+
+                    if (layoutList[0].plan4_id > 0) {
+                        Log.e(mTag, "check plan4 ->")
+                        if (plan4_start_date != "" && plan4_end_date != "") {
+                            val startDayTimeStamp =
+                                getTimeStampFromStringStartDate(plan4_start_date, "--:--")
+                            var endDayTimeStamp =
+                                getTimeStampFromStringEndDate(plan4_end_date, "--:--")
+                            //endTimeStamp = endTimeStamp + 86399 // 1 day = 86400 seconds
+                            Log.e(
+                                mTag,
+                                "plan4 start startDayTimeStamp = $startDayTimeStamp, end endDayTimeStamp = $endDayTimeStamp"
+                            )
+                            if (currentTimestamp >= startDayTimeStamp && currentTimestamp < endDayTimeStamp) { //match date
+                                val match =
+                                    getMatchDaysOfWeeks(currentTimestamp, plan4_days_of_week)
+                                if (match) { //match days of week, then check time interval
+                                    val todayStr = getTodayDateStr()
+                                    val startTimeStamp = getTimeStampFromStringStartDate(
+                                        todayStr,
+                                        plan4StartTimeString
+                                    )
+                                    val endTimeStamp =
+                                        getTimeStampFromStringEndDate(todayStr, plan4EndTimeString)
+                                    if (currentTimestamp >= startTimeStamp && currentTimestamp < endTimeStamp) { //match time interval
+                                        Log.e(mTag, "match plan4")
+                                        currentPlanId = layoutList[0].plan4_id
+                                        currentPlanUse = 4
+                                    }
+                                }
+                            }
+                        } else { //use daily
+                            if (plan4_days_of_week > 0) { //use days of week
+                                val match =
+                                    getMatchDaysOfWeeks(currentTimestamp, plan4_days_of_week)
+                                if (match) { //match days of week, then check time interval
+                                    val todayStr = getTodayDateStr()
+                                    val startTimeStamp = getTimeStampFromStringStartDate(
+                                        todayStr,
+                                        plan4StartTimeString
+                                    )
+                                    val endTimeStamp =
+                                        getTimeStampFromStringEndDate(todayStr, plan4EndTimeString)
+                                    if (currentTimestamp >= startTimeStamp && currentTimestamp < endTimeStamp) { //match time interval
+                                        Log.e(mTag, "match plan4")
+                                        currentPlanId = layoutList[0].plan4_id
+                                        currentPlanUse = 4
+                                    }
+                                }
+                            } else { //use time interval
+                                val todayStr = getTodayDateStr()
+                                val startTimeStamp =
+                                    getTimeStampFromStringStartDate(todayStr, plan4StartTimeString)
+                                val endTimeStamp =
+                                    getTimeStampFromStringEndDate(todayStr, plan4EndTimeString)
+                                if (currentTimestamp >= startTimeStamp && currentTimestamp < endTimeStamp) { //match time interval
+                                    Log.e(mTag, "match plan4")
+                                    currentPlanId = layoutList[0].plan4_id
+                                    currentPlanUse = 4
+                                }
+                            }
+                        }
+                    }
+
+                    if (layoutList[0].plan3_id > 0) {
+                        Log.e(mTag, "check plan3 ->")
+                        if (plan3_start_date != "" && plan3_end_date != "") {
+                            val startDayTimeStamp =
+                                getTimeStampFromStringStartDate(plan3_start_date, "--:--")
+                            var endDayTimeStamp =
+                                getTimeStampFromStringEndDate(plan3_end_date, "--:--")
+                            //endTimeStamp = endTimeStamp + 86399 // 1 day = 86400 seconds
+                            Log.e(
+                                mTag,
+                                "plan3 startDayTimeStamp = $startDayTimeStamp, endDayTimeStamp = $endDayTimeStamp"
+                            )
+                            if (currentTimestamp >= startDayTimeStamp && currentTimestamp < endDayTimeStamp) {
+                                val match =
+                                    getMatchDaysOfWeeks(currentTimestamp, plan3_days_of_week)
+                                if (match) { //match days of week, then check time interval
+                                    val todayStr = getTodayDateStr()
+                                    val startTimeStamp = getTimeStampFromStringStartDate(
+                                        todayStr,
+                                        plan3StartTimeString
+                                    )
+                                    val endTimeStamp =
+                                        getTimeStampFromStringEndDate(todayStr, plan3EndTimeString)
+                                    if (currentTimestamp >= startTimeStamp && currentTimestamp < endTimeStamp) { //match time interval
+                                        Log.e(mTag, "match plan3")
+                                        currentPlanId = layoutList[0].plan3_id
+                                        currentPlanUse = 3
+                                    }
+                                }
+                            }
+                        } else { //use daily
+                            if (plan3_days_of_week > 0) { //use days of week
+                                val match =
+                                    getMatchDaysOfWeeks(currentTimestamp, plan3_days_of_week)
+                                if (match) { //match days of week, then check time interval
+                                    val todayStr = getTodayDateStr()
+                                    val startTimeStamp = getTimeStampFromStringStartDate(
+                                        todayStr,
+                                        plan3StartTimeString
+                                    )
+                                    val endTimeStamp =
+                                        getTimeStampFromStringEndDate(todayStr, plan3EndTimeString)
+                                    if (currentTimestamp >= startTimeStamp && currentTimestamp < endTimeStamp) { //match time interval
+                                        Log.e(mTag, "match plan3")
+                                        currentPlanId = layoutList[0].plan3_id
+                                        currentPlanUse = 3
+                                    }
+                                }
+                            } else { //use time interval
+                                val todayStr = getTodayDateStr()
+                                val startTimeStamp =
+                                    getTimeStampFromStringStartDate(todayStr, plan3StartTimeString)
+                                val endTimeStamp =
+                                    getTimeStampFromStringEndDate(todayStr, plan3EndTimeString)
+                                if (currentTimestamp >= startTimeStamp && currentTimestamp < endTimeStamp) { //match time interval
+                                    Log.e(mTag, "match plan3")
+                                    currentPlanId = layoutList[0].plan3_id
+                                    currentPlanUse = 3
+                                }
+                            }
+                        }
+                    }
+
+                    if (layoutList[0].plan2_id > 0) {
+                        Log.e(mTag, "check plan2 ->")
+                        if (plan2_start_date != "" && plan2_end_date != "") {
+                            val startDayTimeStamp =
+                                getTimeStampFromStringStartDate(plan2_start_date, "--:--")
+                            var endDayTimeStamp =
+                                getTimeStampFromStringEndDate(plan2_end_date, "--:--")
+                            //endTimeStamp = endTimeStamp + 86399 // 1 day = 86400 seconds
+                            Log.e(
+                                mTag,
+                                "plan2 startDayTimeStamp = $startDayTimeStamp, endDayTimeStamp = $endDayTimeStamp"
+                            )
+                            Log.e(mTag, "plan2_days_of_week = $plan2_days_of_week")
+                            if (currentTimestamp >= startDayTimeStamp && currentTimestamp < endDayTimeStamp) {
+                                val match =
+                                    getMatchDaysOfWeeks(currentTimestamp, plan2_days_of_week)
+                                if (match) { //match days of week, then check time interval
+                                    val todayStr = getTodayDateStr()
+                                    val startTimeStamp = getTimeStampFromStringStartDate(
+                                        todayStr,
+                                        plan2StartTimeString
+                                    )
+                                    val endTimeStamp =
+                                        getTimeStampFromStringEndDate(todayStr, plan2EndTimeString)
+                                    if (currentTimestamp >= startTimeStamp && currentTimestamp < endTimeStamp) { //match time interval
+                                        Log.e(mTag, "match plan2")
+                                        currentPlanId = layoutList[0].plan2_id
+                                        currentPlanUse = 2
+                                    }
+
+                                }
+                            }
+                        } else { //use daily
+                            if (plan2_days_of_week > 0) { //use days of week
+                                val match =
+                                    getMatchDaysOfWeeks(currentTimestamp, plan2_days_of_week)
+                                if (match) { //match days of week, then check time interval
+                                    val todayStr = getTodayDateStr()
+                                    val startTimeStamp = getTimeStampFromStringStartDate(
+                                        todayStr,
+                                        plan2StartTimeString
+                                    )
+                                    val endTimeStamp =
+                                        getTimeStampFromStringEndDate(todayStr, plan2EndTimeString)
+                                    if (currentTimestamp >= startTimeStamp && currentTimestamp < endTimeStamp) { //match time interval
+                                        Log.e(mTag, "match plan2")
+                                        currentPlanId = layoutList[0].plan2_id
+                                        currentPlanUse = 2
+                                    }
+                                }
+                            } else { //use time interval
+                                val todayStr = getTodayDateStr()
+                                val startTimeStamp =
+                                    getTimeStampFromStringStartDate(todayStr, plan2StartTimeString)
+                                val endTimeStamp =
+                                    getTimeStampFromStringEndDate(todayStr, plan2EndTimeString)
+                                if (currentTimestamp >= startTimeStamp && currentTimestamp < endTimeStamp) { //match time interval
+                                    Log.e(mTag, "match plan2")
+                                    currentPlanId = layoutList[0].plan2_id
+                                    currentPlanUse = 2
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    Log.e(mTag, "No default ad settings")
+                }
+            }
         }
-
 
         Log.e(mTag, "currentPlanId = $currentPlanId")
         Log.e(mTag, "currentPlanUse = $currentPlanUse")
@@ -7287,6 +7495,11 @@ class MainActivity : AppCompatActivity() {
         Log.d(mTag, "tsLong = $tsLong")
 
         return tsLong
+    }
+
+    private fun getTodayDateStr(): String {
+        val todayDateStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+        return todayDateStr
     }
 
     private fun getTimeStampFromString(startTime: String): Long {
