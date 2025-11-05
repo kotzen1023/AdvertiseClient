@@ -94,6 +94,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZonedDateTime
+import java.util.Calendar
 import java.util.Collections
 import java.util.Date
 import java.util.Locale
@@ -378,7 +379,7 @@ class MainActivity : AppCompatActivity() {
     private var pingError = false
 
     var operationTime: Int = 0
-    private var ClearThread : Thread ?= null
+
 
     @SuppressLint("HardwareIds")
     @RequiresApi(Build.VERSION_CODES.R)
@@ -1028,14 +1029,6 @@ class MainActivity : AppCompatActivity() {
                         }
                     } else if (intent.action!!.equals(Constants.ACTION.ACTION_GET_VIDEOS_SUCCESS, ignoreCase = true)) {
                         Log.d(mTag, "ACTION_GET_VIDEOS_SUCCESS")
-
-                        /*if (checkDownloadVideosAll()) {
-                            Log.d(mTag, "ok, there might be some files can't download, but fine, just play!")
-                            if (infoRenew) {
-                                Log.d(mTag, "start to play!")
-                                playAd()
-                            }
-                        }*/
 
                         if (downloadVideoComplete < videoList.size) {
                             downloadVideos()
@@ -4462,7 +4455,9 @@ class MainActivity : AppCompatActivity() {
                     //main LinearLayout
                     if (mainLinearLayout == null) {
                         mainLinearLayout = LinearLayout(this@MainActivity)
-                        mainLinearLayout!!.setPadding(12,12,12,12)
+                    }
+                    if (layoutList[0].border > 0) {
+                        mainLinearLayout!!.setPadding(12, 12, 12, 12)
                     }
                     mainLinearLayout!!.removeAllViews()
                     mainLinearLayout!!.layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT)
@@ -7665,6 +7660,7 @@ class MainActivity : AppCompatActivity() {
         return sdf.format(date)
     }
 
+    /*
     fun getDayOfWeekFromTimestamp(timestamp: Long): Int {
         Log.d(mTag, "getDayOfWeekFromTimestamp ->")
         // Convert the timestamp (in milliseconds) to a Date object
@@ -7685,19 +7681,23 @@ class MainActivity : AppCompatActivity() {
 
         return dayOfWeekIntValue
     }
+    */
 
     private fun getMatchDaysOfWeeks(currentTimestamp: Long, daysOfWeek: Int): Boolean {
         var ret = false
 
+        val calendar: Calendar = Calendar.getInstance()
+        calendar.setTimeInMillis(currentTimestamp)
+        val isoDayOfWeek: Int = calendar.get(Calendar.DAY_OF_WEEK)
+
+        /*
         val today: LocalDate = LocalDate.now()
         val dayOfWeekEnum: DayOfWeek = today.getDayOfWeek()
 
 
         // The int value of DayOfWeek follows ISO-8601: 1 (MONDAY) to 7 (SUNDAY)
         val isoDayOfWeek = dayOfWeekEnum.value
-
-        //val dayOfWeekInt = getDayOfWeekFromTimestamp(currentTimestamp)
-        //Log.e(mTag, "dayOfWeekInt = $dayOfWeekInt")
+        */
 
         Log.e(mTag, "current dayOfWeekInt = $isoDayOfWeek, settings daysOfWeek = $daysOfWeek")
         //Monday = 1, Tuesday = 2, ..., Sunday = 7
